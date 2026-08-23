@@ -3,14 +3,17 @@ import react from '@vitejs/plugin-react'
 
 // Proxy en desarrollo: /api se reenvia al backend .NET local
 export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5203',
-        changeOrigin: true,
-      },
+    plugins: [react()],
+    server: {
+        port: 5173,
+        watch: {
+            ignored: ['**/.vs/**'],
+        },
+        proxy: {
+            '/api': {
+                target: 'http://localhost:5203',
+                changeOrigin: true,
+            },
+        },
     },
-  },
 })
