@@ -1,0 +1,154 @@
+.register-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background: #f3f4f6;
+    font-family: system-ui, sans-serif;
+}
+
+.register-card {
+    width: 100%;
+    max-width: 450px;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.register-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+    .register-header h1 {
+        margin: 0 0 1.5rem;
+        color: #2563eb;
+        font-size: 2rem;
+    }
+
+    .register-header h2 {
+        margin: 0 0 0.6rem;
+        font-size: 1.6rem;
+        color: #111827;
+    }
+
+    .register-header p {
+        margin: 0;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-bottom: 1.2rem;
+}
+
+    .campo label {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .campo input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.8rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+        .campo input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .campo input::placeholder {
+            color: #9ca3af;
+        }
+
+.btn-registrar {
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem;
+    margin-top: 0.5rem;
+    background: #2563eb;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+    .btn-registrar:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-registrar:active {
+        transform: scale(0.98);
+    }
+
+    .btn-registrar:disabled {
+        background: #93c5fd;
+        cursor: not-allowed;
+    }
+
+.mensaje-error {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 1.2rem;
+    font-size: 0.95rem;
+}
+
+.mensaje-exito {
+    background: #dcfce7;
+    color: #166534;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 1.2rem;
+    font-size: 0.95rem;
+}
+
+.login-link {
+    text-align: center;
+    margin-top: 1.8rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+    .login-link p {
+        margin: 0 0 0.6rem;
+        color: #6b7280;
+    }
+
+    .login-link button {
+        border: none;
+        background: transparent;
+        color: #2563eb;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .login-link button:hover {
+            text-decoration: underline;
+        }
+
+@media (max-width: 500px) {
+    .register-container {
+        padding: 1rem;
+    }
+
+    .register-card {
+        padding: 2rem 1.5rem;
+    }
+}
+
