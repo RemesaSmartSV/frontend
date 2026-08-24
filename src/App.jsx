@@ -1,32 +1,109 @@
 import { useState } from 'react'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Movimientos from './pages/Movimientos'
+import Categorias from './pages/Categorias'
+import Remesas from './pages/Remesas'
+import Ingresos from './pages/Ingresos'
+import Gastos from './pages/Gastos'
+import Dashboard from './pages/Dashboard'
+import { authApi } from './services/api'
+import './App.css'
 
 export default function App() {
-  const [estadoApi, setEstadoApi] = useState(null)
+    const [usuario, setUsuario] = useState(() => {
+        const usuarioGuardado = localStorage.getItem('usuario')
 
-  async function probarConexion() {
-    setEstadoApi('Probando...')
-    try {
-      const res = await fetch('/api/TipsFinancieros')
-      if (res.status === 401) {
-        setEstadoApi('API conectada (requiere autenticacion JWT)')
-      } else if (res.ok) {
-        setEstadoApi('API conectada correctamente')
-      } else {
-        setEstadoApi(`API respondio con estado ${res.status}`)
-      }
-    } catch {
-      setEstadoApi('No se pudo conectar con la API')
+        return usuarioGuardado
+            ? JSON.parse(usuarioGuardado)
+            : null
+    })
+
+    const [mostrarRegistro, setMostrarRegistro] = useState(false)
+    const [pagina, setPagina] = useState('movimientos')
+
+    function manejarLogin(datosUsuario) {
+        setUsuario(datosUsuario)
+        setPagina('dashboard')
     }
-  }
+    function cerrarSesion() {
+        authApi.cerrarSesion()
+        setUsuario(null)
+    }
 
-  return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 640, margin: '4rem auto', padding: '0 1rem' }}>
-      <h1>RemesaSmartSV</h1>
-      <p>API de finanzas familiares para El Salvador.</p>
-      <p>Base del frontend React (Vite). Aqui iran las pantallas del MVP 1:
-        hogares, miembros, remesas, ingresos, gastos y categorias.</p>
-      <button onClick={probarConexion}>Probar conexion con la API</button>
-      {estadoApi && <p><strong>Estado:</strong> {estadoApi}</p>}
-    </main>
-  )
+    if (!usuario) {
+        if (mostrarRegistro) {
+            return (
+                <Register
+                    volverLogin={() => setMostrarRegistro(false)}
+                />
+            )
+        }
+
+        return (
+            <Login
+                onLogin={manejarLogin}
+                irRegistro={() => setMostrarRegistro(true)}
+            />
+        )
+    }
+
+    return (
+        <div>
+            <header className="app-header">
+                <div>
+                    <strong>RemesaSmartSV</strong>
+
+                    <span>
+                        Hola, {usuario.nombre}
+                    </span>
+                </div>
+
+                <button onClick={cerrarSesion}>
+                    Cerrar sesión
+                </button>
+            </header>
+
+            <nav>
+                <button onClick={() => setPagina('dashboard')}>
+                    Inicio
+                </button>
+
+                <button
+                    onClick={() => setPagina('movimientos')}
+                >
+                    Movimientos
+                </button>
+
+                <button
+                    onClick={() => setPagina('categorias')}
+                >
+                    Categorías
+                </button>
+
+                <button onClick={() => setPagina('remesas')}>
+                    Remesas
+                </button>
+
+                <button onClick={() => setPagina('ingresos')}>
+                    Ingresos
+                </button>
+
+                <button onClick={() => setPagina('gastos')}>
+                    Gastos
+                </button>
+            </nav>
+            {pagina === 'dashboard' && <Dashboard />}
+
+            {pagina === 'movimientos' && <Movimientos />}
+
+            {pagina === 'remesas' && <Remesas />}
+
+            {pagina === 'categorias' && <Categorias />}
+
+            {pagina === 'ingresos' && <Ingresos />}
+
+            {pagina === 'gastos' && <Gastos />}
+        </div>
+    )
 }
