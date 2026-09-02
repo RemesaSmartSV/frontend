@@ -159,3 +159,50 @@ export const movimientosApi = {
         return manejarRespuesta(res)
     },
 }
+
+export const presupuestosApi = {
+    async listar() {
+        const res = await fetch(`${API_URL}/Presupuestos`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async obtener(id) {
+        const res = await fetch(`${API_URL}/Presupuestos/${id}`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async crear(presupuesto) {
+        const res = await fetch(`${API_URL}/Presupuestos`, {
+            method: 'POST',
+            headers: obtenerHeaders(),
+            body: JSON.stringify(presupuesto),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async actualizar(id, presupuesto) {
+        const res = await fetch(`${API_URL}/Presupuestos/${id}`, {
+            method: 'PUT',
+            headers: obtenerHeaders(),
+            body: JSON.stringify(presupuesto),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async eliminar(id) {
+        const res = await fetch(`${API_URL}/Presupuestos/${id}`, {
+            method: 'DELETE',
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+}

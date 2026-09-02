@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { categoriasApi } from '../services/api'
-import './Categorias.css'
 
 export default function Categorias() {
     const [categorias, setCategorias] = useState([])
@@ -108,37 +107,44 @@ export default function Categorias() {
     }
 
     return (
-        <main className="categorias-container">
-            <h1>Categorías</h1>
+        <main className="mx-auto max-w-5xl p-4 font-sans text-slate-800 sm:p-8">
 
-            <p className="subtitulo">
+            <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+                Categorías
+            </h1>
+
+            <p className="mb-8 text-gray-500">
                 Administra las categorías de tus ingresos y gastos.
             </p>
 
             {error && (
-                <div className="mensaje-error">
+                <div className="mb-5 rounded-lg border border-red-200 bg-red-100 px-4 py-3.5 text-red-800">
                     {error}
                 </div>
             )}
 
             {mensaje && (
-                <div className="mensaje-exito">
+                <div className="mb-5 rounded-lg border border-green-200 bg-green-100 px-4 py-3.5 text-green-800">
                     {mensaje}
                 </div>
             )}
 
-            <section className="formulario-card">
-                <h2>
+            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+
+                <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
                         ? 'Editar categoría'
                         : 'Crear categoría'}
                 </h2>
 
                 <form onSubmit={guardarCategoria}>
-                    <div className="form-grid">
 
-                        <div className="campo">
-                            <label>Nombre</label>
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                        <div className="flex flex-col gap-2">
+                            <label className="font-semibold text-gray-700">
+                                Nombre
+                            </label>
 
                             <input
                                 type="text"
@@ -147,17 +153,21 @@ export default function Categorias() {
                                     setNombre(e.target.value)
                                 }
                                 placeholder="Ej. Alimentación"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
                             />
                         </div>
 
-                        <div className="campo">
-                            <label>Tipo</label>
+                        <div className="flex flex-col gap-2">
+                            <label className="font-semibold text-gray-700">
+                                Tipo
+                            </label>
 
                             <select
                                 value={tipo}
                                 onChange={(e) =>
                                     setTipo(e.target.value)
                                 }
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
                             >
                                 <option value="Gasto">
                                     Gasto
@@ -169,8 +179,10 @@ export default function Categorias() {
                             </select>
                         </div>
 
-                        <div className="campo">
-                            <label>Ícono</label>
+                        <div className="flex flex-col gap-2 md:col-span-2">
+                            <label className="font-semibold text-gray-700">
+                                Ícono
+                            </label>
 
                             <input
                                 type="text"
@@ -179,15 +191,17 @@ export default function Categorias() {
                                     setIcono(e.target.value)
                                 }
                                 placeholder="Ej. comida"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
                             />
                         </div>
 
                     </div>
 
-                    <div className="botones-formulario">
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+
                         <button
                             type="submit"
-                            className="btn-guardar"
+                            className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700"
                         >
                             {editandoId
                                 ? 'Actualizar'
@@ -197,91 +211,138 @@ export default function Categorias() {
                         {editandoId && (
                             <button
                                 type="button"
-                                className="btn-cancelar"
                                 onClick={limpiarFormulario}
+                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600"
                             >
                                 Cancelar
                             </button>
                         )}
+
                     </div>
+
                 </form>
             </section>
 
-            <section className="lista-card">
-                <div className="lista-header">
-                    <h2>Categorías registradas</h2>
+            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+
+                <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+
+                    <h2 className="text-xl font-semibold text-slate-900">
+                        Categorías registradas
+                    </h2>
 
                     <button
                         onClick={cargarCategorias}
-                        className="btn-recargar"
+                        className="rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800"
                     >
                         Actualizar
                     </button>
+
                 </div>
 
                 {cargando ? (
                     <p>Cargando categorías...</p>
+
                 ) : categorias.length === 0 ? (
-                    <p className="sin-datos">
+
+                    <p className="text-gray-500">
                         No hay categorías registradas.
                     </p>
+
                 ) : (
-                    <div className="tabla-contenedor">
-                        <table>
+
+                    <div className="overflow-x-auto">
+
+                        <table className="w-full border-collapse">
+
                             <thead>
                                 <tr>
-                                    <th>Nombre</th>
-                                    <th>Tipo</th>
-                                    <th>Ícono</th>
-                                    <th>Acciones</th>
+                                    <th className="bg-blue-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Nombre
+                                    </th>
+
+                                    <th className="bg-blue-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Tipo
+                                    </th>
+
+                                    <th className="bg-blue-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Ícono
+                                    </th>
+
+                                    <th className="bg-blue-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Acciones
+                                    </th>
                                 </tr>
                             </thead>
 
                             <tbody>
+
                                 {categorias.map((categoria) => (
-                                    <tr key={categoria.idCategoria}>
-                                        <td>
+                                    <tr
+                                        key={categoria.idCategoria}
+                                        className="transition hover:bg-gray-50"
+                                    >
+
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
                                             {categoria.nombre}
                                         </td>
 
-                                        <td>
-                                            {categoria.tipo}
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold">
+                                            <span
+                                                className={
+                                                    categoria.tipo === 'Ingreso'
+                                                        ? 'inline-block rounded-full bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700'
+                                                        : 'inline-block rounded-full bg-red-100 px-2.5 py-1 text-sm font-bold text-red-600'
+                                                }
+                                            >
+                                                {categoria.tipo}
+                                            </span>
                                         </td>
 
-                                        <td>
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
                                             {categoria.icono || '-'}
                                         </td>
 
-                                        <td className="acciones">
-                                            <button
-                                                onClick={() =>
-                                                    editarCategoria(
-                                                        categoria
-                                                    )
-                                                }
-                                                className="btn-editar"
-                                            >
-                                                Editar
-                                            </button>
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                            <div className="flex flex-col gap-2 sm:flex-row">
 
-                                            <button
-                                                onClick={() =>
-                                                    eliminarCategoria(
-                                                        categoria.idCategoria
-                                                    )
-                                                }
-                                                className="btn-eliminar"
-                                            >
-                                                Eliminar
-                                            </button>
+                                                <button
+                                                    onClick={() =>
+                                                        editarCategoria(
+                                                            categoria
+                                                        )
+                                                    }
+                                                    className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
+                                                >
+                                                    Editar
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        eliminarCategoria(
+                                                            categoria.idCategoria
+                                                        )
+                                                    }
+                                                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                                                >
+                                                    Eliminar
+                                                </button>
+
+                                            </div>
                                         </td>
+
                                     </tr>
                                 ))}
+
                             </tbody>
+
                         </table>
+
                     </div>
                 )}
+
             </section>
+
         </main>
     )
 }
