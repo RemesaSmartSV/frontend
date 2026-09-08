@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { categoriasApi, movimientosApi } from '../services/api'
+import Notification from '../components/Notification'
+import Loading from '../components/Loading'
+import Pagination from '../components/Pagination'
 
 export default function Gastos() {
     const [gastos, setGastos] = useState([])
@@ -14,8 +17,14 @@ export default function Gastos() {
 
     const [editandoId, setEditandoId] = useState(null)
     const [cargando, setCargando] = useState(false)
+    const [procesando, setProcesando] = useState(false)
+
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
+
+    // PAGINACIÓN
+    const [paginaActual, setPaginaActual] = useState(1)
+    const registrosPorPagina = 5
 
     useEffect(() => {
         cargarDatos()
@@ -38,8 +47,15 @@ export default function Gastos() {
 
             setGastos(gastosFiltrados)
             setCategorias(categoriasData)
+
+            // Volver a la primera página al actualizar
+            setPaginaActual(1)
+
         } catch (err) {
-            setError(err.message)
+            setError(
+                err.message ||
+                'No se pudieron cargar los gastos.'
+            )
         } finally {
             setCargando(false)
         }
@@ -75,6 +91,7 @@ export default function Gastos() {
         try {
             setError('')
             setMensaje('')
+            setProcesando(true)
 
             const movimiento = {
                 idCategoria: Number(formulario.idCategoria),
@@ -91,17 +108,31 @@ export default function Gastos() {
                     movimiento
                 )
 
-                setMensaje('Gasto actualizado correctamente.')
+                setMensaje(
+                    'Gasto actualizado correctamente.'
+                )
             } else {
                 await movimientosApi.crear(movimiento)
 
-                setMensaje('Gasto registrado correctamente.')
+                setMensaje(
+                    'Gasto registrado correctamente.'
+                )
             }
 
             limpiarFormulario()
+
+            // Después de guardar, mostrar la primera página
+            setPaginaActual(1)
+
             await cargarDatos()
+
         } catch (err) {
-            setError(err.message)
+            setError(
+                err.message ||
+                'No se pudo guardar el gasto.'
+            )
+        } finally {
+            setProcesando(false)
         }
     }
 
@@ -136,13 +167,23 @@ export default function Gastos() {
         try {
             setError('')
             setMensaje('')
+            setProcesando(true)
 
             await movimientosApi.eliminar(id)
 
-            setMensaje('Gasto eliminado correctamente.')
+            setMensaje(
+                'Gasto eliminado correctamente.'
+            )
+
             await cargarDatos()
+
         } catch (err) {
-            setError(err.message)
+            setError(
+                err.message ||
+                'No se pudo eliminar el gasto.'
+            )
+        } finally {
+            setProcesando(false)
         }
     }
 
@@ -165,50 +206,77 @@ export default function Gastos() {
         return categoria?.nombre || 'Sin categoría'
     }
 
+    // CÁLCULOS DE PAGINACIÓN
+    const totalPaginas = Math.ceil(
+        gastos.length / registrosPorPagina
+    )
+
+    const indiceInicial =
+        (paginaActual - 1) * registrosPorPagina
+
+    const gastosPagina = gastos.slice(
+        indiceInicial,
+        indiceInicial + registrosPorPagina
+    )
+
+    function cambiarPagina(nuevaPagina) {
+        if (
+            nuevaPagina < 1 ||
+            nuevaPagina > totalPaginas
+        ) {
+            return
+        }
+
+        setPaginaActual(nuevaPagina)
+    }
+
     return (
-        <main className="mx-auto max-w-5xl p-4 font-sans text-slate-800 sm:p-8">
+        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-8">
+
+            {/* NOTIFICACIONES */}
+            <Notification
+                tipo="success"
+                mensaje={mensaje}
+                onClose={() => setMensaje('')}
+            />
+
+            <Notification
+                tipo="error"
+                mensaje={error}
+                onClose={() => setError('')}
+            />
 
             {/* ENCABEZADO */}
-            <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
 
-                <div>
+                <div className="min-w-0">
+
                     <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
                         Gastos
                     </h1>
 
-                    <p className="text-gray-500">
-                        Registra y administra los gastos
-                        realizados por tu hogar.
+                    <p className="text-sm leading-relaxed text-gray-500 sm:text-base">
+                        Registra y administra los gastos realizados por tu hogar.
                     </p>
+
                 </div>
 
                 <button
                     onClick={cargarDatos}
-                    className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 sm:w-auto"
+                    disabled={cargando || procesando}
+                    className="w-full rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                 >
-                    Actualizar
+                    {cargando
+                        ? 'Cargando...'
+                        : 'Actualizar'}
                 </button>
 
             </div>
 
-            {/* ERROR */}
-            {error && (
-                <div className="mb-5 rounded-lg border border-red-200 bg-red-100 px-4 py-3.5 text-red-800">
-                    {error}
-                </div>
-            )}
-
-            {/* MENSAJE DE ÉXITO */}
-            {mensaje && (
-                <div className="mb-5 rounded-lg border border-green-200 bg-green-100 px-4 py-3.5 text-green-800">
-                    {mensaje}
-                </div>
-            )}
-
             {/* FORMULARIO */}
-            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+            <section className="mb-6 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
 
-                <h2 className="mb-5 text-xl font-semibold text-slate-900">
+                <h2 className="mb-5 text-lg font-semibold text-slate-900 sm:text-xl">
                     {editandoId
                         ? 'Editar gasto'
                         : 'Registrar gasto'}
@@ -216,11 +284,12 @@ export default function Gastos() {
 
                 <form onSubmit={guardarGasto}>
 
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
 
                         {/* CATEGORÍA */}
                         <div className="flex flex-col gap-2">
-                            <label className="font-semibold text-gray-700">
+
+                            <label className="text-sm font-semibold text-gray-700 sm:text-base">
                                 Categoría
                             </label>
 
@@ -228,7 +297,8 @@ export default function Gastos() {
                                 name="idCategoria"
                                 value={formulario.idCategoria}
                                 onChange={manejarCambio}
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
+                                disabled={procesando}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 disabled:bg-gray-100"
                             >
                                 <option value="">
                                     Selecciona una categoría
@@ -237,27 +307,24 @@ export default function Gastos() {
                                 {categorias
                                     .filter(
                                         (categoria) =>
-                                            categoria.tipo ===
-                                            'Gasto'
+                                            categoria.tipo === 'Gasto'
                                     )
                                     .map((categoria) => (
                                         <option
-                                            key={
-                                                categoria.idCategoria
-                                            }
-                                            value={
-                                                categoria.idCategoria
-                                            }
+                                            key={categoria.idCategoria}
+                                            value={categoria.idCategoria}
                                         >
                                             {categoria.nombre}
                                         </option>
                                     ))}
                             </select>
+
                         </div>
 
                         {/* MONTO */}
                         <div className="flex flex-col gap-2">
-                            <label className="font-semibold text-gray-700">
+
+                            <label className="text-sm font-semibold text-gray-700 sm:text-base">
                                 Monto
                             </label>
 
@@ -269,13 +336,16 @@ export default function Gastos() {
                                 value={formulario.monto}
                                 onChange={manejarCambio}
                                 placeholder="0.00"
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400"
+                                disabled={procesando}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
+
                         </div>
 
                         {/* FECHA */}
                         <div className="flex flex-col gap-2">
-                            <label className="font-semibold text-gray-700">
+
+                            <label className="text-sm font-semibold text-gray-700 sm:text-base">
                                 Fecha
                             </label>
 
@@ -284,13 +354,16 @@ export default function Gastos() {
                                 name="fecha"
                                 value={formulario.fecha}
                                 onChange={manejarCambio}
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
+                                disabled={procesando}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 disabled:bg-gray-100"
                             />
+
                         </div>
 
                         {/* DESCRIPCIÓN */}
                         <div className="flex flex-col gap-2 md:col-span-2">
-                            <label className="font-semibold text-gray-700">
+
+                            <label className="text-sm font-semibold text-gray-700 sm:text-base">
                                 Descripción
                             </label>
 
@@ -300,8 +373,10 @@ export default function Gastos() {
                                 value={formulario.descripcion}
                                 onChange={manejarCambio}
                                 placeholder="Ej. Compra de alimentos"
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400"
+                                disabled={procesando}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
+
                         </div>
 
                     </div>
@@ -311,18 +386,22 @@ export default function Gastos() {
 
                         <button
                             type="submit"
-                            className="rounded-lg bg-red-600 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-red-700"
+                            disabled={procesando}
+                            className="w-full rounded-lg bg-red-600 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                         >
-                            {editandoId
-                                ? 'Actualizar gasto'
-                                : 'Guardar gasto'}
+                            {procesando
+                                ? 'Guardando...'
+                                : editandoId
+                                    ? 'Actualizar gasto'
+                                    : 'Guardar gasto'}
                         </button>
 
                         {editandoId && (
                             <button
                                 type="button"
-                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600"
+                                className="w-full rounded-lg bg-gray-500 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                                 onClick={limpiarFormulario}
+                                disabled={procesando}
                             >
                                 Cancelar
                             </button>
@@ -331,126 +410,187 @@ export default function Gastos() {
                     </div>
 
                 </form>
+
             </section>
 
             {/* LISTA DE GASTOS */}
-            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+            <section className="mb-6 overflow-hidden rounded-[14px] bg-white shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8">
 
-                <h2 className="mb-5 text-xl font-semibold text-slate-900">
-                    Gastos registrados
-                </h2>
+                <div className="flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
+
+                    <div>
+
+                        <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
+                            Gastos registrados
+                        </h2>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {gastos.length} gasto
+                            {gastos.length !== 1 ? 's' : ''} registrado
+                            {gastos.length !== 1 ? 's' : ''}
+                        </p>
+
+                    </div>
+
+                    <button
+                        onClick={cargarDatos}
+                        disabled={cargando || procesando}
+                        className="w-full rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
+                    >
+                        {cargando
+                            ? 'Cargando...'
+                            : 'Actualizar'}
+                    </button>
+
+                </div>
 
                 {cargando ? (
-                    <p className="text-gray-500">
-                        Cargando gastos...
-                    </p>
+
+                    <div className="px-5 pb-6 sm:px-6">
+                        <Loading mensaje="Cargando gastos..." />
+                    </div>
 
                 ) : gastos.length === 0 ? (
 
-                    <p className="text-gray-500">
-                        No hay gastos registrados.
-                    </p>
+                    <div className="px-5 pb-8 pt-2 text-center sm:px-6">
+
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">
+                            💸
+                        </div>
+
+                        <p className="mt-4 font-medium text-gray-700">
+                            No hay gastos registrados.
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            Los gastos que registres aparecerán aquí.
+                        </p>
+
+                    </div>
 
                 ) : (
 
-                    <div className="overflow-x-auto">
+                    <>
 
-                        <table className="w-full border-collapse">
+                        <div className="w-full overflow-x-auto">
 
-                            <thead>
-                                <tr>
-                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
-                                        Fecha
-                                    </th>
+                            <table className="w-full min-w-[700px] border-collapse">
 
-                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
-                                        Categoría
-                                    </th>
+                                <thead>
 
-                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
-                                        Monto
-                                    </th>
+                                    <tr>
 
-                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
-                                        Descripción
-                                    </th>
+                                        <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                            Fecha
+                                        </th>
 
-                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
-                                        Acciones
-                                    </th>
-                                </tr>
-                            </thead>
+                                        <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                            Categoría
+                                        </th>
 
-                            <tbody>
+                                        <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                            Monto
+                                        </th>
 
-                                {gastos.map((gasto) => (
-                                    <tr
-                                        key={
-                                            gasto.idMovimiento
-                                        }
-                                        className="transition hover:bg-red-50"
-                                    >
+                                        <th className="bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                            Descripción
+                                        </th>
 
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                            {new Date(
-                                                gasto.fecha
-                                            ).toLocaleDateString()}
-                                        </td>
-
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                            {obtenerNombreCategoria(
-                                                gasto.idCategoria
-                                            )}
-                                        </td>
-
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold text-red-600">
-                                            -$
-                                            {Number(
-                                                gasto.monto
-                                            ).toFixed(2)}
-                                        </td>
-
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                            {gasto.descripcion ||
-                                                '-'}
-                                        </td>
-
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                            <div className="flex flex-col gap-2 sm:flex-row">
-
-                                                <button
-                                                    onClick={() =>
-                                                        editarGasto(
-                                                            gasto
-                                                        )
-                                                    }
-                                                    className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
-                                                >
-                                                    Editar
-                                                </button>
-
-                                                <button
-                                                    onClick={() =>
-                                                        eliminarGasto(
-                                                            gasto.idMovimiento
-                                                        )
-                                                    }
-                                                    className="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-800"
-                                                >
-                                                    Eliminar
-                                                </button>
-
-                                            </div>
-                                        </td>
+                                        <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                            Acciones
+                                        </th>
 
                                     </tr>
-                                ))}
 
-                            </tbody>
+                                </thead>
 
-                        </table>
+                                <tbody>
 
-                    </div>
+                                    {gastosPagina.map((gasto) => (
+
+                                        <tr
+                                            key={gasto.idMovimiento}
+                                            className="transition hover:bg-red-50"
+                                        >
+
+                                            <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                                {new Date(
+                                                    gasto.fecha
+                                                ).toLocaleDateString()}
+                                            </td>
+
+                                            <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                                {obtenerNombreCategoria(
+                                                    gasto.idCategoria
+                                                )}
+                                            </td>
+
+                                            <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold text-red-600">
+                                                -$
+                                                {Number(
+                                                    gasto.monto
+                                                ).toFixed(2)}
+                                            </td>
+
+                                            <td className="max-w-[250px] break-words border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                                {gasto.descripcion || '-'}
+                                            </td>
+
+                                            <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
+
+                                                <div className="flex flex-col gap-2 sm:flex-row">
+
+                                                    <button
+                                                        onClick={() =>
+                                                            editarGasto(gasto)
+                                                        }
+                                                        disabled={procesando}
+                                                        className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        Editar
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() =>
+                                                            eliminarGasto(
+                                                                gasto.idMovimiento
+                                                            )
+                                                        }
+                                                        disabled={procesando}
+                                                        className="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        {procesando
+                                                            ? 'Procesando...'
+                                                            : 'Eliminar'}
+                                                    </button>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    ))}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        {/* PAGINACIÓN */}
+                        <div className="px-5 pb-6 sm:px-6">
+
+                            <Pagination
+                                paginaActual={paginaActual}
+                                totalPaginas={totalPaginas}
+                                cambiarPagina={cambiarPagina}
+                            />
+
+                        </div>
+
+                    </>
+
                 )}
 
             </section>

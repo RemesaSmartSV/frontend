@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { categoriasApi } from '../services/api'
+import Notification from '../components/Notification'
+import Loading from '../components/Loading'
 
 export default function Categorias() {
     const [categorias, setCategorias] = useState([])
@@ -9,6 +11,8 @@ export default function Categorias() {
 
     const [editandoId, setEditandoId] = useState(null)
     const [cargando, setCargando] = useState(false)
+    const [procesando, setProcesando] = useState(false)
+
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
 
@@ -41,6 +45,7 @@ export default function Categorias() {
         try {
             setError('')
             setMensaje('')
+            setProcesando(true)
 
             const categoria = {
                 nombre: nombre.trim(),
@@ -49,17 +54,28 @@ export default function Categorias() {
             }
 
             if (editandoId) {
-                await categoriasApi.actualizar(editandoId, categoria)
-                setMensaje('Categoría actualizada correctamente.')
+                await categoriasApi.actualizar(
+                    editandoId,
+                    categoria
+                )
+
+                setMensaje(
+                    'Categoría actualizada correctamente.'
+                )
             } else {
                 await categoriasApi.crear(categoria)
-                setMensaje('Categoría creada correctamente.')
+
+                setMensaje(
+                    'Categoría creada correctamente.'
+                )
             }
 
             limpiarFormulario()
             await cargarCategorias()
         } catch (err) {
             setError(err.message)
+        } finally {
+            setProcesando(false)
         }
     }
 
@@ -68,6 +84,7 @@ export default function Categorias() {
         setNombre(categoria.nombre)
         setTipo(categoria.tipo)
         setIcono(categoria.icono || '')
+
         setMensaje('')
         setError('')
 
@@ -89,13 +106,19 @@ export default function Categorias() {
         try {
             setError('')
             setMensaje('')
+            setProcesando(true)
 
             await categoriasApi.eliminar(id)
 
-            setMensaje('Categoría eliminada correctamente.')
+            setMensaje(
+                'Categoría eliminada correctamente.'
+            )
+
             await cargarCategorias()
         } catch (err) {
             setError(err.message)
+        } finally {
+            setProcesando(false)
         }
     }
 
@@ -107,29 +130,36 @@ export default function Categorias() {
     }
 
     return (
-        <main className="mx-auto max-w-5xl p-4 font-sans text-slate-800 sm:p-8">
+        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-8">
 
-            <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
-                Categorías
-            </h1>
+            {/* NOTIFICACIONES */}
+            <Notification
+                tipo="success"
+                mensaje={mensaje}
+                onClose={() => setMensaje('')}
+            />
 
-            <p className="mb-8 text-gray-500">
-                Administra las categorías de tus ingresos y gastos.
-            </p>
+            <Notification
+                tipo="error"
+                mensaje={error}
+                onClose={() => setError('')}
+            />
 
-            {error && (
-                <div className="mb-5 rounded-lg border border-red-200 bg-red-100 px-4 py-3.5 text-red-800">
-                    {error}
-                </div>
-            )}
+            {/* ENCABEZADO */}
+            <div className="mb-6 sm:mb-8">
 
-            {mensaje && (
-                <div className="mb-5 rounded-lg border border-green-200 bg-green-100 px-4 py-3.5 text-green-800">
-                    {mensaje}
-                </div>
-            )}
+                <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+                    Categorías
+                </h1>
 
-            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+                <p className="text-sm leading-6 text-gray-500 sm:text-base">
+                    Administra las categorías de tus ingresos y gastos.
+                </p>
+
+            </div>
+
+            {/* FORMULARIO */}
+            <section className="mb-6 rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
 
                 <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
@@ -139,9 +169,11 @@ export default function Categorias() {
 
                 <form onSubmit={guardarCategoria}>
 
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
 
-                        <div className="flex flex-col gap-2">
+                        {/* NOMBRE */}
+                        <div className="flex min-w-0 flex-col gap-2">
+
                             <label className="font-semibold text-gray-700">
                                 Nombre
                             </label>
@@ -153,11 +185,15 @@ export default function Categorias() {
                                     setNombre(e.target.value)
                                 }
                                 placeholder="Ej. Alimentación"
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                                disabled={procesando}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
+
                         </div>
 
-                        <div className="flex flex-col gap-2">
+                        {/* TIPO */}
+                        <div className="flex min-w-0 flex-col gap-2">
+
                             <label className="font-semibold text-gray-700">
                                 Tipo
                             </label>
@@ -167,7 +203,8 @@ export default function Categorias() {
                                 onChange={(e) =>
                                     setTipo(e.target.value)
                                 }
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                                disabled={procesando}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             >
                                 <option value="Gasto">
                                     Gasto
@@ -177,9 +214,12 @@ export default function Categorias() {
                                     Ingreso
                                 </option>
                             </select>
+
                         </div>
 
-                        <div className="flex flex-col gap-2 md:col-span-2">
+                        {/* ICONO */}
+                        <div className="flex min-w-0 flex-col gap-2 md:col-span-2">
+
                             <label className="font-semibold text-gray-700">
                                 Ícono
                             </label>
@@ -191,28 +231,35 @@ export default function Categorias() {
                                     setIcono(e.target.value)
                                 }
                                 placeholder="Ej. comida"
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                                disabled={procesando}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
+
                         </div>
 
                     </div>
 
+                    {/* BOTONES */}
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
 
                         <button
                             type="submit"
-                            className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700"
+                            disabled={procesando}
+                            className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
-                            {editandoId
-                                ? 'Actualizar'
-                                : 'Crear categoría'}
+                            {procesando
+                                ? 'Guardando...'
+                                : editandoId
+                                    ? 'Actualizar'
+                                    : 'Crear categoría'}
                         </button>
 
                         {editandoId && (
                             <button
                                 type="button"
                                 onClick={limpiarFormulario}
-                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600"
+                                disabled={procesando}
+                                className="w-full rounded-lg bg-gray-500 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                             >
                                 Cancelar
                             </button>
@@ -221,89 +268,111 @@ export default function Categorias() {
                     </div>
 
                 </form>
+
             </section>
 
-            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+            {/* CATEGORÍAS REGISTRADAS */}
+            <section className="mb-8 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
 
                 <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
 
-                    <h2 className="text-xl font-semibold text-slate-900">
-                        Categorías registradas
-                    </h2>
+                    <div>
+                        <h2 className="text-xl font-semibold text-slate-900">
+                            Categorías registradas
+                        </h2>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            Lista de categorías disponibles.
+                        </p>
+                    </div>
 
                     <button
                         onClick={cargarCategorias}
-                        className="rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800"
+                        disabled={cargando || procesando}
+                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
-                        Actualizar
+                        {cargando
+                            ? 'Cargando...'
+                            : 'Actualizar'}
                     </button>
 
                 </div>
 
                 {cargando ? (
-                    <p>Cargando categorías...</p>
+
+                    <Loading mensaje="Cargando categorías..." />
 
                 ) : categorias.length === 0 ? (
 
-                    <p className="text-gray-500">
+                    <p className="p-4 text-sm text-gray-500 sm:p-0">
                         No hay categorías registradas.
                     </p>
 
                 ) : (
 
-                    <div className="overflow-x-auto">
+                    <div className="w-full overflow-x-auto">
 
-                        <table className="w-full border-collapse">
+                        <table className="w-full min-w-[650px] border-collapse">
 
                             <thead>
                                 <tr>
-                                    <th className="bg-blue-50 px-3.5 py-3 text-left font-bold text-gray-700">
+
+                                    <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
                                         Nombre
                                     </th>
 
-                                    <th className="bg-blue-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                    <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
                                         Tipo
                                     </th>
 
-                                    <th className="bg-blue-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                    <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
                                         Ícono
                                     </th>
 
-                                    <th className="bg-blue-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                    <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
                                         Acciones
                                     </th>
+
                                 </tr>
                             </thead>
 
                             <tbody>
 
                                 {categorias.map((categoria) => (
+
                                     <tr
                                         key={categoria.idCategoria}
                                         className="transition hover:bg-gray-50"
                                     >
 
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                        {/* NOMBRE */}
+                                        <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
                                             {categoria.nombre}
                                         </td>
 
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold">
+                                        {/* TIPO */}
+                                        <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
+
                                             <span
                                                 className={
                                                     categoria.tipo === 'Ingreso'
-                                                        ? 'inline-block rounded-full bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700'
-                                                        : 'inline-block rounded-full bg-red-100 px-2.5 py-1 text-sm font-bold text-red-600'
+                                                        ? 'inline-block whitespace-nowrap rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700 sm:text-sm'
+                                                        : 'inline-block whitespace-nowrap rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-600 sm:text-sm'
                                                 }
                                             >
                                                 {categoria.tipo}
                                             </span>
+
                                         </td>
 
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                        {/* ICONO */}
+                                        <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
                                             {categoria.icono || '-'}
                                         </td>
 
-                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                        {/* ACCIONES */}
+                                        <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
+
                                             <div className="flex flex-col gap-2 sm:flex-row">
 
                                                 <button
@@ -312,7 +381,8 @@ export default function Categorias() {
                                                             categoria
                                                         )
                                                     }
-                                                    className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
+                                                    disabled={procesando}
+                                                    className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
                                                     Editar
                                                 </button>
@@ -323,15 +393,20 @@ export default function Categorias() {
                                                             categoria.idCategoria
                                                         )
                                                     }
-                                                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                                                    disabled={procesando}
+                                                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
-                                                    Eliminar
+                                                    {procesando
+                                                        ? 'Procesando...'
+                                                        : 'Eliminar'}
                                                 </button>
 
                                             </div>
+
                                         </td>
 
                                     </tr>
+
                                 ))}
 
                             </tbody>
@@ -339,6 +414,7 @@ export default function Categorias() {
                         </table>
 
                     </div>
+
                 )}
 
             </section>

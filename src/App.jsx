@@ -15,6 +15,7 @@ import Remesas from './pages/Remesas'
 import Ingresos from './pages/Ingresos'
 import Gastos from './pages/Gastos'
 import Presupuestos from './pages/Presupuestos'
+import EducacionFinanciera from './pages/EducacionFinanciera'
 
 import Layout from './components/Layout'
 
@@ -35,16 +36,20 @@ export default function App() {
     const [mostrarRegistro, setMostrarRegistro] =
         useState(false)
 
+
     function manejarLogin(datosUsuario) {
         setUsuario(datosUsuario)
     }
 
+
     function cerrarSesion() {
         authApi.cerrarSesion()
         setUsuario(null)
+        setMostrarRegistro(false)
     }
 
-    // Si no hay usuario, mostrar Login/Register
+
+    // Si no hay usuario, mostrar Login o Register
 
     if (!usuario) {
 
@@ -68,7 +73,9 @@ export default function App() {
         )
     }
 
+
     // Usuario autenticado
+
     return (
         <BrowserRouter>
 
@@ -118,13 +125,15 @@ export default function App() {
                         element={<Presupuestos />}
                     />
 
+                    <Route
+                        path="/educacion-financiera"
+                        element={<EducacionFinanciera />}
+                    />
+
                 </Route>
 
             </Routes>
 
         </BrowserRouter>
-
-            )
-    }
-
-                
+    )
+}
