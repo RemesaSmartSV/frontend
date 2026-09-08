@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { categoriasApi, movimientosApi } from '../services/api'
-import './Gastos.css'
 
 export default function Gastos() {
     const [gastos, setGastos] = useState([])
@@ -167,13 +166,17 @@ export default function Gastos() {
     }
 
     return (
-        <main className="gastos-container">
+        <main className="mx-auto max-w-5xl p-4 font-sans text-slate-800 sm:p-8">
 
-            <div className="gastos-header">
+            {/* ENCABEZADO */}
+            <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+
                 <div>
-                    <h1>Gastos</h1>
+                    <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+                        Gastos
+                    </h1>
 
-                    <p>
+                    <p className="text-gray-500">
                         Registra y administra los gastos
                         realizados por tu hogar.
                     </p>
@@ -181,27 +184,31 @@ export default function Gastos() {
 
                 <button
                     onClick={cargarDatos}
-                    className="btn-recargar"
+                    className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 sm:w-auto"
                 >
                     Actualizar
                 </button>
+
             </div>
 
+            {/* ERROR */}
             {error && (
-                <div className="mensaje-error">
+                <div className="mb-5 rounded-lg border border-red-200 bg-red-100 px-4 py-3.5 text-red-800">
                     {error}
                 </div>
             )}
 
+            {/* MENSAJE DE ÉXITO */}
             {mensaje && (
-                <div className="mensaje-exito">
+                <div className="mb-5 rounded-lg border border-green-200 bg-green-100 px-4 py-3.5 text-green-800">
                     {mensaje}
                 </div>
             )}
 
-            <section className="formulario-card">
+            {/* FORMULARIO */}
+            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
 
-                <h2>
+                <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
                         ? 'Editar gasto'
                         : 'Registrar gasto'}
@@ -209,15 +216,19 @@ export default function Gastos() {
 
                 <form onSubmit={guardarGasto}>
 
-                    <div className="form-grid">
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-                        <div className="campo">
-                            <label>Categoría</label>
+                        {/* CATEGORÍA */}
+                        <div className="flex flex-col gap-2">
+                            <label className="font-semibold text-gray-700">
+                                Categoría
+                            </label>
 
                             <select
                                 name="idCategoria"
                                 value={formulario.idCategoria}
                                 onChange={manejarCambio}
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
                             >
                                 <option value="">
                                     Selecciona una categoría
@@ -244,8 +255,11 @@ export default function Gastos() {
                             </select>
                         </div>
 
-                        <div className="campo">
-                            <label>Monto</label>
+                        {/* MONTO */}
+                        <div className="flex flex-col gap-2">
+                            <label className="font-semibold text-gray-700">
+                                Monto
+                            </label>
 
                             <input
                                 type="number"
@@ -255,22 +269,30 @@ export default function Gastos() {
                                 value={formulario.monto}
                                 onChange={manejarCambio}
                                 placeholder="0.00"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400"
                             />
                         </div>
 
-                        <div className="campo">
-                            <label>Fecha</label>
+                        {/* FECHA */}
+                        <div className="flex flex-col gap-2">
+                            <label className="font-semibold text-gray-700">
+                                Fecha
+                            </label>
 
                             <input
                                 type="date"
                                 name="fecha"
                                 value={formulario.fecha}
                                 onChange={manejarCambio}
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
                             />
                         </div>
 
-                        <div className="campo campo-completo">
-                            <label>Descripción</label>
+                        {/* DESCRIPCIÓN */}
+                        <div className="flex flex-col gap-2 md:col-span-2">
+                            <label className="font-semibold text-gray-700">
+                                Descripción
+                            </label>
 
                             <input
                                 type="text"
@@ -278,16 +300,18 @@ export default function Gastos() {
                                 value={formulario.descripcion}
                                 onChange={manejarCambio}
                                 placeholder="Ej. Compra de alimentos"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400"
                             />
                         </div>
 
                     </div>
 
-                    <div className="botones-formulario">
+                    {/* BOTONES */}
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
 
                         <button
                             type="submit"
-                            className="btn-guardar"
+                            className="rounded-lg bg-red-600 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-red-700"
                         >
                             {editandoId
                                 ? 'Actualizar gasto'
@@ -297,7 +321,7 @@ export default function Gastos() {
                         {editandoId && (
                             <button
                                 type="button"
-                                className="btn-cancelar"
+                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600"
                                 onClick={limpiarFormulario}
                             >
                                 Cancelar
@@ -307,97 +331,119 @@ export default function Gastos() {
                     </div>
 
                 </form>
-
             </section>
 
-            <section className="lista-card">
+            {/* LISTA DE GASTOS */}
+            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
 
-                <h2>Gastos registrados</h2>
+                <h2 className="mb-5 text-xl font-semibold text-slate-900">
+                    Gastos registrados
+                </h2>
 
                 {cargando ? (
-                    <p>Cargando gastos...</p>
+                    <p className="text-gray-500">
+                        Cargando gastos...
+                    </p>
+
                 ) : gastos.length === 0 ? (
-                    <p className="sin-datos">
+
+                    <p className="text-gray-500">
                         No hay gastos registrados.
                     </p>
+
                 ) : (
 
-                    <div className="tabla-contenedor">
+                    <div className="overflow-x-auto">
 
-                        <table>
+                        <table className="w-full border-collapse">
 
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
-                                    <th>Categoría</th>
-                                    <th>Monto</th>
-                                    <th>Descripción</th>
-                                    <th>Acciones</th>
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Fecha
+                                    </th>
+
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Categoría
+                                    </th>
+
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Monto
+                                    </th>
+
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Descripción
+                                    </th>
+
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Acciones
+                                    </th>
                                 </tr>
                             </thead>
 
                             <tbody>
 
                                 {gastos.map((gasto) => (
-
                                     <tr
                                         key={
                                             gasto.idMovimiento
                                         }
+                                        className="transition hover:bg-red-50"
                                     >
 
-                                        <td>
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
                                             {new Date(
                                                 gasto.fecha
                                             ).toLocaleDateString()}
                                         </td>
 
-                                        <td>
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
                                             {obtenerNombreCategoria(
                                                 gasto.idCategoria
                                             )}
                                         </td>
 
-                                        <td className="monto-gasto">
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold text-red-600">
                                             -$
                                             {Number(
                                                 gasto.monto
                                             ).toFixed(2)}
                                         </td>
 
-                                        <td>
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
                                             {gasto.descripcion ||
                                                 '-'}
                                         </td>
 
-                                        <td className="acciones">
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                            <div className="flex flex-col gap-2 sm:flex-row">
 
-                                            <button
-                                                onClick={() =>
-                                                    editarGasto(
-                                                        gasto
-                                                    )
-                                                }
-                                                className="btn-editar"
-                                            >
-                                                Editar
-                                            </button>
+                                                <button
+                                                    onClick={() =>
+                                                        editarGasto(
+                                                            gasto
+                                                        )
+                                                    }
+                                                    className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
+                                                >
+                                                    Editar
+                                                </button>
 
-                                            <button
-                                                onClick={() =>
-                                                    eliminarGasto(
-                                                        gasto.idMovimiento
-                                                    )
-                                                }
-                                                className="btn-eliminar"
-                                            >
-                                                Eliminar
-                                            </button>
+                                                <button
+                                                    onClick={() =>
+                                                        eliminarGasto(
+                                                            gasto.idMovimiento
+                                                        )
+                                                    }
+                                                    className="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-800"
+                                                >
+                                                    Eliminar
+                                                </button>
 
+                                            </div>
                                         </td>
 
                                     </tr>
-
                                 ))}
 
                             </tbody>
@@ -405,7 +451,6 @@ export default function Gastos() {
                         </table>
 
                     </div>
-
                 )}
 
             </section>

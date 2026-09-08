@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { categoriasApi, movimientosApi } from '../services/api'
-import './Ingresos.css'
 
 export default function Ingresos() {
     const [ingresos, setIngresos] = useState([])
@@ -171,12 +170,17 @@ export default function Ingresos() {
     }
 
     return (
-        <main className="ingresos-container">
-            <div className="ingresos-header">
-                <div>
-                    <h1>Ingresos</h1>
+        <main className="mx-auto max-w-5xl p-4 font-sans text-slate-800 sm:p-8">
 
-                    <p>
+            {/* ENCABEZADO */}
+            <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+
+                <div>
+                    <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+                        Ingresos
+                    </h1>
+
+                    <p className="text-gray-500">
                         Registra y administra los ingresos
                         económicos de tu hogar.
                     </p>
@@ -184,41 +188,51 @@ export default function Ingresos() {
 
                 <button
                     onClick={cargarDatos}
-                    className="btn-recargar"
+                    className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 sm:w-auto"
                 >
                     Actualizar
                 </button>
+
             </div>
 
+            {/* MENSAJE DE ERROR */}
             {error && (
-                <div className="mensaje-error">
+                <div className="mb-5 rounded-lg border border-red-200 bg-red-100 px-4 py-3.5 text-red-800">
                     {error}
                 </div>
             )}
 
+            {/* MENSAJE DE ÉXITO */}
             {mensaje && (
-                <div className="mensaje-exito">
+                <div className="mb-5 rounded-lg border border-green-200 bg-green-100 px-4 py-3.5 text-green-800">
                     {mensaje}
                 </div>
             )}
 
-            <section className="formulario-card">
-                <h2>
+            {/* FORMULARIO */}
+            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+
+                <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
                         ? 'Editar ingreso'
                         : 'Registrar ingreso'}
                 </h2>
 
                 <form onSubmit={guardarIngreso}>
-                    <div className="form-grid">
 
-                        <div className="campo">
-                            <label>Categoría</label>
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                        {/* CATEGORÍA */}
+                        <div className="flex flex-col gap-2">
+                            <label className="font-semibold text-gray-700">
+                                Categoría
+                            </label>
 
                             <select
                                 name="idCategoria"
                                 value={formulario.idCategoria}
                                 onChange={manejarCambio}
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
                             >
                                 <option value="">
                                     Selecciona una categoría
@@ -245,8 +259,11 @@ export default function Ingresos() {
                             </select>
                         </div>
 
-                        <div className="campo">
-                            <label>Monto</label>
+                        {/* MONTO */}
+                        <div className="flex flex-col gap-2">
+                            <label className="font-semibold text-gray-700">
+                                Monto
+                            </label>
 
                             <input
                                 type="number"
@@ -256,22 +273,30 @@ export default function Ingresos() {
                                 value={formulario.monto}
                                 onChange={manejarCambio}
                                 placeholder="0.00"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
                             />
                         </div>
 
-                        <div className="campo">
-                            <label>Fecha</label>
+                        {/* FECHA */}
+                        <div className="flex flex-col gap-2">
+                            <label className="font-semibold text-gray-700">
+                                Fecha
+                            </label>
 
                             <input
                                 type="date"
                                 name="fecha"
                                 value={formulario.fecha}
                                 onChange={manejarCambio}
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
                             />
                         </div>
 
-                        <div className="campo campo-completo">
-                            <label>Descripción</label>
+                        {/* DESCRIPCIÓN */}
+                        <div className="flex flex-col gap-2 md:col-span-2">
+                            <label className="font-semibold text-gray-700">
+                                Descripción
+                            </label>
 
                             <input
                                 type="text"
@@ -279,15 +304,18 @@ export default function Ingresos() {
                                 value={formulario.descripcion}
                                 onChange={manejarCambio}
                                 placeholder="Ej. Salario mensual"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
                             />
                         </div>
 
                     </div>
 
-                    <div className="botones-formulario">
+                    {/* BOTONES */}
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+
                         <button
                             type="submit"
-                            className="btn-guardar"
+                            className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700"
                         >
                             {editandoId
                                 ? 'Actualizar ingreso'
@@ -297,99 +325,140 @@ export default function Ingresos() {
                         {editandoId && (
                             <button
                                 type="button"
-                                className="btn-cancelar"
+                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600"
                                 onClick={limpiarFormulario}
                             >
                                 Cancelar
                             </button>
                         )}
+
                     </div>
+
                 </form>
             </section>
 
-            <section className="lista-card">
-                <h2>Ingresos registrados</h2>
+            {/* LISTA */}
+            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+
+                <h2 className="mb-5 text-xl font-semibold text-slate-900">
+                    Ingresos registrados
+                </h2>
 
                 {cargando ? (
-                    <p>Cargando ingresos...</p>
+                    <p className="text-gray-500">
+                        Cargando ingresos...
+                    </p>
+
                 ) : ingresos.length === 0 ? (
-                    <p className="sin-datos">
+
+                    <p className="text-gray-500">
                         No hay ingresos registrados.
                     </p>
+
                 ) : (
-                    <div className="tabla-contenedor">
-                        <table>
+
+                    <div className="overflow-x-auto">
+
+                        <table className="w-full border-collapse">
+
                             <thead>
                                 <tr>
-                                    <th>Fecha</th>
-                                    <th>Categoría</th>
-                                    <th>Monto</th>
-                                    <th>Descripción</th>
-                                    <th>Acciones</th>
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Fecha
+                                    </th>
+
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Categoría
+                                    </th>
+
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Monto
+                                    </th>
+
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Descripción
+                                    </th>
+
+                                    <th className="bg-gray-50 px-3.5 py-3 text-left font-bold text-gray-700">
+                                        Acciones
+                                    </th>
                                 </tr>
                             </thead>
 
                             <tbody>
+
                                 {ingresos.map((ingreso) => (
                                     <tr
                                         key={
                                             ingreso.idMovimiento
                                         }
+                                        className="transition hover:bg-gray-50"
                                     >
-                                        <td>
+
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
                                             {new Date(
                                                 ingreso.fecha
                                             ).toLocaleDateString()}
                                         </td>
 
-                                        <td>
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
                                             {obtenerNombreCategoria(
                                                 ingreso.idCategoria
                                             )}
                                         </td>
 
-                                        <td className="monto-ingreso">
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold text-green-600">
                                             +$
                                             {Number(
                                                 ingreso.monto
                                             ).toFixed(2)}
                                         </td>
 
-                                        <td>
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
                                             {ingreso.descripcion ||
                                                 '-'}
                                         </td>
 
-                                        <td className="acciones">
-                                            <button
-                                                onClick={() =>
-                                                    editarIngreso(
-                                                        ingreso
-                                                    )
-                                                }
-                                                className="btn-editar"
-                                            >
-                                                Editar
-                                            </button>
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                            <div className="flex flex-col gap-2 sm:flex-row">
 
-                                            <button
-                                                onClick={() =>
-                                                    eliminarIngreso(
-                                                        ingreso.idMovimiento
-                                                    )
-                                                }
-                                                className="btn-eliminar"
-                                            >
-                                                Eliminar
-                                            </button>
+                                                <button
+                                                    onClick={() =>
+                                                        editarIngreso(
+                                                            ingreso
+                                                        )
+                                                    }
+                                                    className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
+                                                >
+                                                    Editar
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        eliminarIngreso(
+                                                            ingreso.idMovimiento
+                                                        )
+                                                    }
+                                                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                                                >
+                                                    Eliminar
+                                                </button>
+
+                                            </div>
                                         </td>
+
                                     </tr>
                                 ))}
+
                             </tbody>
+
                         </table>
+
                     </div>
                 )}
+
             </section>
+
         </main>
     )
 }
