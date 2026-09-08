@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { authApi } from '../services/api'
+import Notification from '../components/Notification'
 
 export default function Register({ volverLogin }) {
     const [formulario, setFormulario] = useState({
@@ -27,10 +28,36 @@ export default function Register({ volverLogin }) {
 
         setMensaje('')
         setError('')
-        setCargando(true)
+
+        if (
+            !formulario.nombre.trim() ||
+            !formulario.correo.trim() ||
+            !formulario.contrasena.trim() ||
+            !formulario.nombreFamiliar.trim()
+        ) {
+            setError('Completa todos los campos.')
+            return
+        }
+
+        if (formulario.contrasena.length < 6) {
+            setError(
+                'La contraseña debe tener al menos 6 caracteres.'
+            )
+            return
+        }
 
         try {
-            const respuesta = await authApi.register(formulario)
+            setCargando(true)
+
+            const datosRegistro = {
+                nombre: formulario.nombre.trim(),
+                correo: formulario.correo.trim(),
+                contrasena: formulario.contrasena,
+                nombreFamiliar: formulario.nombreFamiliar.trim(),
+            }
+
+            const respuesta =
+                await authApi.register(datosRegistro)
 
             setMensaje(
                 `Cuenta creada correctamente. Bienvenido, ${respuesta.nombre}`
@@ -43,145 +70,190 @@ export default function Register({ volverLogin }) {
                 nombreFamiliar: '',
             })
         } catch (err) {
-            setError(err.message)
+            setError(
+                err.message ||
+                'No se pudo crear la cuenta. Inténtalo nuevamente.'
+            )
         } finally {
             setCargando(false)
         }
     }
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-100 p-4 font-sans sm:p-8">
+        <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 p-3 font-sans sm:p-6 lg:p-8">
 
-            <section className="w-full max-w-[450px] rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)] sm:p-10">
+            {/* NOTIFICACIÓN DE ÉXITO */}
+            <Notification
+                tipo="success"
+                mensaje={mensaje}
+                onClose={() => setMensaje('')}
+            />
 
-                {/* Encabezado */}
-                <div className="mb-8 text-center">
+            {/* NOTIFICACIÓN DE ERROR */}
+            <Notification
+                tipo="error"
+                mensaje={error}
+                onClose={() => setError('')}
+            />
 
-                    <h1 className="mb-6 text-3xl font-normal text-blue-600 sm:text-[2rem]">
+            <section className="w-full max-w-[450px] overflow-hidden rounded-2xl bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.1)] sm:p-8 md:p-10">
+
+                {/* ENCABEZADO */}
+                <div className="mb-7 text-center sm:mb-8">
+
+                    <h1 className="mb-5 text-2xl font-normal text-blue-600 sm:mb-6 sm:text-[2rem]">
                         RemesaSmartSV
                     </h1>
 
-                    <h2 className="mb-2 text-[1.6rem] font-normal text-gray-900">
+                    <h2 className="mb-2 text-2xl font-normal text-gray-900 sm:text-[1.6rem]">
                         Crear cuenta
                     </h2>
 
-                    <p className="leading-relaxed text-gray-500">
+                    <p className="text-sm leading-relaxed text-gray-500 sm:text-base">
                         Regístrate para comenzar a administrar
                         las finanzas de tu hogar.
                     </p>
 
                 </div>
 
-                {/* Mensaje de éxito */}
-                {mensaje && (
-                    <div className="mb-5 rounded-lg bg-green-100 p-3 text-[0.95rem] text-green-800">
-                        {mensaje}
-                    </div>
-                )}
+                {/* FORMULARIO */}
+                <form
+                    onSubmit={registrar}
+                    className="flex min-w-0 flex-col"
+                >
 
-                {/* Mensaje de error */}
-                {error && (
-                    <div className="mb-5 rounded-lg bg-red-100 p-3 text-[0.95rem] text-red-800">
-                        {error}
-                    </div>
-                )}
+                    {/* NOMBRE */}
+                    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
 
-                {/* Formulario */}
-                <form onSubmit={registrar}>
-
-                    {/* Nombre */}
-                    <div className="mb-5 flex flex-col gap-2">
-                        <label className="font-semibold text-gray-700">
+                        <label
+                            htmlFor="nombre"
+                            className="text-sm font-semibold text-gray-700 sm:text-base"
+                        >
                             Nombre
                         </label>
 
                         <input
+                            id="nombre"
                             type="text"
                             name="nombre"
                             value={formulario.nombre}
                             onChange={manejarCambio}
                             placeholder="Ingresa tu nombre"
+                            autoComplete="name"
                             required
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                            disabled={cargando}
+                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
+
                     </div>
 
-                    {/* Correo */}
-                    <div className="mb-5 flex flex-col gap-2">
-                        <label className="font-semibold text-gray-700">
+                    {/* CORREO */}
+                    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
+
+                        <label
+                            htmlFor="correo"
+                            className="text-sm font-semibold text-gray-700 sm:text-base"
+                        >
                             Correo
                         </label>
 
                         <input
+                            id="correo"
                             type="email"
                             name="correo"
                             value={formulario.correo}
                             onChange={manejarCambio}
                             placeholder="correo@ejemplo.com"
+                            autoComplete="email"
                             required
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                            disabled={cargando}
+                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
+
                     </div>
 
-                    {/* Contraseña */}
-                    <div className="mb-5 flex flex-col gap-2">
-                        <label className="font-semibold text-gray-700">
+                    {/* CONTRASEÑA */}
+                    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
+
+                        <label
+                            htmlFor="contrasena"
+                            className="text-sm font-semibold text-gray-700 sm:text-base"
+                        >
                             Contraseña
                         </label>
 
                         <input
+                            id="contrasena"
                             type="password"
                             name="contrasena"
                             value={formulario.contrasena}
                             onChange={manejarCambio}
                             placeholder="Mínimo 6 caracteres"
+                            autoComplete="new-password"
                             minLength={6}
                             required
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                            disabled={cargando}
+                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
+
                     </div>
 
-                    {/* Nombre familiar */}
-                    <div className="mb-5 flex flex-col gap-2">
-                        <label className="font-semibold text-gray-700">
+                    {/* NOMBRE FAMILIAR */}
+                    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
+
+                        <label
+                            htmlFor="nombreFamiliar"
+                            className="text-sm font-semibold text-gray-700 sm:text-base"
+                        >
                             Nombre familiar
                         </label>
 
                         <input
+                            id="nombreFamiliar"
                             type="text"
                             name="nombreFamiliar"
                             value={formulario.nombreFamiliar}
                             onChange={manejarCambio}
                             placeholder="Ej. Familia Duarte"
+                            autoComplete="organization"
                             required
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                            disabled={cargando}
+                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
+
                     </div>
 
-                    {/* Botón */}
+                    {/* BOTÓN */}
                     <button
                         type="submit"
                         disabled={cargando}
-                        className="mt-2 w-full rounded-lg bg-blue-600 px-3 py-3.5 text-base font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-blue-300"
+                        className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-3.5 text-base font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-blue-300 disabled:active:scale-100"
                     >
+
+                        {cargando && (
+                            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+                        )}
+
                         {cargando
                             ? 'Registrando...'
                             : 'Crear cuenta'}
+
                     </button>
 
                 </form>
 
-                {/* Volver al Login */}
-                <div className="mt-7 border-t border-gray-200 pt-6 text-center">
+                {/* VOLVER AL LOGIN */}
+                <div className="mt-6 border-t border-gray-200 pt-5 text-center sm:mt-7 sm:pt-6">
 
-                    <p className="mb-2.5 text-gray-500">
+                    <p className="mb-2.5 text-sm text-gray-500 sm:text-base">
                         ¿Ya tienes una cuenta?
                     </p>
 
                     <button
                         type="button"
                         onClick={volverLogin}
-                        className="bg-transparent text-base font-semibold text-blue-600 hover:underline"
+                        disabled={cargando}
+                        className="bg-transparent text-base font-semibold text-blue-600 transition hover:text-blue-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         Iniciar sesión
                     </button>

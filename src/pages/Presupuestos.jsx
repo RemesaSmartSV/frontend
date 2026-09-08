@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { categoriasApi, presupuestosApi } from '../services/api'
+import Notification from '../components/Notification'
+import Loading from '../components/Loading'
+import Pagination from '../components/Pagination'
 
 export default function Presupuestos() {
     const [presupuestos, setPresupuestos] = useState([])
@@ -13,7 +16,14 @@ export default function Presupuestos() {
 
     const [editando, setEditando] = useState(null)
     const [cargando, setCargando] = useState(true)
+    const [procesando, setProcesando] = useState(false)
+
     const [error, setError] = useState('')
+    const [mensaje, setMensaje] = useState('')
+
+    // PAGINACIÓN
+    const [paginaActual, setPaginaActual] = useState(1)
+    const registrosPorPagina = 5
 
     useEffect(() => {
         cargarDatos()
@@ -24,15 +34,19 @@ export default function Presupuestos() {
             setCargando(true)
             setError('')
 
-            const [presupuestosData, categoriasData] = await Promise.all([
-                presupuestosApi.listar(),
-                categoriasApi.listar(),
-            ])
+            const [presupuestosData, categoriasData] =
+                await Promise.all([
+                    presupuestosApi.listar(),
+                    categoriasApi.listar(),
+                ])
 
             setPresupuestos(presupuestosData)
             setCategorias(categoriasData)
-        } catch (error) {
-            setError(error.message)
+
+            // Regresar a la primera página al actualizar
+            setPaginaActual(1)
+        } catch (err) {
+            setError(err.message)
         } finally {
             setCargando(false)
         }
@@ -59,8 +73,15 @@ export default function Presupuestos() {
             return
         }
 
+        if (Number(formulario.montoLimite) <= 0) {
+            setError('El monto límite debe ser mayor que 0.')
+            return
+        }
+
         try {
             setError('')
+            setMensaje('')
+            setProcesando(true)
 
             const datos = {
                 idCategoria: Number(formulario.idCategoria),
@@ -69,15 +90,28 @@ export default function Presupuestos() {
             }
 
             if (editando) {
-                await presupuestosApi.actualizar(editando, datos)
+                await presupuestosApi.actualizar(
+                    editando,
+                    datos
+                )
+
+                setMensaje(
+                    'Presupuesto actualizado correctamente.'
+                )
             } else {
                 await presupuestosApi.crear(datos)
+
+                setMensaje(
+                    'Presupuesto creado correctamente.'
+                )
             }
 
             limpiarFormulario()
             await cargarDatos()
-        } catch (error) {
-            setError(error.message)
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setProcesando(false)
         }
     }
 
@@ -91,6 +125,9 @@ export default function Presupuestos() {
                 ? presupuesto.mesAnio.substring(0, 7)
                 : '',
         })
+
+        setError('')
+        setMensaje('')
 
         window.scrollTo({
             top: 0,
@@ -109,11 +146,20 @@ export default function Presupuestos() {
 
         try {
             setError('')
+            setMensaje('')
+            setProcesando(true)
 
             await presupuestosApi.eliminar(id)
+
+            setMensaje(
+                'Presupuesto eliminado correctamente.'
+            )
+
             await cargarDatos()
-        } catch (error) {
-            setError(error.message)
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setProcesando(false)
         }
     }
 
@@ -132,34 +178,78 @@ export default function Presupuestos() {
             (cat) => cat.idCategoria === idCategoria
         )
 
-        return categoria ? categoria.nombre : 'Sin categoría'
+        return categoria
+            ? categoria.nombre
+            : 'Sin categoría'
+    }
+
+    // DATOS DE PAGINACIÓN
+    const totalPaginas = Math.ceil(
+        presupuestos.length / registrosPorPagina
+    )
+
+    const indiceInicial =
+        (paginaActual - 1) * registrosPorPagina
+
+    const presupuestosPagina = presupuestos.slice(
+        indiceInicial,
+        indiceInicial + registrosPorPagina
+    )
+
+    function cambiarPagina(nuevaPagina) {
+        if (
+            nuevaPagina >= 1 &&
+            nuevaPagina <= totalPaginas
+        ) {
+            setPaginaActual(nuevaPagina)
+        }
     }
 
     return (
-        <div className="space-y-6">
+        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-8">
 
-            {/* Encabezado */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-800">
-                    Presupuestos
-                </h1>
+            {/* NOTIFICACIONES */}
+            <Notification
+                tipo="success"
+                mensaje={mensaje}
+                onClose={() => setMensaje('')}
+            />
 
-                <p className="mt-1 text-gray-600">
-                    Administra los límites de gasto de tu hogar.
-                </p>
+            <Notification
+                tipo="error"
+                mensaje={error}
+                onClose={() => setError('')}
+            />
+
+            {/* ENCABEZADO */}
+            <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
+
+                <div className="min-w-0">
+                    <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+                        Presupuestos
+                    </h1>
+
+                    <p className="text-sm text-gray-500 sm:text-base">
+                        Administra los límites de gasto de tu hogar.
+                    </p>
+                </div>
+
+                <button
+                    onClick={cargarDatos}
+                    disabled={cargando || procesando}
+                    className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                >
+                    {cargando
+                        ? 'Cargando...'
+                        : 'Actualizar'}
+                </button>
+
             </div>
 
-            {/* Mensaje de error */}
-            {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {error}
-                </div>
-            )}
+            {/* FORMULARIO */}
+            <section className="mb-6 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
 
-            {/* Formulario */}
-            <section className="rounded-xl bg-white p-6 shadow-md">
-
-                <h2 className="mb-6 text-xl font-semibold text-gray-800">
+                <h2 className="mb-5 text-xl font-semibold text-slate-900 sm:mb-6">
                     {editando
                         ? 'Editar presupuesto'
                         : 'Crear presupuesto'}
@@ -170,11 +260,11 @@ export default function Presupuestos() {
                     className="grid grid-cols-1 gap-5 md:grid-cols-3"
                 >
 
-                    {/* Categoría */}
-                    <div>
+                    {/* CATEGORÍA */}
+                    <div className="min-w-0">
                         <label
                             htmlFor="idCategoria"
-                            className="mb-2 block text-sm font-medium text-gray-700"
+                            className="mb-2 block text-sm font-semibold text-gray-700"
                         >
                             Categoría
                         </label>
@@ -184,28 +274,34 @@ export default function Presupuestos() {
                             name="idCategoria"
                             value={formulario.idCategoria}
                             onChange={manejarCambio}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                            disabled={procesando}
+                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
                         >
                             <option value="">
                                 Selecciona una categoría
                             </option>
 
-                            {categorias.map((categoria) => (
-                                <option
-                                    key={categoria.idCategoria}
-                                    value={categoria.idCategoria}
-                                >
-                                    {categoria.nombre}
-                                </option>
-                            ))}
+                            {categorias
+                                .filter(
+                                    (categoria) =>
+                                        categoria.tipo === 'Gasto'
+                                )
+                                .map((categoria) => (
+                                    <option
+                                        key={categoria.idCategoria}
+                                        value={categoria.idCategoria}
+                                    >
+                                        {categoria.nombre}
+                                    </option>
+                                ))}
                         </select>
                     </div>
 
-                    {/* Monto */}
-                    <div>
+                    {/* MONTO */}
+                    <div className="min-w-0">
                         <label
                             htmlFor="montoLimite"
-                            className="mb-2 block text-sm font-medium text-gray-700"
+                            className="mb-2 block text-sm font-semibold text-gray-700"
                         >
                             Monto límite
                         </label>
@@ -219,15 +315,16 @@ export default function Presupuestos() {
                             value={formulario.montoLimite}
                             onChange={manejarCambio}
                             placeholder="Ej. 500.00"
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                            disabled={procesando}
+                            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
                         />
                     </div>
 
-                    {/* Mes */}
-                    <div>
+                    {/* MES */}
+                    <div className="min-w-0">
                         <label
                             htmlFor="mesAnio"
-                            className="mb-2 block text-sm font-medium text-gray-700"
+                            className="mb-2 block text-sm font-semibold text-gray-700"
                         >
                             Mes
                         </label>
@@ -238,27 +335,32 @@ export default function Presupuestos() {
                             type="month"
                             value={formulario.mesAnio}
                             onChange={manejarCambio}
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                            disabled={procesando}
+                            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
                         />
                     </div>
 
-                    {/* Botones */}
-                    <div className="flex flex-wrap items-end gap-3 md:col-span-3">
+                    {/* BOTONES */}
+                    <div className="flex flex-col gap-3 md:col-span-3 sm:flex-row">
 
                         <button
                             type="submit"
-                            className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white transition hover:bg-blue-700"
+                            disabled={procesando}
+                            className="w-full rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
-                            {editando
-                                ? 'Actualizar presupuesto'
-                                : 'Guardar presupuesto'}
+                            {procesando
+                                ? 'Guardando...'
+                                : editando
+                                    ? 'Actualizar presupuesto'
+                                    : 'Guardar presupuesto'}
                         </button>
 
                         {editando && (
                             <button
                                 type="button"
                                 onClick={limpiarFormulario}
-                                className="rounded-lg bg-gray-200 px-5 py-2.5 font-medium text-gray-700 transition hover:bg-gray-300"
+                                disabled={procesando}
+                                className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                             >
                                 Cancelar
                             </button>
@@ -269,119 +371,153 @@ export default function Presupuestos() {
                 </form>
             </section>
 
-            {/* Tabla */}
-            <section className="rounded-xl bg-white p-6 shadow-md">
+            {/* TABLA */}
+            <section className="mb-8 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
 
-                <div className="mb-5">
-                    <h2 className="text-xl font-semibold text-gray-800">
-                        Mis presupuestos
-                    </h2>
+                <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
 
-                    <p className="mt-1 text-sm text-gray-500">
-                        Consulta y administra tus presupuestos registrados.
-                    </p>
+                    <div className="min-w-0">
+                        <h2 className="text-xl font-semibold text-slate-900">
+                            Mis presupuestos
+                        </h2>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            Consulta y administra tus presupuestos registrados.
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={cargarDatos}
+                        disabled={cargando || procesando}
+                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    >
+                        {cargando
+                            ? 'Cargando...'
+                            : 'Actualizar'}
+                    </button>
+
                 </div>
 
                 {cargando ? (
-                    <div className="py-8 text-center text-gray-500">
-                        Cargando presupuestos...
-                    </div>
+                    <Loading mensaje="Cargando presupuestos..." />
+
                 ) : presupuestos.length === 0 ? (
-                    <div className="rounded-lg bg-gray-50 py-8 text-center text-gray-500">
+
+                    <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
                         No tienes presupuestos registrados.
                     </div>
+
                 ) : (
-                    <div className="overflow-x-auto">
 
-                        <table className="w-full text-left text-sm">
+                    <>
+                        <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
 
-                            <thead className="border-b bg-gray-50 text-gray-700">
-                                <tr>
-                                    <th className="px-4 py-3 font-semibold">
-                                        Categoría
-                                    </th>
+                            <table className="min-w-[700px] w-full border-collapse text-left text-sm">
 
-                                    <th className="px-4 py-3 font-semibold">
-                                        Mes
-                                    </th>
+                                <thead>
+                                    <tr>
+                                        <th className="whitespace-nowrap border-b bg-gray-50 px-4 py-3 font-semibold text-gray-700">
+                                            Categoría
+                                        </th>
 
-                                    <th className="px-4 py-3 font-semibold">
-                                        Monto límite
-                                    </th>
+                                        <th className="whitespace-nowrap border-b bg-gray-50 px-4 py-3 font-semibold text-gray-700">
+                                            Mes
+                                        </th>
 
-                                    <th className="px-4 py-3 text-center font-semibold">
-                                        Acciones
-                                    </th>
-                                </tr>
-                            </thead>
+                                        <th className="whitespace-nowrap border-b bg-gray-50 px-4 py-3 font-semibold text-gray-700">
+                                            Monto límite
+                                        </th>
 
-                            <tbody className="divide-y divide-gray-200">
-
-                                {presupuestos.map((presupuesto) => (
-                                    <tr
-                                        key={presupuesto.idPresupuesto}
-                                        className="transition hover:bg-gray-50"
-                                    >
-
-                                        <td className="px-4 py-3 text-gray-700">
-                                            {obtenerNombreCategoria(
-                                                presupuesto.idCategoria
-                                            )}
-                                        </td>
-
-                                        <td className="px-4 py-3 text-gray-700">
-                                            {presupuesto.mesAnio
-                                                ? presupuesto.mesAnio.substring(0, 7)
-                                                : ''}
-                                        </td>
-
-                                        <td className="px-4 py-3 font-medium text-gray-800">
-                                            $
-                                            {Number(
-                                                presupuesto.montoLimite
-                                            ).toFixed(2)}
-                                        </td>
-
-                                        <td className="px-4 py-3">
-                                            <div className="flex justify-center gap-2">
-
-                                                <button
-                                                    onClick={() =>
-                                                        editarPresupuesto(
-                                                            presupuesto
-                                                        )
-                                                    }
-                                                    className="rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-200"
-                                                >
-                                                    Editar
-                                                </button>
-
-                                                <button
-                                                    onClick={() =>
-                                                        eliminarPresupuesto(
-                                                            presupuesto.idPresupuesto
-                                                        )
-                                                    }
-                                                    className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-200"
-                                                >
-                                                    Eliminar
-                                                </button>
-
-                                            </div>
-                                        </td>
-
+                                        <th className="whitespace-nowrap border-b bg-gray-50 px-4 py-3 text-center font-semibold text-gray-700">
+                                            Acciones
+                                        </th>
                                     </tr>
-                                ))}
+                                </thead>
 
-                            </tbody>
+                                <tbody>
 
-                        </table>
+                                    {presupuestosPagina.map((presupuesto) => (
+                                        <tr
+                                            key={presupuesto.idPresupuesto}
+                                            className="transition hover:bg-gray-50"
+                                        >
 
-                    </div>
+                                            <td className="max-w-[220px] break-words border-b border-gray-200 px-4 py-3 text-gray-700">
+                                                {obtenerNombreCategoria(
+                                                    presupuesto.idCategoria
+                                                )}
+                                            </td>
+
+                                            <td className="whitespace-nowrap border-b border-gray-200 px-4 py-3 text-gray-700">
+                                                {presupuesto.mesAnio
+                                                    ? presupuesto.mesAnio.substring(
+                                                        0,
+                                                        7
+                                                    )
+                                                    : ''}
+                                            </td>
+
+                                            <td className="whitespace-nowrap border-b border-gray-200 px-4 py-3 font-semibold text-gray-800">
+                                                $
+                                                {Number(
+                                                    presupuesto.montoLimite
+                                                ).toFixed(2)}
+                                            </td>
+
+                                            <td className="border-b border-gray-200 px-4 py-3">
+
+                                                <div className="flex flex-col justify-center gap-2 sm:flex-row">
+
+                                                    <button
+                                                        onClick={() =>
+                                                            editarPresupuesto(
+                                                                presupuesto
+                                                            )
+                                                        }
+                                                        disabled={procesando}
+                                                        className="w-full rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                                    >
+                                                        Editar
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() =>
+                                                            eliminarPresupuesto(
+                                                                presupuesto.idPresupuesto
+                                                            )
+                                                        }
+                                                        disabled={procesando}
+                                                        className="w-full rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                                    >
+                                                        {procesando
+                                                            ? 'Procesando...'
+                                                            : 'Eliminar'}
+                                                    </button>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+                                    ))}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        {/* PAGINACIÓN */}
+                        <Pagination
+                            paginaActual={paginaActual}
+                            totalPaginas={totalPaginas}
+                            cambiarPagina={cambiarPagina}
+                        />
+                    </>
                 )}
 
             </section>
 
-        </div>
+        </main>
     )
 }

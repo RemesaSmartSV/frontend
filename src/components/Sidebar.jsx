@@ -1,66 +1,135 @@
 import { NavLink } from 'react-router-dom'
+import {
+    Home,
+    ClipboardList,
+    Tags,
+    Banknote,
+    TrendingUp,
+    TrendingDown,
+    Wallet,
+    BookOpen
+} from 'lucide-react'
 
-export default function Sidebar() {
+export default function Sidebar({
+    menuAbierto,
+    setMenuAbierto
+}) {
+
+    const enlaces = [
+        {
+            to: '/',
+            nombre: 'Inicio',
+            icono: Home,
+        },
+        {
+            to: '/movimientos',
+            nombre: 'Movimientos',
+            icono: ClipboardList,
+        },
+        {
+            to: '/categorias',
+            nombre: 'Categorías',
+            icono: Tags,
+        },
+        {
+            to: '/remesas',
+            nombre: 'Remesas',
+            icono: Banknote,
+        },
+        {
+            to: '/ingresos',
+            nombre: 'Ingresos',
+            icono: TrendingUp,
+        },
+        {
+            to: '/gastos',
+            nombre: 'Gastos',
+            icono: TrendingDown,
+        },
+        {
+            to: '/presupuestos',
+            nombre: 'Presupuestos',
+            icono: Wallet,
+        },
+        {
+            to: '/educacion-financiera',
+            nombre: 'Educación Financiera',
+            icono: BookOpen,
+        },
+    ]
+
+    function cerrarMenuMovil() {
+        setMenuAbierto(false)
+    }
+
     return (
-        <aside className="min-h-screen w-64 bg-gray-900 p-4 text-white">
+        <>
+            {/* Fondo oscuro en móvil */}
+            {menuAbierto && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+                    onClick={cerrarMenuMovil}
+                />
+            )}
 
-            <h3 className="mb-6 text-xl font-bold">
-                Menú
-            </h3>
+            <aside
+                className={`
+                    fixed left-0 top-20 z-50
+                   h-[calc(100vh-80px)]
+                    w-72 bg-gray-900 p-4 text-white
+                    shadow-xl
+                    transition-transform duration-300
+                    lg:static lg:z-auto lg:h-[calc(100vh-72px)]
+                    lg:w-64 lg:shrink-0
+                    lg:translate-x-0 lg:shadow-none
+                    ${menuAbierto
+                        ? 'translate-x-0'
+                        : '-translate-x-full'
+                    }
+                `}
+            >
 
-            <nav className="flex flex-col gap-2">
+                <div className="mb-6 border-b border-gray-700 pb-5">
+                    <h3 className="text-xl font-bold">
+                        Menú
+                    </h3>
 
-                <NavLink
-                    to="/"
-                    className="rounded-lg px-4 py-3 hover:bg-gray-700"
-                >
-                    Inicio
-                </NavLink>
+                    <p className="mt-1 text-xs text-gray-400">
+                        Administración financiera
+                    </p>
+                </div>
 
-                <NavLink
-                    to="/movimientos"
-                    className="rounded-lg px-4 py-3 hover:bg-gray-700"
-                >
-                    Movimientos
-                </NavLink>
+                <nav className="flex flex-col gap-2">
 
-                <NavLink
-                    to="/categorias"
-                    className="rounded-lg px-4 py-3 hover:bg-gray-700"
-                >
-                    Categorías
-                </NavLink>
+                    {enlaces.map((enlace) => {
 
-                <NavLink
-                    to="/remesas"
-                    className="rounded-lg px-4 py-3 hover:bg-gray-700"
-                >
-                    Remesas
-                </NavLink>
+                        const Icono = enlace.icono
 
-                <NavLink
-                    to="/ingresos"
-                    className="rounded-lg px-4 py-3 hover:bg-gray-700"
-                >
-                    Ingresos
-                </NavLink>
+                        return (
+                            <NavLink
+                                key={enlace.to}
+                                to={enlace.to}
+                                end={enlace.to === '/'}
+                                onClick={cerrarMenuMovil}
+                                className={({ isActive }) =>
+                                    `flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${isActive
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                    }`
+                                }
+                            >
+                                <Icono size={19} />
 
-                <NavLink
-                    to="/gastos"
-                    className="rounded-lg px-4 py-3 hover:bg-gray-700"
-                >
-                    Gastos
-                </NavLink>
+                                <span>
+                                    {enlace.nombre}
+                                </span>
+                            </NavLink>
+                        )
+                    })}
 
-                <NavLink
-                    to="/presupuestos"
-                    className="rounded-lg px-4 py-3 hover:bg-gray-700"
-                >
-                    Presupuestos
-                </NavLink>
+                </nav>
 
-            </nav>
-
-        </aside>
+            </aside>
+        </>
     )
 }

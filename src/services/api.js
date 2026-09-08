@@ -206,3 +206,21 @@ export const presupuestosApi = {
         return manejarRespuesta(res)
     },
 }
+
+export const educacionApi = {
+    async listar() {
+        const res = await fetch(`${API_URL}/TipsFinancieros`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async obtener(id) {
+        const res = await fetch(`${API_URL}/TipsFinancieros/${id}`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+}
