@@ -3,6 +3,7 @@ import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import { Download } from 'lucide-react'
 
 export default function Movimientos() {
     const [movimientos, setMovimientos] = useState([])
@@ -171,6 +172,15 @@ export default function Movimientos() {
             setError(err.message)
         } finally {
             setProcesando(false)
+        }
+    }
+
+    async function exportarMovimientos(formato) {
+        try {
+            setError('')
+            await movimientosApi.exportar(formato)
+        } catch (err) {
+            setError(err.message)
         }
     }
 
@@ -444,15 +454,31 @@ export default function Movimientos() {
                         Movimientos registrados
                     </h2>
 
-                    <button
-                        onClick={cargarDatos}
-                        disabled={cargando || procesando}
-                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                    >
-                        {cargando
-                            ? 'Cargando...'
-                            : 'Actualizar'}
-                    </button>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        <button
+                            onClick={() => exportarMovimientos('csv')}
+                            disabled={cargando || procesando}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            <Download size={17} aria-hidden="true" />
+                            CSV
+                        </button>
+                        <button
+                            onClick={() => exportarMovimientos('json')}
+                            disabled={cargando || procesando}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            <Download size={17} aria-hidden="true" />
+                            JSON
+                        </button>
+                        <button
+                            onClick={cargarDatos}
+                            disabled={cargando || procesando}
+                            className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            {cargando ? 'Cargando...' : 'Actualizar'}
+                        </button>
+                    </div>
 
                 </div>
 
