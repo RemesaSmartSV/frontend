@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Bell, Menu, X } from 'lucide-react'
 import logo from '../assets/logo_remesa-sinfondo.png'
 
@@ -12,6 +12,23 @@ export default function Navbar({
     errorAlertas
 }) {
     const [alertasAbiertas, setAlertasAbiertas] = useState(false)
+    const alertasRef = useRef(null)
+
+    useEffect(() => {
+        function cerrarAlClickearFuera(e) {
+            if (alertasRef.current && !alertasRef.current.contains(e.target)) {
+                setAlertasAbiertas(false)
+            }
+        }
+
+        if (alertasAbiertas) {
+            document.addEventListener('mousedown', cerrarAlClickearFuera)
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', cerrarAlClickearFuera)
+        }
+    }, [alertasAbiertas])
 
     return (
         <header className="sticky top-0 z-50 flex h-20 items-center justify-between border-b border-gray-200 bg-white px-2 shadow-sm sm:px-0">
@@ -47,7 +64,7 @@ export default function Navbar({
 
             <div className="flex items-center gap-2 sm:gap-3">
 
-                <div className="relative">
+                <div className="relative" ref={alertasRef}>
                     <button
                         type="button"
                         onClick={() => setAlertasAbiertas(!alertasAbiertas)}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
 import { alertasApi } from '../services/api'
@@ -14,11 +14,10 @@ export default function Layout({
     const [alertas, setAlertas] = useState([])
     const [cargandoAlertas, setCargandoAlertas] = useState(true)
     const [errorAlertas, setErrorAlertas] = useState('')
-    const location = useLocation()
 
     useEffect(() => {
         cargarAlertas()
-    }, [location.pathname])
+    }, [])
 
     async function cargarAlertas() {
         try {
