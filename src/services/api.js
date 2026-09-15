@@ -207,6 +207,32 @@ export const presupuestosApi = {
     },
 }
 
+export const alertasApi = {
+    async listarPorPeriodo(fechaInicio, fechaFin) {
+        function formatearFecha(fecha) {
+            const año = fecha.getFullYear()
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+            const dia = String(fecha.getDate()).padStart(2, '0')
+
+            return `${año}-${mes}-${dia}`
+        }
+
+        const parametros = new URLSearchParams({
+            fechaInicio: formatearFecha(fechaInicio),
+            fechaFin: formatearFecha(fechaFin),
+        })
+
+        const res = await fetch(
+            `${API_URL}/Alertas/periodo?${parametros.toString()}`,
+            {
+                headers: obtenerHeaders(),
+            }
+        )
+
+        return manejarRespuesta(res)
+    },
+}
+
 export const educacionApi = {
     async listar() {
         const res = await fetch(`${API_URL}/TipsFinancieros`, {
