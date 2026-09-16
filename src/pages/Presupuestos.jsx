@@ -1,12 +1,19 @@
-import { useEffect, useState } from 'react'
-import { categoriasApi, presupuestosApi } from '../services/api'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+    categoriasApi,
+    presupuestosApi,
+    movimientosApi
+} from '../services/api'
+
 import Notification from '../components/Notification'
+import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 
-export default function Presupuestos() {
+function Presupuestos() {
     const [presupuestos, setPresupuestos] = useState([])
     const [categorias, setCategorias] = useState([])
+    const [movimientos, setMovimientos] = useState([])
 
     const [formulario, setFormulario] = useState({
         idCategoria: '',
@@ -21,149 +28,72 @@ export default function Presupuestos() {
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
 
-    // PAGINACIÓN
+    const [confirmModal, setConfirmModal] = useState({
+        abierto: false,
+        id: null,
+        mensaje: '',
+    })
+
+    const [filtros, setFiltros] = useState({
+        idCategoria: '',
+        mesAnio: '',
+        montoMinimo: '',
+        montoMaximo: '',
+        busqueda: '',
+    })
+
     const [paginaActual, setPaginaActual] = useState(1)
     const registrosPorPagina = 5
 
-    useEffect(() => {
-        cargarDatos()
-    }, [])
+    // ==========================================
+    // CARGAR DATOS
+    // ==========================================
 
-    async function cargarDatos() {
+    const cargarDatos = useCallback(async () => {
         try {
             setCargando(true)
             setError('')
 
-            const [presupuestosData, categoriasData] =
-                await Promise.all([
-                    presupuestosApi.listar(),
-                    categoriasApi.listar(),
-                ])
+            const [
+                presupuestosData,
+                categoriasData,
+                movimientosData
+            ] = await Promise.all([
+                presupuestosApi.listar(),
+                categoriasApi.listar(),
+                movimientosApi.listar(),
+            ])
 
-            setPresupuestos(presupuestosData)
-            setCategorias(categoriasData)
+            setPresupuestos(presupuestosData || [])
+            setCategorias(categoriasData || [])
+            setMovimientos(movimientosData || [])
 
-            // Regresar a la primera página al actualizar
             setPaginaActual(1)
         } catch (err) {
-            setError(err.message)
+            setError(err.message || 'No se pudieron cargar los datos.')
         } finally {
             setCargando(false)
         }
-    }
+    }, [])
 
-    function manejarCambio(e) {
+    useEffect(() => {
+        cargarDatos()
+    }, [cargarDatos])
+
+    // ==========================================
+    // FORMULARIO
+    // ==========================================
+
+    const manejarCambio = (e) => {
         const { name, value } = e.target
 
-        setFormulario({
-            ...formulario,
+        setFormulario((prev) => ({
+            ...prev,
             [name]: value,
-        })
+        }))
     }
 
-    async function manejarSubmit(e) {
-        e.preventDefault()
-
-        if (
-            !formulario.idCategoria ||
-            !formulario.montoLimite ||
-            !formulario.mesAnio
-        ) {
-            setError('Completa todos los campos.')
-            return
-        }
-
-        if (Number(formulario.montoLimite) <= 0) {
-            setError('El monto límite debe ser mayor que 0.')
-            return
-        }
-
-        try {
-            setError('')
-            setMensaje('')
-            setProcesando(true)
-
-            const datos = {
-                idCategoria: Number(formulario.idCategoria),
-                montoLimite: Number(formulario.montoLimite),
-                mesAnio: `${formulario.mesAnio}-01`,
-            }
-
-            if (editando) {
-                await presupuestosApi.actualizar(
-                    editando,
-                    datos
-                )
-
-                setMensaje(
-                    'Presupuesto actualizado correctamente.'
-                )
-            } else {
-                await presupuestosApi.crear(datos)
-
-                setMensaje(
-                    'Presupuesto creado correctamente.'
-                )
-            }
-
-            limpiarFormulario()
-            await cargarDatos()
-        } catch (err) {
-            setError(err.message)
-        } finally {
-            setProcesando(false)
-        }
-    }
-
-    function editarPresupuesto(presupuesto) {
-        setEditando(presupuesto.idPresupuesto)
-
-        setFormulario({
-            idCategoria: presupuesto.idCategoria,
-            montoLimite: presupuesto.montoLimite,
-            mesAnio: presupuesto.mesAnio
-                ? presupuesto.mesAnio.substring(0, 7)
-                : '',
-        })
-
-        setError('')
-        setMensaje('')
-
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-        })
-    }
-
-    async function eliminarPresupuesto(id) {
-        const confirmar = window.confirm(
-            '¿Estás segura de que deseas eliminar este presupuesto?'
-        )
-
-        if (!confirmar) {
-            return
-        }
-
-        try {
-            setError('')
-            setMensaje('')
-            setProcesando(true)
-
-            await presupuestosApi.eliminar(id)
-
-            setMensaje(
-                'Presupuesto eliminado correctamente.'
-            )
-
-            await cargarDatos()
-        } catch (err) {
-            setError(err.message)
-        } finally {
-            setProcesando(false)
-        }
-    }
-
-    function limpiarFormulario() {
+    const limpiarFormulario = () => {
         setFormulario({
             idCategoria: '',
             montoLimite: '',
@@ -173,83 +103,461 @@ export default function Presupuestos() {
         setEditando(null)
     }
 
-    function obtenerNombreCategoria(idCategoria) {
-        const categoria = categorias.find(
-            (cat) => cat.idCategoria === idCategoria
-        )
+    const manejarSubmit = async (e) => {
+        e.preventDefault()
 
-        return categoria
-            ? categoria.nombre
-            : 'Sin categoría'
-    }
+        setError('')
+        setMensaje('')
 
-    // DATOS DE PAGINACIÓN
-    const totalPaginas = Math.ceil(
-        presupuestos.length / registrosPorPagina
-    )
+        if (!formulario.idCategoria) {
+            setError('Selecciona una categoría.')
+            return
+        }
 
-    const indiceInicial =
-        (paginaActual - 1) * registrosPorPagina
+        if (!formulario.montoLimite) {
+            setError('Ingresa un monto límite.')
+            return
+        }
 
-    const presupuestosPagina = presupuestos.slice(
-        indiceInicial,
-        indiceInicial + registrosPorPagina
-    )
+        if (Number(formulario.montoLimite) <= 0) {
+            setError('El monto límite debe ser mayor que 0.')
+            return
+        }
 
-    function cambiarPagina(nuevaPagina) {
-        if (
-            nuevaPagina >= 1 &&
-            nuevaPagina <= totalPaginas
-        ) {
-            setPaginaActual(nuevaPagina)
+        if (!formulario.mesAnio) {
+            setError('Selecciona el mes del presupuesto.')
+            return
+        }
+
+        try {
+            setProcesando(true)
+
+            const datos = {
+                idCategoria: Number(formulario.idCategoria),
+                montoLimite: Number(formulario.montoLimite),
+                mesAnio: `${formulario.mesAnio}-01`,
+            }
+
+            if (editando) {
+                await presupuestosApi.actualizar(editando, datos)
+                setMensaje('Presupuesto actualizado correctamente.')
+            } else {
+                await presupuestosApi.crear(datos)
+                setMensaje('Presupuesto creado correctamente.')
+            }
+
+            limpiarFormulario()
+            await cargarDatos()
+        } catch (err) {
+            setError(err.message || 'No se pudo guardar el presupuesto.')
+        } finally {
+            setProcesando(false)
         }
     }
 
+    // ==========================================
+    // EDITAR
+    // ==========================================
+
+    const editarPresupuesto = (presupuesto) => {
+        setEditando(presupuesto.idPresupuesto)
+
+        setFormulario({
+            idCategoria: String(presupuesto.idCategoria),
+            montoLimite: String(presupuesto.montoLimite),
+            mesAnio: presupuesto.mesAnio
+                ? presupuesto.mesAnio.substring(0, 7)
+                : '',
+        })
+
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+        })
+    }
+
+    // ==========================================
+    // ELIMINAR
+    // ==========================================
+
+    const solicitarEliminar = (id) => {
+        setConfirmModal({
+            abierto: true,
+            id,
+            mensaje: '¿Estás segura de que deseas eliminar este presupuesto?',
+        })
+    }
+
+    const confirmarEliminar = async () => {
+        try {
+            setProcesando(true)
+            setError('')
+
+            await presupuestosApi.eliminar(confirmModal.id)
+
+            setMensaje('Presupuesto eliminado correctamente.')
+
+            setConfirmModal({
+                abierto: false,
+                id: null,
+                mensaje: '',
+            })
+
+            await cargarDatos()
+        } catch (err) {
+            setError(err.message || 'No se pudo eliminar el presupuesto.')
+        } finally {
+            setProcesando(false)
+        }
+    }
+
+    // ==========================================
+    // OBTENER CATEGORÍA
+    // ==========================================
+
+    const obtenerNombreCategoria = (idCategoria) => {
+        const categoria = categorias.find(
+            (item) =>
+                Number(item.idCategoria) === Number(idCategoria)
+        )
+
+        return categoria?.nombre || 'Sin categoría'
+    }
+
+    // ==========================================
+    // CALCULAR PROGRESO
+    // ==========================================
+
+    const obtenerProgresoPresupuesto = (presupuesto) => {
+        const categoriaId = Number(presupuesto.idCategoria)
+
+        const mesPresupuesto = presupuesto.mesAnio
+            ? presupuesto.mesAnio.substring(0, 7)
+            : ''
+
+        const gastos = movimientos.filter((movimiento) => {
+            const tipo = String(
+                movimiento.tipo || ''
+            ).toLowerCase()
+
+            const fechaMovimiento = movimiento.fecha
+                ? String(movimiento.fecha).substring(0, 7)
+                : ''
+
+            return (
+                tipo === 'gasto' &&
+                Number(movimiento.idCategoria) === categoriaId &&
+                fechaMovimiento === mesPresupuesto
+            )
+        })
+
+        const gastado = gastos.reduce(
+            (total, movimiento) => {
+                return total + Number(movimiento.monto || 0)
+            },
+            0
+        )
+
+        const limite = Number(
+            presupuesto.montoLimite || 0
+        )
+
+        const porcentaje = limite > 0
+            ? (gastado / limite) * 100
+            : 0
+
+        const porcentajeBarra = Math.min(
+            Math.max(porcentaje, 0),
+            100
+        )
+
+        let estado = 'normal'
+
+        if (porcentaje >= 90) {
+            estado = 'peligro'
+        } else if (porcentaje >= 70) {
+            estado = 'advertencia'
+        }
+
+        return {
+            gastado,
+            limite,
+            porcentaje,
+            porcentajeBarra,
+            estado,
+        }
+    }
+
+    // ==========================================
+    // COLOR DE LA BARRA
+    // ==========================================
+
+    const obtenerColorBarra = (estado) => {
+        if (estado === 'peligro') {
+            return 'bg-red-500'
+        }
+
+        if (estado === 'advertencia') {
+            return 'bg-yellow-400'
+        }
+
+        return 'bg-green-500'
+    }
+
+    // ==========================================
+    // FILTROS
+    // ==========================================
+
+    const manejarCambioFiltro = (e) => {
+        const { name, value } = e.target
+
+        setFiltros((prev) => ({
+            ...prev,
+            [name]: value,
+        }))
+
+        setPaginaActual(1)
+    }
+
+    const limpiarFiltros = () => {
+        setFiltros({
+            idCategoria: '',
+            mesAnio: '',
+            montoMinimo: '',
+            montoMaximo: '',
+            busqueda: '',
+        })
+
+        setPaginaActual(1)
+    }
+
+    // ==========================================
+    // FILTRAR PRESUPUESTOS
+    // ==========================================
+
+    const presupuestosFiltrados = useMemo(() => {
+        return presupuestos.filter((presupuesto) => {
+            const nombreCategoria =
+                obtenerNombreCategoria(
+                    presupuesto.idCategoria
+                ).toLowerCase()
+
+            const categoriaCoincide =
+                !filtros.idCategoria ||
+                Number(presupuesto.idCategoria) ===
+                Number(filtros.idCategoria)
+
+            const mesPresupuesto =
+                presupuesto.mesAnio
+                    ? presupuesto.mesAnio.substring(0, 7)
+                    : ''
+
+            const mesCoincide =
+                !filtros.mesAnio ||
+                mesPresupuesto === filtros.mesAnio
+
+            const monto = Number(
+                presupuesto.montoLimite || 0
+            )
+
+            const montoMinimoCoincide =
+                !filtros.montoMinimo ||
+                monto >= Number(filtros.montoMinimo)
+
+            const montoMaximoCoincide =
+                !filtros.montoMaximo ||
+                monto <= Number(filtros.montoMaximo)
+
+            const busquedaCoincide =
+                !filtros.busqueda ||
+                nombreCategoria.includes(
+                    filtros.busqueda.toLowerCase()
+                )
+
+            return (
+                categoriaCoincide &&
+                mesCoincide &&
+                montoMinimoCoincide &&
+                montoMaximoCoincide &&
+                busquedaCoincide
+            )
+        })
+    }, [presupuestos, categorias, filtros])
+
+    // ==========================================
+    // PAGINACIÓN
+    // ==========================================
+
+    const totalPaginas = Math.ceil(
+        presupuestosFiltrados.length /
+        registrosPorPagina
+    )
+
+    const presupuestosPaginados = useMemo(() => {
+        const inicio =
+            (paginaActual - 1) *
+            registrosPorPagina
+
+        return presupuestosFiltrados.slice(
+            inicio,
+            inicio + registrosPorPagina
+        )
+    }, [
+        presupuestosFiltrados,
+        paginaActual,
+    ])
+
+    // ==========================================
+    // EXPORTAR CSV
+    // ==========================================
+
+    const exportarCSV = () => {
+        if (presupuestosFiltrados.length === 0) {
+            setError(
+                'No hay presupuestos para exportar.'
+            )
+            return
+        }
+
+        const encabezados = [
+            'Categoría',
+            'Mes',
+            'Monto límite',
+            'Gastado',
+            'Porcentaje',
+        ]
+
+        const filas =
+            presupuestosFiltrados.map(
+                (presupuesto) => {
+                    const progreso =
+                        obtenerProgresoPresupuesto(
+                            presupuesto
+                        )
+
+                    return [
+                        obtenerNombreCategoria(
+                            presupuesto.idCategoria
+                        ),
+                        presupuesto.mesAnio
+                            ? presupuesto.mesAnio.substring(0, 7)
+                            : '',
+                        Number(
+                            presupuesto.montoLimite
+                        ).toFixed(2),
+                        progreso.gastado.toFixed(2),
+                        `${progreso.porcentaje.toFixed(2)}%`,
+                    ]
+                }
+            )
+
+        const contenido = [
+            encabezados,
+            ...filas,
+        ]
+            .map((fila) => fila.join(','))
+            .join('\n')
+
+        const blob = new Blob(
+            [contenido],
+            {
+                type: 'text/csv;charset=utf-8;',
+            }
+        )
+
+        const url =
+            URL.createObjectURL(blob)
+
+        const enlace =
+            document.createElement('a')
+
+        enlace.href = url
+        enlace.download =
+            'presupuestos.csv'
+
+        document.body.appendChild(enlace)
+
+        enlace.click()
+
+        document.body.removeChild(enlace)
+
+        URL.revokeObjectURL(url)
+    }
+
+    // ==========================================
+    // CARGANDO
+    // ==========================================
+
+    if (cargando) {
+        return <Loading />
+    }
+
+    // ==========================================
+    // RENDER
+    // ==========================================
+
     return (
-        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-8">
-
-            {/* NOTIFICACIONES */}
-            <Notification
-                tipo="success"
-                mensaje={mensaje}
-                onClose={() => setMensaje('')}
-            />
-
-            <Notification
-                tipo="error"
-                mensaje={error}
-                onClose={() => setError('')}
-            />
+        <div className="space-y-6">
 
             {/* ENCABEZADO */}
-            <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
 
-                <div className="min-w-0">
-                    <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-800">
                         Presupuestos
                     </h1>
 
-                    <p className="text-sm text-gray-500 sm:text-base">
-                        Administra los límites de gasto de tu hogar.
+                    <p className="text-gray-500">
+                        Controla tus límites de gasto y revisa tu progreso.
                     </p>
                 </div>
 
-                <button
-                    onClick={cargarDatos}
-                    disabled={cargando || procesando}
-                    className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                >
-                    {cargando
-                        ? 'Cargando...'
-                        : 'Actualizar'}
-                </button>
+                <div className="flex gap-2">
+
+                    <button
+                        type="button"
+                        onClick={exportarCSV}
+                        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                    >
+                        Exportar CSV
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={cargarDatos}
+                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                        Actualizar
+                    </button>
+
+                </div>
 
             </div>
 
-            {/* FORMULARIO */}
-            <section className="mb-6 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+            {/* NOTIFICACIONES */}
 
-                <h2 className="mb-5 text-xl font-semibold text-slate-900 sm:mb-6">
+            {error && (
+                <Notification
+                    type="error"
+                    message={error}
+                    onClose={() => setError('')}
+                />
+            )}
+
+            {mensaje && (
+                <Notification
+                    type="success"
+                    message={mensaje}
+                    onClose={() => setMensaje('')}
+                />
+            )}
+
+            {/* FORMULARIO */}
+
+            <div className="rounded-xl bg-white p-6 shadow-sm">
+
+                <h2 className="mb-4 text-lg font-semibold text-gray-800">
                     {editando
                         ? 'Editar presupuesto'
                         : 'Crear presupuesto'}
@@ -257,25 +565,19 @@ export default function Presupuestos() {
 
                 <form
                     onSubmit={manejarSubmit}
-                    className="grid grid-cols-1 gap-5 md:grid-cols-3"
+                    className="grid grid-cols-1 gap-4 md:grid-cols-3"
                 >
 
-                    {/* CATEGORÍA */}
-                    <div className="min-w-0">
-                        <label
-                            htmlFor="idCategoria"
-                            className="mb-2 block text-sm font-semibold text-gray-700"
-                        >
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
                             Categoría
                         </label>
 
                         <select
-                            id="idCategoria"
                             name="idCategoria"
                             value={formulario.idCategoria}
                             onChange={manejarCambio}
-                            disabled={procesando}
-                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                         >
                             <option value="">
                                 Selecciona una categoría
@@ -284,12 +586,18 @@ export default function Presupuestos() {
                             {categorias
                                 .filter(
                                     (categoria) =>
-                                        categoria.tipo === 'Gasto'
+                                        String(
+                                            categoria.tipo || ''
+                                        ).toLowerCase() === 'gasto'
                                 )
                                 .map((categoria) => (
                                     <option
-                                        key={categoria.idCategoria}
-                                        value={categoria.idCategoria}
+                                        key={
+                                            categoria.idCategoria
+                                        }
+                                        value={
+                                            categoria.idCategoria
+                                        }
                                     >
                                         {categoria.nombre}
                                     </option>
@@ -297,70 +605,62 @@ export default function Presupuestos() {
                         </select>
                     </div>
 
-                    {/* MONTO */}
-                    <div className="min-w-0">
-                        <label
-                            htmlFor="montoLimite"
-                            className="mb-2 block text-sm font-semibold text-gray-700"
-                        >
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
                             Monto límite
                         </label>
 
                         <input
-                            id="montoLimite"
-                            name="montoLimite"
                             type="number"
-                            min="0"
+                            name="montoLimite"
+                            min="0.01"
                             step="0.01"
-                            value={formulario.montoLimite}
+                            value={
+                                formulario.montoLimite
+                            }
                             onChange={manejarCambio}
-                            placeholder="Ej. 500.00"
-                            disabled={procesando}
-                            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
+                            placeholder="Ej. 100.00"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                         />
                     </div>
 
-                    {/* MES */}
-                    <div className="min-w-0">
-                        <label
-                            htmlFor="mesAnio"
-                            className="mb-2 block text-sm font-semibold text-gray-700"
-                        >
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
                             Mes
                         </label>
 
                         <input
-                            id="mesAnio"
-                            name="mesAnio"
                             type="month"
-                            value={formulario.mesAnio}
+                            name="mesAnio"
+                            value={
+                                formulario.mesAnio
+                            }
                             onChange={manejarCambio}
-                            disabled={procesando}
-                            className="w-full min-w-0 rounded-lg border border-gray-300 px-4 py-2.5 text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                         />
                     </div>
 
-                    {/* BOTONES */}
-                    <div className="flex flex-col gap-3 md:col-span-3 sm:flex-row">
+                    <div className="flex gap-2 md:col-span-3">
 
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="w-full rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                            className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                         >
                             {procesando
                                 ? 'Guardando...'
                                 : editando
-                                    ? 'Actualizar presupuesto'
-                                    : 'Guardar presupuesto'}
+                                    ? 'Actualizar'
+                                    : 'Crear presupuesto'}
                         </button>
 
                         {editando && (
                             <button
                                 type="button"
-                                onClick={limpiarFormulario}
-                                disabled={procesando}
-                                className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                onClick={
+                                    limpiarFormulario
+                                }
+                                className="rounded-lg border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50"
                             >
                                 Cancelar
                             </button>
@@ -369,155 +669,382 @@ export default function Presupuestos() {
                     </div>
 
                 </form>
-            </section>
 
-            {/* TABLA */}
-            <section className="mb-8 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+            </div>
 
-                <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            {/* FILTROS */}
 
-                    <div className="min-w-0">
-                        <h2 className="text-xl font-semibold text-slate-900">
-                            Mis presupuestos
-                        </h2>
+            <div className="rounded-xl bg-white p-6 shadow-sm">
 
-                        <p className="mt-1 text-sm text-gray-500">
-                            Consulta y administra tus presupuestos registrados.
-                        </p>
-                    </div>
+                <div className="mb-4 flex items-center justify-between">
+
+                    <h2 className="text-lg font-semibold text-gray-800">
+                        Filtros
+                    </h2>
 
                     <button
-                        onClick={cargarDatos}
-                        disabled={cargando || procesando}
-                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        type="button"
+                        onClick={limpiarFiltros}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
                     >
-                        {cargando
-                            ? 'Cargando...'
-                            : 'Actualizar'}
+                        Limpiar filtros
                     </button>
 
                 </div>
 
-                {cargando ? (
-                    <Loading mensaje="Cargando presupuestos..." />
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
 
-                ) : presupuestos.length === 0 ? (
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Categoría
+                        </label>
 
-                    <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-                        No tienes presupuestos registrados.
+                        <select
+                            name="idCategoria"
+                            value={
+                                filtros.idCategoria
+                            }
+                            onChange={
+                                manejarCambioFiltro
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                        >
+                            <option value="">
+                                Todas
+                            </option>
+
+                            {categorias.map(
+                                (categoria) => (
+                                    <option
+                                        key={
+                                            categoria.idCategoria
+                                        }
+                                        value={
+                                            categoria.idCategoria
+                                        }
+                                    >
+                                        {categoria.nombre}
+                                    </option>
+                                )
+                            )}
+                        </select>
                     </div>
 
-                ) : (
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Mes
+                        </label>
 
-                    <>
-                        <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
-
-                            <table className="min-w-[700px] w-full border-collapse text-left text-sm">
-
-                                <thead>
-                                    <tr>
-                                        <th className="whitespace-nowrap border-b bg-gray-50 px-4 py-3 font-semibold text-gray-700">
-                                            Categoría
-                                        </th>
-
-                                        <th className="whitespace-nowrap border-b bg-gray-50 px-4 py-3 font-semibold text-gray-700">
-                                            Mes
-                                        </th>
-
-                                        <th className="whitespace-nowrap border-b bg-gray-50 px-4 py-3 font-semibold text-gray-700">
-                                            Monto límite
-                                        </th>
-
-                                        <th className="whitespace-nowrap border-b bg-gray-50 px-4 py-3 text-center font-semibold text-gray-700">
-                                            Acciones
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-
-                                    {presupuestosPagina.map((presupuesto) => (
-                                        <tr
-                                            key={presupuesto.idPresupuesto}
-                                            className="transition hover:bg-gray-50"
-                                        >
-
-                                            <td className="max-w-[220px] break-words border-b border-gray-200 px-4 py-3 text-gray-700">
-                                                {obtenerNombreCategoria(
-                                                    presupuesto.idCategoria
-                                                )}
-                                            </td>
-
-                                            <td className="whitespace-nowrap border-b border-gray-200 px-4 py-3 text-gray-700">
-                                                {presupuesto.mesAnio
-                                                    ? presupuesto.mesAnio.substring(
-                                                        0,
-                                                        7
-                                                    )
-                                                    : ''}
-                                            </td>
-
-                                            <td className="whitespace-nowrap border-b border-gray-200 px-4 py-3 font-semibold text-gray-800">
-                                                $
-                                                {Number(
-                                                    presupuesto.montoLimite
-                                                ).toFixed(2)}
-                                            </td>
-
-                                            <td className="border-b border-gray-200 px-4 py-3">
-
-                                                <div className="flex flex-col justify-center gap-2 sm:flex-row">
-
-                                                    <button
-                                                        onClick={() =>
-                                                            editarPresupuesto(
-                                                                presupuesto
-                                                            )
-                                                        }
-                                                        disabled={procesando}
-                                                        className="w-full rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                                                    >
-                                                        Editar
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() =>
-                                                            eliminarPresupuesto(
-                                                                presupuesto.idPresupuesto
-                                                            )
-                                                        }
-                                                        disabled={procesando}
-                                                        className="w-full rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                                                    >
-                                                        {procesando
-                                                            ? 'Procesando...'
-                                                            : 'Eliminar'}
-                                                    </button>
-
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-                                    ))}
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
-                        {/* PAGINACIÓN */}
-                        <Pagination
-                            paginaActual={paginaActual}
-                            totalPaginas={totalPaginas}
-                            cambiarPagina={cambiarPagina}
+                        <input
+                            type="month"
+                            name="mesAnio"
+                            value={
+                                filtros.mesAnio
+                            }
+                            onChange={
+                                manejarCambioFiltro
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
                         />
-                    </>
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Monto mínimo
+                        </label>
+
+                        <input
+                            type="number"
+                            name="montoMinimo"
+                            min="0"
+                            step="0.01"
+                            value={
+                                filtros.montoMinimo
+                            }
+                            onChange={
+                                manejarCambioFiltro
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Monto máximo
+                        </label>
+
+                        <input
+                            type="number"
+                            name="montoMaximo"
+                            min="0"
+                            step="0.01"
+                            value={
+                                filtros.montoMaximo
+                            }
+                            onChange={
+                                manejarCambioFiltro
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                            Buscar categoría
+                        </label>
+
+                        <input
+                            type="text"
+                            name="busqueda"
+                            value={
+                                filtros.busqueda
+                            }
+                            onChange={
+                                manejarCambioFiltro
+                            }
+                            placeholder="Buscar..."
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                        />
+                    </div>
+
+                </div>
+
+            </div>
+
+            {/* TABLA */}
+
+            <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+
+                <div className="overflow-x-auto">
+
+                    <table className="w-full min-w-[800px]">
+
+                        <thead className="bg-gray-50">
+
+                            <tr>
+
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                    Categoría
+                                </th>
+
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                    Mes
+                                </th>
+
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                    Monto límite
+                                </th>
+
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                    Progreso
+                                </th>
+
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                    Acciones
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody className="divide-y divide-gray-100">
+
+                            {presupuestosPaginados.length === 0 ? (
+
+                                <tr>
+
+                                    <td
+                                        colSpan="5"
+                                        className="px-6 py-10 text-center text-gray-500"
+                                    >
+                                        No tienes presupuestos registrados.
+                                    </td>
+
+                                </tr>
+
+                            ) : (
+
+                                presupuestosPaginados.map(
+                                    (presupuesto) => {
+
+                                        const progreso =
+                                            obtenerProgresoPresupuesto(
+                                                presupuesto
+                                            )
+
+                                        const colorBarra =
+                                            obtenerColorBarra(
+                                                progreso.estado
+                                            )
+
+                                        return (
+                                            <tr
+                                                key={
+                                                    presupuesto.idPresupuesto
+                                                }
+                                                className="hover:bg-gray-50"
+                                            >
+
+                                                <td className="px-6 py-4">
+
+                                                    <span className="font-medium text-gray-800">
+                                                        {
+                                                            obtenerNombreCategoria(
+                                                                presupuesto.idCategoria
+                                                            )
+                                                        }
+                                                    </span>
+
+                                                </td>
+
+                                                <td className="px-6 py-4 text-gray-600">
+
+                                                    {presupuesto.mesAnio
+                                                        ? presupuesto.mesAnio.substring(
+                                                            0,
+                                                            7
+                                                        )
+                                                        : '-'}
+
+                                                </td>
+
+                                                <td className="px-6 py-4 font-medium text-gray-800">
+
+                                                    $
+                                                    {Number(
+                                                        presupuesto.montoLimite
+                                                    ).toFixed(2)}
+
+                                                </td>
+
+                                                <td className="px-6 py-4">
+
+                                                    <div className="min-w-[180px]">
+
+                                                        <div className="mb-1 flex justify-between text-xs">
+
+                                                            <span className="text-gray-500">
+                                                                $
+                                                                {progreso.gastado.toFixed(
+                                                                    2
+                                                                )}
+                                                            </span>
+
+                                                            <span className="font-semibold text-gray-700">
+                                                                {progreso.porcentaje.toFixed(
+                                                                    0
+                                                                )}
+                                                                %
+                                                            </span>
+
+                                                        </div>
+
+                                                        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+
+                                                            <div
+                                                                className={`h-full rounded-full transition-all duration-500 ${colorBarra}`}
+                                                                style={{
+                                                                    width: `${progreso.porcentajeBarra}%`,
+                                                                }}
+                                                            />
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </td>
+
+                                                <td className="px-6 py-4">
+
+                                                    <div className="flex gap-2">
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                editarPresupuesto(
+                                                                    presupuesto
+                                                                )
+                                                            }
+                                                            className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                                                        >
+                                                            Editar
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                solicitarEliminar(
+                                                                    presupuesto.idPresupuesto
+                                                                )
+                                                            }
+                                                            className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200"
+                                                        >
+                                                            Eliminar
+                                                        </button>
+
+                                                    </div>
+
+                                                </td>
+
+                                            </tr>
+                                        )
+                                    }
+                                )
+
+                            )}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                {totalPaginas > 1 && (
+                    <div className="border-t border-gray-100 p-4">
+
+                        <Pagination
+                            paginaActual={
+                                paginaActual
+                            }
+                            totalPaginas={
+                                totalPaginas
+                            }
+                            onPageChange={
+                                setPaginaActual
+                            }
+                        />
+
+                    </div>
                 )}
 
-            </section>
+            </div>
 
-        </main>
+            {/* MODAL DE CONFIRMACIÓN */}
+
+            <ConfirmModal
+                abierto={
+                    confirmModal.abierto
+                }
+                mensaje={
+                    confirmModal.mensaje
+                }
+                onConfirm={
+                    confirmarEliminar
+                }
+                onCancel={() =>
+                    setConfirmModal({
+                        abierto: false,
+                        id: null,
+                        mensaje: '',
+                    })
+                }
+                cargando={
+                    procesando
+                }
+            />
+
+        </div>
     )
 }
+
+export default Presupuestos

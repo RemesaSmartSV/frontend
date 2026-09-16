@@ -28,7 +28,7 @@ export default function Layout({
                     setMenuAbierto={setMenuAbierto}
                 />
 
-                <main className="min-w-0 flex-1 p-4 sm:p-6">
+                <main className="min-w-0 flex-1 p-4 sm:p-6 lg:ml-64">
                     <Outlet />
                 </main>
 

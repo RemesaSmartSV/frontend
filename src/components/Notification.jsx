@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 export default function Notification({ tipo = 'success', mensaje, onClose }) {
     if (!mensaje) return null
 
@@ -15,11 +17,19 @@ export default function Notification({ tipo = 'success', mensaje, onClose }) {
         info: 'ℹ',
     }
 
+    useEffect(() => {
+        if (tipo === 'success' && onClose) {
+            const timer = setTimeout(onClose, 4000)
+            return () => clearTimeout(timer)
+        }
+    }, [tipo, onClose])
+
     return (
         <div
+            role="alert"
             className={`fixed right-5 top-5 z-50 flex w-80 items-center gap-3 rounded-lg border-l-4 p-4 shadow-lg ${estilos[tipo]}`}
         >
-            <span className="text-xl font-bold">
+            <span className="text-xl font-bold" aria-hidden="true">
                 {iconos[tipo]}
             </span>
 
@@ -29,6 +39,7 @@ export default function Notification({ tipo = 'success', mensaje, onClose }) {
 
             <button
                 onClick={onClose}
+                aria-label="Cerrar notificación"
                 className="text-lg font-bold opacity-60 hover:opacity-100"
             >
                 ×

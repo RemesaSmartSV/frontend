@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import ConfirmModal from '../components/ConfirmModal'
+import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
 
 export default function Movimientos() {
     const [movimientos, setMovimientos] = useState([])
@@ -11,7 +13,7 @@ export default function Movimientos() {
     const [formulario, setFormulario] = useState({
         idCategoria: '',
         monto: '',
-        fecha: '',
+        fecha: obtenerFechaHoy(),
         tipo: 'Ingreso',
         descripcion: '',
         origenEmisora: '',
@@ -24,15 +26,34 @@ export default function Movimientos() {
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
 
+    const [confirmModal, setConfirmModal] = useState({
+        abierto: false,
+        id: null,
+        titulo: '',
+        mensaje: '',
+    })
+
+    // =========================
+    // FILTROS
+    // =========================
+
+    const [filtros, setFiltros] = useState({
+        fechaDesde: '',
+        fechaHasta: '',
+        idCategoria: '',
+        montoMinimo: '',
+        montoMaximo: '',
+        busqueda: '',
+    })
+
+    // =========================
     // PAGINACIÓN
+    // =========================
+
     const [paginaActual, setPaginaActual] = useState(1)
     const registrosPorPagina = 5
 
-    useEffect(() => {
-        cargarDatos()
-    }, [])
-
-    async function cargarDatos() {
+    const cargarDatos = useCallback(async () => {
         try {
             setCargando(true)
             setError('')
@@ -45,24 +66,33 @@ export default function Movimientos() {
 
             setMovimientos(movimientosData)
             setCategorias(categoriasData)
-
-            // Volver a la primera página al actualizar
             setPaginaActual(1)
-
         } catch (err) {
             setError(err.message)
         } finally {
             setCargando(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        cargarDatos()
+    }, [cargarDatos])
 
     function manejarCambio(e) {
         const { name, value } = e.target
 
-        setFormulario({
-            ...formulario,
-            [name]: value,
-        })
+        if (name === 'tipo') {
+            setFormulario({
+                ...formulario,
+                [name]: value,
+                idCategoria: '',
+            })
+        } else {
+            setFormulario({
+                ...formulario,
+                [name]: value,
+            })
+        }
     }
 
     async function guardarMovimiento(e) {
@@ -116,7 +146,6 @@ export default function Movimientos() {
 
             limpiarFormulario()
             await cargarDatos()
-
         } catch (err) {
             setError(err.message)
         } finally {
@@ -145,14 +174,25 @@ export default function Movimientos() {
         })
     }
 
-    async function eliminarMovimiento(id) {
-        const confirmar = window.confirm(
-            '¿Seguro que deseas eliminar este movimiento?'
-        )
+    function eliminarMovimiento(id) {
+        setConfirmModal({
+            abierto: true,
+            id,
+            titulo: 'Eliminar movimiento',
+            mensaje:
+                '¿Seguro que deseas eliminar este movimiento? Esta acción no se puede deshacer.',
+        })
+    }
 
-        if (!confirmar) {
-            return
-        }
+    async function confirmarEliminarMovimiento() {
+        const id = confirmModal.id
+
+        setConfirmModal({
+            abierto: false,
+            id: null,
+            titulo: '',
+            mensaje: '',
+        })
 
         try {
             setError('')
@@ -166,7 +206,6 @@ export default function Movimientos() {
             )
 
             await cargarDatos()
-
         } catch (err) {
             setError(err.message)
         } finally {
@@ -180,7 +219,7 @@ export default function Movimientos() {
         setFormulario({
             idCategoria: '',
             monto: '',
-            fecha: '',
+            fecha: obtenerFechaHoy(),
             tipo: 'Ingreso',
             descripcion: '',
             origenEmisora: '',
@@ -188,20 +227,236 @@ export default function Movimientos() {
     }
 
     // =========================
+    // MANEJO DE FILTROS
+    // =========================
+
+    function manejarCambioFiltro(e) {
+        const { name, value } = e.target
+
+        setFiltros({
+            ...filtros,
+            [name]: value,
+        })
+
+        setPaginaActual(1)
+    }
+
+    function limpiarFiltros() {
+        setFiltros({
+            fechaDesde: '',
+            fechaHasta: '',
+            idCategoria: '',
+            montoMinimo: '',
+            montoMaximo: '',
+            busqueda: '',
+        })
+
+        setPaginaActual(1)
+    }
+
+    // =========================
+    // FILTRADO
+    // =========================
+
+    const movimientosFiltrados = useMemo(() => {
+        return movimientos.filter((movimiento) => {
+            if (filtros.fechaDesde) {
+                const fechaMovimiento =
+                    movimiento.fecha?.split('T')[0]
+
+                if (fechaMovimiento < filtros.fechaDesde) {
+                    return false
+                }
+            }
+
+            if (filtros.fechaHasta) {
+                const fechaMovimiento =
+                    movimiento.fecha?.split('T')[0]
+
+                if (fechaMovimiento > filtros.fechaHasta) {
+                    return false
+                }
+            }
+
+            if (filtros.idCategoria) {
+                if (
+                    String(movimiento.idCategoria) !==
+                    String(filtros.idCategoria)
+                ) {
+                    return false
+                }
+            }
+
+            if (filtros.montoMinimo !== '') {
+                if (
+                    Number(movimiento.monto) <
+                    Number(filtros.montoMinimo)
+                ) {
+                    return false
+                }
+            }
+
+            if (filtros.montoMaximo !== '') {
+                if (
+                    Number(movimiento.monto) >
+                    Number(filtros.montoMaximo)
+                ) {
+                    return false
+                }
+            }
+
+            if (filtros.busqueda) {
+                const termino =
+                    filtros.busqueda.toLowerCase()
+
+                const descripcion =
+                    (movimiento.descripcion || '').toLowerCase()
+
+                const origen =
+                    (movimiento.origenEmisora || '').toLowerCase()
+
+                if (
+                    !descripcion.includes(termino) &&
+                    !origen.includes(termino)
+                ) {
+                    return false
+                }
+            }
+
+            return true
+        })
+    }, [movimientos, filtros])
+
+    // =========================
+    // EXPORTAR CSV
+    // =========================
+
+    function exportarMovimientos() {
+        if (movimientosFiltrados.length === 0) {
+            setError('No hay movimientos para exportar.')
+            return
+        }
+
+        const encabezados = [
+            'Fecha',
+            'Tipo',
+            'Categoría',
+            'Monto',
+            'Descripción',
+            'Origen',
+        ]
+
+        const filas = movimientosFiltrados.map(
+            (movimiento) => {
+                const categoria = categorias.find(
+                    (c) =>
+                        c.idCategoria ===
+                        movimiento.idCategoria
+                )
+
+                const fecha =
+                    movimiento.fecha?.split('T')[0] || ''
+
+                const tipo =
+                    movimiento.tipo || ''
+
+                const nombreCategoria =
+                    categoria?.nombre ||
+                    'Sin categoría'
+
+                const monto =
+                    Number(movimiento.monto).toFixed(2)
+
+                const descripcion =
+                    movimiento.descripcion || ''
+
+                const origen =
+                    movimiento.origenEmisora || ''
+
+                return [
+                    fecha,
+                    tipo,
+                    nombreCategoria,
+                    monto,
+                    descripcion,
+                    origen,
+                ]
+            }
+        )
+
+        function escaparCSV(valor) {
+            let texto = String(valor).replace(/"/g, '""')
+
+            if (/^[=+\-@\t\r]/.test(texto)) {
+                texto = "'" + texto
+            }
+
+            return `"${texto}"`
+        }
+
+        const contenidoCSV = [
+            encabezados.map(escaparCSV).join(','),
+            ...filas.map((fila) =>
+                fila.map(escaparCSV).join(',')
+            ),
+        ].join('\n')
+
+        const BOM = '\uFEFF'
+
+        const archivo = new Blob(
+            [BOM + contenidoCSV],
+            {
+                type: 'text/csv;charset=utf-8;',
+            }
+        )
+
+        const url =
+            URL.createObjectURL(archivo)
+
+        const enlace =
+            document.createElement('a')
+
+        enlace.href = url
+
+        const fechaActual =
+            new Date()
+                .toISOString()
+                .split('T')[0]
+
+        enlace.download =
+            `movimientos_${fechaActual}.csv`
+
+        document.body.appendChild(enlace)
+
+        enlace.click()
+
+        document.body.removeChild(enlace)
+
+        URL.revokeObjectURL(url)
+
+        setMensaje(
+            `${movimientosFiltrados.length} movimiento(s) exportado(s) correctamente.`
+        )
+    }
+
+    // =========================
     // PAGINACIÓN
     // =========================
 
     const totalPaginas = Math.ceil(
-        movimientos.length / registrosPorPagina
+        movimientosFiltrados.length /
+        registrosPorPagina
     )
 
     const indiceInicial =
-        (paginaActual - 1) * registrosPorPagina
+        (paginaActual - 1) *
+        registrosPorPagina
 
-    const movimientosPagina = movimientos.slice(
-        indiceInicial,
-        indiceInicial + registrosPorPagina
-    )
+    const movimientosPagina =
+        movimientosFiltrados.slice(
+            indiceInicial,
+            indiceInicial + registrosPorPagina
+        )
 
     function cambiarPagina(nuevaPagina) {
         if (
@@ -215,9 +470,10 @@ export default function Movimientos() {
     }
 
     return (
-        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-8">
+        <div className="w-full space-y-6 font-sans text-slate-800">
 
             {/* NOTIFICACIONES */}
+
             <Notification
                 tipo="success"
                 mensaje={mensaje}
@@ -231,21 +487,22 @@ export default function Movimientos() {
             />
 
             {/* ENCABEZADO */}
+
             <div className="mb-6 sm:mb-8">
 
-                <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+                <h1 className="text-2xl font-bold text-gray-800">
                     Movimientos financieros
                 </h1>
 
-                <p className="max-w-2xl text-sm leading-6 text-gray-500 sm:text-base">
-                    Registra tus ingresos, remesas y gastos
-                    familiares.
+                <p className="text-gray-500">
+                    Registra tus ingresos, remesas y gastos familiares.
                 </p>
 
             </div>
 
             {/* FORMULARIO */}
-            <section className="mb-6 rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+
+            <section className="mb-6 w-full rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
 
                 <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
@@ -255,10 +512,12 @@ export default function Movimientos() {
 
                 <form onSubmit={guardarMovimiento}>
 
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-2">
 
                         {/* TIPO */}
+
                         <div className="flex min-w-0 flex-col gap-2">
+
                             <label
                                 htmlFor="tipo"
                                 className="font-semibold text-gray-700"
@@ -272,7 +531,7 @@ export default function Movimientos() {
                                 value={formulario.tipo}
                                 onChange={manejarCambio}
                                 disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             >
                                 <option value="Ingreso">
                                     Ingreso / Remesa
@@ -282,10 +541,13 @@ export default function Movimientos() {
                                     Gasto
                                 </option>
                             </select>
+
                         </div>
 
                         {/* CATEGORÍA */}
+
                         <div className="flex min-w-0 flex-col gap-2">
+
                             <label
                                 htmlFor="idCategoria"
                                 className="font-semibold text-gray-700"
@@ -299,25 +561,34 @@ export default function Movimientos() {
                                 value={formulario.idCategoria}
                                 onChange={manejarCambio}
                                 disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             >
                                 <option value="">
                                     Selecciona una categoría
                                 </option>
 
-                                {categorias.map((categoria) => (
-                                    <option
-                                        key={categoria.idCategoria}
-                                        value={categoria.idCategoria}
-                                    >
-                                        {categoria.nombre}
-                                    </option>
-                                ))}
+                                {categorias
+                                    .filter(
+                                        (categoria) =>
+                                            categoria.tipo ===
+                                            formulario.tipo
+                                    )
+                                    .map((categoria) => (
+                                        <option
+                                            key={categoria.idCategoria}
+                                            value={categoria.idCategoria}
+                                        >
+                                            {categoria.nombre}
+                                        </option>
+                                    ))}
                             </select>
+
                         </div>
 
                         {/* MONTO */}
+
                         <div className="flex min-w-0 flex-col gap-2">
+
                             <label
                                 htmlFor="monto"
                                 className="font-semibold text-gray-700"
@@ -335,12 +606,15 @@ export default function Movimientos() {
                                 onChange={manejarCambio}
                                 placeholder="0.00"
                                 disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
+
                         </div>
 
                         {/* FECHA */}
+
                         <div className="flex min-w-0 flex-col gap-2">
+
                             <label
                                 htmlFor="fecha"
                                 className="font-semibold text-gray-700"
@@ -355,12 +629,15 @@ export default function Movimientos() {
                                 value={formulario.fecha}
                                 onChange={manejarCambio}
                                 disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             />
+
                         </div>
 
                         {/* ORIGEN */}
+
                         <div className="flex min-w-0 flex-col gap-2">
+
                             <label
                                 htmlFor="origenEmisora"
                                 className="font-semibold text-gray-700"
@@ -376,12 +653,15 @@ export default function Movimientos() {
                                 onChange={manejarCambio}
                                 placeholder="Ej. Estados Unidos"
                                 disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
+
                         </div>
 
                         {/* DESCRIPCIÓN */}
+
                         <div className="flex min-w-0 flex-col gap-2 md:col-span-2">
+
                             <label
                                 htmlFor="descripcion"
                                 className="font-semibold text-gray-700"
@@ -397,13 +677,15 @@ export default function Movimientos() {
                                 onChange={manejarCambio}
                                 placeholder="Descripción del movimiento"
                                 disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
+
                         </div>
 
                     </div>
 
                     {/* BOTONES */}
+
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
 
                         <button
@@ -435,14 +717,228 @@ export default function Movimientos() {
 
             </section>
 
+            {/* FILTROS */}
+
+            <section className="mb-6 w-full rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+
+                <div className="mb-5">
+
+                    <h2 className="text-xl font-semibold text-slate-900">
+                        Filtrar movimientos
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Filtra los movimientos por fecha, categoría o monto.
+                    </p>
+
+                </div>
+
+                {/* BÚSQUEDA */}
+
+                <div className="mb-5 flex min-w-0 flex-col gap-2">
+
+                    <label
+                        htmlFor="busqueda"
+                        className="font-semibold text-gray-700"
+                    >
+                        Buscar por descripción
+                    </label>
+
+                    <input
+                        id="busqueda"
+                        type="text"
+                        name="busqueda"
+                        value={filtros.busqueda}
+                        onChange={manejarCambioFiltro}
+                        placeholder="Ej. Supermercado, transporte..."
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                    />
+
+                </div>
+
+                {/* FILTROS */}
+
+                <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-5">
+
+                    {/* FECHA DESDE */}
+
+                    <div className="flex min-w-0 flex-col gap-2">
+
+                        <label
+                            htmlFor="fechaDesde"
+                            className="font-semibold text-gray-700"
+                        >
+                            Fecha desde
+                        </label>
+
+                        <input
+                            id="fechaDesde"
+                            type="date"
+                            name="fechaDesde"
+                            value={filtros.fechaDesde}
+                            onChange={manejarCambioFiltro}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                        />
+
+                    </div>
+
+                    {/* FECHA HASTA */}
+
+                    <div className="flex min-w-0 flex-col gap-2">
+
+                        <label
+                            htmlFor="fechaHasta"
+                            className="font-semibold text-gray-700"
+                        >
+                            Fecha hasta
+                        </label>
+
+                        <input
+                            id="fechaHasta"
+                            type="date"
+                            name="fechaHasta"
+                            value={filtros.fechaHasta}
+                            onChange={manejarCambioFiltro}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                        />
+
+                    </div>
+
+                    {/* CATEGORÍA */}
+
+                    <div className="flex min-w-0 flex-col gap-2">
+
+                        <label
+                            htmlFor="filtroCategoria"
+                            className="font-semibold text-gray-700"
+                        >
+                            Categoría
+                        </label>
+
+                        <select
+                            id="filtroCategoria"
+                            name="idCategoria"
+                            value={filtros.idCategoria}
+                            onChange={manejarCambioFiltro}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                        >
+                            <option value="">
+                                Todas las categorías
+                            </option>
+
+                            {categorias.map((categoria) => (
+                                <option
+                                    key={categoria.idCategoria}
+                                    value={categoria.idCategoria}
+                                >
+                                    {categoria.nombre}
+                                </option>
+                            ))}
+
+                        </select>
+
+                    </div>
+
+                    {/* MONTO MÍNIMO */}
+
+                    <div className="flex min-w-0 flex-col gap-2">
+
+                        <label
+                            htmlFor="montoMinimo"
+                            className="font-semibold text-gray-700"
+                        >
+                            Monto mínimo
+                        </label>
+
+                        <input
+                            id="montoMinimo"
+                            type="number"
+                            name="montoMinimo"
+                            min="0"
+                            step="0.01"
+                            value={filtros.montoMinimo}
+                            onChange={manejarCambioFiltro}
+                            placeholder="Ej. 10.00"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                        />
+
+                    </div>
+
+                    {/* MONTO MÁXIMO */}
+
+                    <div className="flex min-w-0 flex-col gap-2">
+
+                        <label
+                            htmlFor="montoMaximo"
+                            className="font-semibold text-gray-700"
+                        >
+                            Monto máximo
+                        </label>
+
+                        <input
+                            id="montoMaximo"
+                            type="number"
+                            name="montoMaximo"
+                            min="0"
+                            step="0.01"
+                            value={filtros.montoMaximo}
+                            onChange={manejarCambioFiltro}
+                            placeholder="Ej. 500.00"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                        />
+
+                    </div>
+
+                </div>
+
+                {/* BOTONES */}
+
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+
+                    <button
+                        type="button"
+                        onClick={limpiarFiltros}
+                        className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 sm:w-auto"
+                    >
+                        Limpiar filtros
+                    </button>
+
+                    <p className="text-sm text-gray-500">
+                        {movimientosFiltrados.length === 1
+                            ? '1 movimiento encontrado'
+                            : `${movimientosFiltrados.length} movimientos encontrados`}
+                    </p>
+
+                </div>
+
+            </section>
+
             {/* LISTA */}
-            <section className="mb-6 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+
+            <section className="mb-6 w-full overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
 
                 <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-                    <h2 className="text-xl font-semibold text-slate-900">
-                        Movimientos registrados
-                    </h2>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+
+                        <h2 className="text-xl font-semibold text-slate-900">
+                            Movimientos registrados
+                        </h2>
+
+                        <button
+                            type="button"
+                            onClick={exportarMovimientos}
+                            disabled={
+                                cargando ||
+                                procesando ||
+                                movimientosFiltrados.length === 0
+                            }
+                            className="w-full rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            Exportar
+                        </button>
+
+                    </div>
 
                     <button
                         onClick={cargarDatos}
@@ -462,20 +958,49 @@ export default function Movimientos() {
 
                 ) : movimientos.length === 0 ? (
 
-                    <div className="rounded-lg bg-gray-50 p-6 text-center sm:p-8">
-                        <p className="text-sm text-gray-500 sm:text-base">
+                    <div className="rounded-lg bg-gray-50 p-8 text-center">
+
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">
+                            📋
+                        </div>
+
+                        <p className="mt-4 font-medium text-gray-700">
                             No hay movimientos registrados.
                         </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            Usa el formulario de arriba para registrar tu primer movimiento.
+                        </p>
+
+                    </div>
+
+                ) : movimientosFiltrados.length === 0 ? (
+
+                    <div className="rounded-lg bg-gray-50 p-6 text-center sm:p-8">
+
+                        <p className="text-sm font-medium text-gray-600 sm:text-base">
+                            No hay movimientos que coincidan con los filtros.
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={limpiarFiltros}
+                            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                        >
+                            Limpiar filtros
+                        </button>
+
                     </div>
 
                 ) : (
 
                     <>
-                        <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
 
-                            <table className="w-full min-w-[950px] border-collapse">
+                           <div className="w-full overflow-x-auto">
 
+                             <table className="w-full min-w-[800px]">
                                 <thead>
+
                                     <tr>
 
                                         <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
@@ -507,6 +1032,7 @@ export default function Movimientos() {
                                         </th>
 
                                     </tr>
+
                                 </thead>
 
                                 <tbody>
@@ -521,21 +1047,18 @@ export default function Movimientos() {
                                             )
 
                                         return (
+
                                             <tr
-                                                key={
-                                                    movimiento.idMovimiento
-                                                }
+                                                key={movimiento.idMovimiento}
                                                 className="transition hover:bg-gray-50"
                                             >
 
-                                                {/* FECHA */}
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
                                                     {new Date(
                                                         movimiento.fecha
                                                     ).toLocaleDateString()}
                                                 </td>
 
-                                                {/* TIPO */}
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
 
                                                     <span
@@ -551,33 +1074,27 @@ export default function Movimientos() {
 
                                                 </td>
 
-                                                {/* CATEGORÍA */}
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
                                                     {categoria?.nombre ||
                                                         'Sin categoría'}
                                                 </td>
 
-                                                {/* MONTO */}
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm font-semibold sm:px-3.5">
-                                                    $
-                                                    {Number(
+                                                    {formatearMoneda(
                                                         movimiento.monto
-                                                    ).toFixed(2)}
+                                                    )}
                                                 </td>
 
-                                                {/* DESCRIPCIÓN */}
                                                 <td className="max-w-[250px] break-words border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
                                                     {movimiento.descripcion ||
                                                         '-'}
                                                 </td>
 
-                                                {/* ORIGEN */}
                                                 <td className="max-w-[180px] break-words border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
                                                     {movimiento.origenEmisora ||
                                                         '-'}
                                                 </td>
 
-                                                {/* ACCIONES */}
                                                 <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
 
                                                     <div className="flex flex-col gap-2 sm:flex-row">
@@ -613,6 +1130,7 @@ export default function Movimientos() {
                                                 </td>
 
                                             </tr>
+
                                         )
                                     })}
 
@@ -622,19 +1140,37 @@ export default function Movimientos() {
 
                         </div>
 
-                        {/* PAGINACIÓN */}
                         <div className="px-1 pb-1">
+
                             <Pagination
                                 paginaActual={paginaActual}
                                 totalPaginas={totalPaginas}
                                 cambiarPagina={cambiarPagina}
                             />
+
                         </div>
+
                     </>
+
                 )}
 
             </section>
 
-        </main>
+            <ConfirmModal
+                abierto={confirmModal.abierto}
+                titulo={confirmModal.titulo}
+                mensaje={confirmModal.mensaje}
+                onConfirmar={confirmarEliminarMovimiento}
+                onCancelar={() =>
+                    setConfirmModal({
+                        abierto: false,
+                        id: null,
+                        titulo: '',
+                        mensaje: '',
+                    })
+                }
+            />
+
+        </div>
     )
 }

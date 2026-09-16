@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { categoriasApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
+import ConfirmModal from '../components/ConfirmModal'
 
 export default function Categorias() {
     const [categorias, setCategorias] = useState([])
@@ -16,11 +17,14 @@ export default function Categorias() {
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
 
-    useEffect(() => {
-        cargarCategorias()
-    }, [])
+    const [confirmModal, setConfirmModal] = useState({
+        abierto: false,
+        id: null,
+        titulo: '',
+        mensaje: '',
+    })
 
-    async function cargarCategorias() {
+    const cargarCategorias = useCallback(async () => {
         try {
             setCargando(true)
             setError('')
@@ -32,7 +36,11 @@ export default function Categorias() {
         } finally {
             setCargando(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        cargarCategorias()
+    }, [cargarCategorias])
 
     async function guardarCategoria(e) {
         e.preventDefault()
@@ -94,14 +102,18 @@ export default function Categorias() {
         })
     }
 
-    async function eliminarCategoria(id) {
-        const confirmar = window.confirm(
-            '¿Seguro que deseas eliminar esta categoría?'
-        )
+    function eliminarCategoria(id) {
+        setConfirmModal({
+            abierto: true,
+            id,
+            titulo: 'Eliminar categoría',
+            mensaje: '¿Seguro que deseas eliminar esta categoría? Esta acción no se puede deshacer.',
+        })
+    }
 
-        if (!confirmar) {
-            return
-        }
+    async function confirmarEliminarCategoria() {
+        const id = confirmModal.id
+        setConfirmModal({ abierto: false, id: null, titulo: '', mensaje: '' })
 
         try {
             setError('')
@@ -110,9 +122,7 @@ export default function Categorias() {
 
             await categoriasApi.eliminar(id)
 
-            setMensaje(
-                'Categoría eliminada correctamente.'
-            )
+            setMensaje('Categoría eliminada correctamente.')
 
             await cargarCategorias()
         } catch (err) {
@@ -130,7 +140,7 @@ export default function Categorias() {
     }
 
     return (
-        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-8">
+        <div className="space-y-6">
 
             {/* NOTIFICACIONES */}
             <Notification
@@ -148,11 +158,11 @@ export default function Categorias() {
             {/* ENCABEZADO */}
             <div className="mb-6 sm:mb-8">
 
-                <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+                <h1 className="text-2xl font-bold text-gray-800">
                     Categorías
                 </h1>
 
-                <p className="text-sm leading-6 text-gray-500 sm:text-base">
+                <p className="text-gray-500">
                     Administra las categorías de tus ingresos y gastos.
                 </p>
 
@@ -304,9 +314,17 @@ export default function Categorias() {
 
                 ) : categorias.length === 0 ? (
 
-                    <p className="p-4 text-sm text-gray-500 sm:p-0">
-                        No hay categorías registradas.
-                    </p>
+                    <div className="p-8 text-center">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">
+                            🏷️
+                        </div>
+                        <p className="mt-4 font-medium text-gray-700">
+                            No hay categorías registradas.
+                        </p>
+                        <p className="mt-1 text-sm text-gray-500">
+                            Crea tu primera categoría usando el formulario de arriba.
+                        </p>
+                    </div>
 
                 ) : (
 
@@ -419,6 +437,14 @@ export default function Categorias() {
 
             </section>
 
-        </main>
+            <ConfirmModal
+                abierto={confirmModal.abierto}
+                titulo={confirmModal.titulo}
+                mensaje={confirmModal.mensaje}
+                onConfirmar={confirmarEliminarCategoria}
+                onCancelar={() => setConfirmModal({ abierto: false, id: null, titulo: '', mensaje: '' })}
+            />
+
+        </div>
     )
 }
