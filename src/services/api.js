@@ -158,6 +158,27 @@ export const movimientosApi = {
 
         return manejarRespuesta(res)
     },
+
+    async exportar(formato) {
+        const res = await fetch(
+            `${API_URL}/Movimientos/exportar?formato=${formato}`,
+            { headers: obtenerHeaders() }
+        )
+
+        if (!res.ok) {
+            throw new Error(`Error ${res.status}`)
+        }
+
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const enlace = document.createElement('a')
+        enlace.href = url
+        enlace.download = `movimientos.${formato}`
+        document.body.appendChild(enlace)
+        enlace.click()
+        enlace.remove()
+        URL.revokeObjectURL(url)
+    },
 }
 
 export const presupuestosApi = {
