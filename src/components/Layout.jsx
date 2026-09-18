@@ -7,32 +7,27 @@ export default function Layout({
     usuario,
     cerrarSesion
 }) {
-
-    const [menuAbierto, setMenuAbierto] =
-        useState(false)
+    const [menuAbierto, setMenuAbierto] = useState(false)
 
     return (
         <div className="min-h-screen bg-gray-100">
 
             <Navbar
                 usuario={usuario}
+                menuAbierto={menuAbierto}
+                setMenuAbierto={setMenuAbierto}
+            />
+
+            <Sidebar
+                usuario={usuario}
                 cerrarSesion={cerrarSesion}
                 menuAbierto={menuAbierto}
                 setMenuAbierto={setMenuAbierto}
             />
 
-            <div className="flex">
-
-                <Sidebar
-                    menuAbierto={menuAbierto}
-                    setMenuAbierto={setMenuAbierto}
-                />
-
-                <main className="min-w-0 flex-1 p-4 sm:p-6 lg:ml-64">
-                    <Outlet />
-                </main>
-
-            </div>
+            <main className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:ml-64">
+                <Outlet />
+            </main>
 
         </div>
     )
