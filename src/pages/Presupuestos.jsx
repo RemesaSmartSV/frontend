@@ -200,6 +200,7 @@ function Presupuestos() {
             setConfirmModal({
                 abierto: false,
                 id: null,
+                titulo: 'Eliminar presupuesto',
                 mensaje: '',
             })
 
@@ -1009,7 +1010,7 @@ function Presupuestos() {
                             totalPaginas={
                                 totalPaginas
                             }
-                            onPageChange={
+                            cambiarpagina={
                                 setPaginaActual
                             }
                         />
@@ -1028,10 +1029,10 @@ function Presupuestos() {
                 mensaje={
                     confirmModal.mensaje
                 }
-                onConfirm={
+                onConfirmar={
                     confirmarEliminar
                 }
-                onCancel={() =>
+                onCancelar={() =>
                     setConfirmModal({
                         abierto: false,
                         id: null,
@@ -1045,6 +1046,7 @@ function Presupuestos() {
 
         </div>
     )
+
 }
 
 export default Presupuestos
