@@ -120,13 +120,24 @@ export const authApi = {
         localStorage.removeItem('usuario')
     },
 }
+function extraerItems(respuesta) {
+    if (respuesta && Array.isArray(respuesta.items)) {
+        return respuesta.items
+    }
+    if (Array.isArray(respuesta)) {
+        return respuesta
+    }
+    return []
+}
+
 export const categoriasApi = {
     async listar() {
         const res = await fetch(`${API_URL}/Categorias`, {
             headers: obtenerHeaders(),
         })
 
-        return manejarRespuesta(res)
+        const data = await manejarRespuesta(res)
+        return extraerItems(data)
     },
 
     async crear(categoria) {
@@ -165,7 +176,8 @@ export const movimientosApi = {
             headers: obtenerHeaders(),
         })
 
-        return manejarRespuesta(res)
+        const data = await manejarRespuesta(res)
+        return extraerItems(data)
     },
 
     async crear(movimiento) {

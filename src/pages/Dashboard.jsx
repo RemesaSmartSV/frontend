@@ -311,8 +311,8 @@ export default function Dashboard() {
 
             {mensaje && (
                 <Notification
-                    type="success"
-                    message={mensaje}
+                    tipo="success"
+                    mensaje={mensaje}
                     onClose={() =>
                         setMensaje('')
                     }
@@ -321,8 +321,8 @@ export default function Dashboard() {
 
             {error && (
                 <Notification
-                    type="error"
-                    message={error}
+                    tipo="error"
+                    mensaje={error}
                     onClose={() =>
                         setError('')
                     }
