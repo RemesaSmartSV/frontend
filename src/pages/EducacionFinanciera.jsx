@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { educacionApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
@@ -11,11 +11,7 @@ export default function EducacionFinanciera() {
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
 
-    useEffect(() => {
-        cargarTips()
-    }, [])
-
-    async function cargarTips() {
+    const cargarTips = useCallback(async () => {
         try {
             setCargando(true)
             setError('')
@@ -31,7 +27,11 @@ export default function EducacionFinanciera() {
         } finally {
             setCargando(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        cargarTips()
+    }, [cargarTips])
 
     async function actualizarTips() {
         try {

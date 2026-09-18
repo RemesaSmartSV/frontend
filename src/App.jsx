@@ -1,29 +1,38 @@
-import { useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import {
     BrowserRouter,
     Routes,
-    Route
+    Route,
+    useLocation
 } from 'react-router-dom'
 
-import Login from './pages/Login'
-import Register from './pages/Register'
-
-import Dashboard from './pages/Dashboard'
-import Movimientos from './pages/Movimientos'
-import Categorias from './pages/Categorias'
-import Remesas from './pages/Remesas'
-import Ingresos from './pages/Ingresos'
-import Gastos from './pages/Gastos'
-import Presupuestos from './pages/Presupuestos'
-import EducacionFinanciera from './pages/EducacionFinanciera'
-
+import Loading from './components/Loading'
+import Notification from './components/Notification'
 import Layout from './components/Layout'
+import { authApi, setOnUnauthorized } from './services/api'
 
-import { authApi } from './services/api'
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Movimientos = lazy(() => import('./pages/Movimientos'))
+const Categorias = lazy(() => import('./pages/Categorias'))
+const Remesas = lazy(() => import('./pages/Remesas'))
+const Ingresos = lazy(() => import('./pages/Ingresos'))
+const Gastos = lazy(() => import('./pages/Gastos'))
+const Presupuestos = lazy(() => import('./pages/Presupuestos'))
+const EducacionFinanciera = lazy(() => import('./pages/EducacionFinanciera'))
 
+function ScrollToTop() {
+    const { pathname } = useLocation()
 
-export default function App() {
+    useEffect(() => {
+        window.scrollTo(0, 0)
+    }, [pathname])
 
+    return null
+}
+
+function AppContent() {
     const [usuario, setUsuario] = useState(() => {
         const usuarioGuardado =
             localStorage.getItem('usuario')
@@ -36,11 +45,20 @@ export default function App() {
     const [mostrarRegistro, setMostrarRegistro] =
         useState(false)
 
+    const [mensajeSesion, setMensajeSesion] = useState('')
+
+    useEffect(() => {
+        setOnUnauthorized(() => {
+            setUsuario(null)
+            setMostrarRegistro(false)
+            setMensajeSesion('Tu sesión expiró. Inicia sesión nuevamente.')
+        })
+    }, [])
 
     function manejarLogin(datosUsuario) {
+        setMensajeSesion('')
         setUsuario(datosUsuario)
     }
-
 
     function cerrarSesion() {
         authApi.cerrarSesion()
@@ -48,28 +66,38 @@ export default function App() {
         setMostrarRegistro(false)
     }
 
-
     // Si no hay usuario, mostrar Login o Register
 
     if (!usuario) {
 
         if (mostrarRegistro) {
             return (
-                <Register
-                    volverLogin={() =>
-                        setMostrarRegistro(false)
-                    }
-                />
+                <Suspense fallback={<Loading mensaje="Cargando..." />}>
+                    <Register
+                        volverLogin={() =>
+                            setMostrarRegistro(false)
+                        }
+                    />
+                </Suspense>
             )
         }
 
         return (
-            <Login
-                onLogin={manejarLogin}
-                irRegistro={() =>
-                    setMostrarRegistro(true)
-                }
-            />
+            <>
+                <Notification
+                    tipo="info"
+                    mensaje={mensajeSesion}
+                    onClose={() => setMensajeSesion('')}
+                />
+                <Suspense fallback={<Loading mensaje="Cargando..." />}>
+                    <Login
+                        onLogin={manejarLogin}
+                        irRegistro={() =>
+                            setMostrarRegistro(true)
+                        }
+                    />
+                </Suspense>
+            </>
         )
     }
 
@@ -79,61 +107,69 @@ export default function App() {
     return (
         <BrowserRouter>
 
-            <Routes>
+            <ScrollToTop />
 
-                <Route
-                    element={
-                        <Layout
-                            usuario={usuario}
-                            cerrarSesion={cerrarSesion}
+            <Suspense fallback={<Loading mensaje="Cargando página..." />}>
+                <Routes>
+
+                    <Route
+                        element={
+                            <Layout
+                                usuario={usuario}
+                                cerrarSesion={cerrarSesion}
+                            />
+                        }
+                    >
+
+                        <Route
+                            path="/"
+                            element={<Dashboard />}
                         />
-                    }
-                >
 
-                    <Route
-                        path="/"
-                        element={<Dashboard />}
-                    />
+                        <Route
+                            path="/movimientos"
+                            element={<Movimientos />}
+                        />
 
-                    <Route
-                        path="/movimientos"
-                        element={<Movimientos />}
-                    />
+                        <Route
+                            path="/categorias"
+                            element={<Categorias />}
+                        />
 
-                    <Route
-                        path="/categorias"
-                        element={<Categorias />}
-                    />
+                        <Route
+                            path="/remesas"
+                            element={<Remesas />}
+                        />
 
-                    <Route
-                        path="/remesas"
-                        element={<Remesas />}
-                    />
+                        <Route
+                            path="/ingresos"
+                            element={<Ingresos />}
+                        />
 
-                    <Route
-                        path="/ingresos"
-                        element={<Ingresos />}
-                    />
+                        <Route
+                            path="/gastos"
+                            element={<Gastos />}
+                        />
 
-                    <Route
-                        path="/gastos"
-                        element={<Gastos />}
-                    />
+                        <Route
+                            path="/presupuestos"
+                            element={<Presupuestos />}
+                        />
 
-                    <Route
-                        path="/presupuestos"
-                        element={<Presupuestos />}
-                    />
+                        <Route
+                            path="/educacion-financiera"
+                            element={<EducacionFinanciera />}
+                        />
 
-                    <Route
-                        path="/educacion-financiera"
-                        element={<EducacionFinanciera />}
-                    />
+                    </Route>
 
-                </Route>
-
-            </Routes>
+                </Routes>
+            </Suspense>
 
         </BrowserRouter>
     )
+}
+
+export default function App() {
+    return <AppContent />
 }

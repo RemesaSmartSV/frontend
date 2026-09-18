@@ -1,7 +1,34 @@
 const API_URL = '/api'
 
+let onUnauthorized = null
+
+export function setOnUnauthorized(callback) {
+    onUnauthorized = callback
+}
+
 function obtenerToken() {
-    return localStorage.getItem('token')
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+        return null
+    }
+
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const expiracion = payload.exp * 1000
+
+        if (Date.now() >= expiracion) {
+            localStorage.removeItem('token')
+            localStorage.removeItem('usuario')
+            return null
+        }
+    } catch {
+        localStorage.removeItem('token')
+        localStorage.removeItem('usuario')
+        return null
+    }
+
+    return token
 }
 
 async function manejarRespuesta(res) {
@@ -11,6 +38,17 @@ async function manejarRespuesta(res) {
         }
 
         return await res.json()
+    }
+
+    if (res.status === 401) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('usuario')
+
+        if (onUnauthorized) {
+            onUnauthorized()
+        }
+
+        throw new Error('Sesión expirada. Inicia sesión nuevamente.')
     }
 
     let mensaje = `Error ${res.status}`
