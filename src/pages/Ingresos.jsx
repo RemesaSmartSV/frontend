@@ -1,48 +1,57 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
+import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import { formatearMoneda } from '../utils/formato'
 
-export default function Ingresos() {
+function Ingresos() {
     const [ingresos, setIngresos] = useState([])
     const [categorias, setCategorias] = useState([])
 
     const [formulario, setFormulario] = useState({
         idCategoria: '',
         monto: '',
-        fecha: '',
+        fecha: new Date().toISOString().split('T')[0],
         descripcion: '',
     })
 
     const [editandoId, setEditandoId] = useState(null)
     const [cargando, setCargando] = useState(false)
     const [procesando, setProcesando] = useState(false)
-
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
+    const [confirmModal, setConfirmModal] = useState({
+        abierto: false,
+        id: null,
+        titulo: '',
+        mensaje: '',
+    })
 
-    // PAGINACIÓN
     const [paginaActual, setPaginaActual] = useState(1)
     const registrosPorPagina = 5
 
-    useEffect(() => {
-        cargarDatos()
-    }, [])
+    const [filtros, setFiltros] = useState({
+        fechaDesde: '',
+        fechaHasta: '',
+        idCategoria: '',
+        montoMinimo: '',
+        montoMaximo: '',
+        busqueda: '',
+    })
 
-    async function cargarDatos() {
+    const cargarDatos = useCallback(async () => {
+        setCargando(true)
+        setError('')
+
         try {
-            setCargando(true)
-            setError('')
-
             const [movimientosData, categoriasData] =
                 await Promise.all([
                     movimientosApi.listar(),
                     categoriasApi.listar(),
                 ])
 
-            // Solo ingresos normales.
-            // Las remesas se identifican porque tienen origenEmisora.
             const ingresosFiltrados = movimientosData.filter(
                 (movimiento) =>
                     movimiento.tipo === 'Ingreso' &&
@@ -51,16 +60,18 @@ export default function Ingresos() {
 
             setIngresos(ingresosFiltrados)
             setCategorias(categoriasData)
-
-            // Volver a la primera página al actualizar los datos
             setPaginaActual(1)
-
         } catch (err) {
-            setError(err.message)
+            console.error(err)
+            setError('No se pudieron cargar los ingresos.')
         } finally {
             setCargando(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        cargarDatos()
+    }, [cargarDatos])
 
     function manejarCambio(e) {
         const { name, value } = e.target
@@ -73,6 +84,8 @@ export default function Ingresos() {
 
     async function guardarIngreso(e) {
         e.preventDefault()
+        setError('')
+        setMensaje('')
 
         if (!formulario.idCategoria) {
             setError('Selecciona una categoría.')
@@ -89,11 +102,9 @@ export default function Ingresos() {
             return
         }
 
-        try {
-            setError('')
-            setMensaje('')
-            setProcesando(true)
+        setProcesando(true)
 
+        try {
             const movimiento = {
                 idCategoria: Number(formulario.idCategoria),
                 monto: Number(formulario.monto),
@@ -109,22 +120,21 @@ export default function Ingresos() {
                     movimiento
                 )
 
-                setMensaje(
-                    'Ingreso actualizado correctamente.'
-                )
+                setMensaje('Ingreso actualizado correctamente.')
             } else {
                 await movimientosApi.crear(movimiento)
 
-                setMensaje(
-                    'Ingreso registrado correctamente.'
-                )
+                setMensaje('Ingreso registrado correctamente.')
             }
 
             limpiarFormulario()
             await cargarDatos()
-
         } catch (err) {
-            setError(err.message)
+            console.error(err)
+            setError(
+                err.message ||
+                'No se pudo guardar el ingreso.'
+            )
         } finally {
             setProcesando(false)
         }
@@ -134,8 +144,8 @@ export default function Ingresos() {
         setEditandoId(ingreso.idMovimiento)
 
         setFormulario({
-            idCategoria: ingreso.idCategoria,
-            monto: ingreso.monto,
+            idCategoria: ingreso.idCategoria || '',
+            monto: ingreso.monto || '',
             fecha: ingreso.fecha?.split('T')[0] || '',
             descripcion: ingreso.descripcion || '',
         })
@@ -149,44 +159,46 @@ export default function Ingresos() {
         })
     }
 
-    async function eliminarIngreso(id) {
-        const confirmar = window.confirm(
-            '¿Seguro que deseas eliminar este ingreso?'
-        )
+    function eliminarIngreso(id) {
+        setConfirmModal({
+            abierto: true,
+            id,
+            titulo: 'Eliminar ingreso',
+            mensaje: '¿Estás segura de que deseas eliminar este ingreso? Esta acción no se puede deshacer.',
+        })
+    }
 
-        if (!confirmar) {
-            return
-        }
+    async function confirmarEliminarIngreso() {
+        const id = confirmModal.id
+        setConfirmModal({ abierto: false, id: null, titulo: '', mensaje: '' })
+
+        setProcesando(true)
+        setError('')
+        setMensaje('')
 
         try {
-            setError('')
-            setMensaje('')
-            setProcesando(true)
-
             await movimientosApi.eliminar(id)
 
-            setMensaje(
-                'Ingreso eliminado correctamente.'
-            )
+            setMensaje('Ingreso eliminado correctamente.')
 
             await cargarDatos()
-
         } catch (err) {
-            setError(err.message)
+            console.error(err)
+            setError('No se pudo eliminar el ingreso.')
         } finally {
             setProcesando(false)
         }
     }
 
     function limpiarFormulario() {
-        setEditandoId(null)
-
         setFormulario({
             idCategoria: '',
             monto: '',
-            fecha: '',
+            fecha: new Date().toISOString().split('T')[0],
             descripcion: '',
         })
+
+        setEditandoId(null)
     }
 
     function obtenerNombreCategoria(idCategoria) {
@@ -197,21 +209,98 @@ export default function Ingresos() {
         return categoria?.nombre || 'Sin categoría'
     }
 
-    // =========================
-    // PAGINACIÓN
-    // =========================
+    function manejarCambioFiltro(e) {
+        const { name, value } = e.target
+
+        setFiltros({
+            ...filtros,
+            [name]: value,
+        })
+
+        setPaginaActual(1)
+    }
+
+    function limpiarFiltros() {
+        setFiltros({
+            fechaDesde: '',
+            fechaHasta: '',
+            idCategoria: '',
+            montoMinimo: '',
+            montoMaximo: '',
+            busqueda: '',
+        })
+
+        setPaginaActual(1)
+    }
+
+    const ingresosFiltradosPorUI = useMemo(() => {
+        return ingresos.filter((ingreso) => {
+            const fechaIngreso =
+                ingreso.fecha?.split('T')[0] || ''
+
+            const montoIngreso = Number(ingreso.monto)
+
+            if (
+                filtros.fechaDesde &&
+                fechaIngreso < filtros.fechaDesde
+            ) {
+                return false
+            }
+
+            if (
+                filtros.fechaHasta &&
+                fechaIngreso > filtros.fechaHasta
+            ) {
+                return false
+            }
+
+            if (
+                filtros.idCategoria &&
+                String(ingreso.idCategoria) !==
+                String(filtros.idCategoria)
+            ) {
+                return false
+            }
+
+            if (
+                filtros.montoMinimo !== '' &&
+                montoIngreso < Number(filtros.montoMinimo)
+            ) {
+                return false
+            }
+
+            if (
+                filtros.montoMaximo !== '' &&
+                montoIngreso > Number(filtros.montoMaximo)
+            ) {
+                return false
+            }
+
+            if (filtros.busqueda) {
+                const termino = filtros.busqueda.toLowerCase()
+                const descripcion = (ingreso.descripcion || '').toLowerCase()
+                if (!descripcion.includes(termino)) {
+                    return false
+                }
+            }
+
+            return true
+        })
+    }, [ingresos, filtros])
 
     const totalPaginas = Math.ceil(
-        ingresos.length / registrosPorPagina
+        ingresosFiltradosPorUI.length /
+        registrosPorPagina
     )
 
     const indiceInicial =
         (paginaActual - 1) * registrosPorPagina
 
-    const ingresosPagina = ingresos.slice(
-        indiceInicial,
-        indiceInicial + registrosPorPagina
-    )
+    const ingresosPagina =
+        ingresosFiltradosPorUI.slice(
+            indiceInicial,
+            indiceInicial + registrosPorPagina
+        )
 
     function cambiarPagina(nuevaPagina) {
         if (
@@ -224,176 +313,244 @@ export default function Ingresos() {
         setPaginaActual(nuevaPagina)
     }
 
+    function exportarIngresos() {
+        if (ingresosFiltradosPorUI.length === 0) {
+            setError('No hay ingresos para exportar.')
+            return
+        }
+
+        const encabezados = [
+            'Fecha',
+            'Categoría',
+            'Monto',
+            'Descripción',
+        ]
+
+        const filas = ingresosFiltradosPorUI.map(
+            (ingreso) => {
+                const fecha =
+                    ingreso.fecha?.split('T')[0] || ''
+
+                const categoria =
+                    obtenerNombreCategoria(
+                        ingreso.idCategoria
+                    )
+
+                const monto = Number(
+                    ingreso.monto
+                ).toFixed(2)
+
+                const descripcion =
+                    ingreso.descripcion || ''
+
+                return [
+                    fecha,
+                    categoria,
+                    monto,
+                    descripcion,
+                ]
+            }
+        )
+
+        function escaparCSV(valor) {
+            let texto = String(valor).replace(/"/g, '""')
+
+            if (/^[=+\-@\t\r]/.test(texto)) {
+                texto = "'" + texto
+            }
+
+            return `"${texto}"`
+        }
+
+        const contenidoCSV = [
+            encabezados
+                .map(escaparCSV)
+                .join(','),
+
+            ...filas.map((fila) =>
+                fila
+                    .map(escaparCSV)
+                    .join(',')
+            ),
+        ].join('\n')
+
+        const BOM = '\uFEFF'
+
+        const archivo = new Blob(
+            [BOM + contenidoCSV],
+            {
+                type: 'text/csv;charset=utf-8;',
+            }
+        )
+
+        const url =
+            URL.createObjectURL(archivo)
+
+        const enlace =
+            document.createElement('a')
+
+        enlace.href = url
+
+        const fechaActual =
+            new Date()
+                .toISOString()
+                .split('T')[0]
+
+        enlace.download =
+            `ingresos_${fechaActual}.csv`
+
+        document.body.appendChild(enlace)
+
+        enlace.click()
+
+        document.body.removeChild(enlace)
+
+        URL.revokeObjectURL(url)
+
+        setMensaje(
+            `${ingresosFiltradosPorUI.length} ingreso(s) exportado(s) correctamente.`
+        )
+    }
+
+    const categoriasIngreso = categorias.filter(
+        (categoria) =>
+            categoria.tipo === 'Ingreso'
+    )
+
+    const hayFiltrosActivos =
+        filtros.fechaDesde ||
+        filtros.fechaHasta ||
+        filtros.idCategoria ||
+        filtros.montoMinimo !== '' ||
+        filtros.montoMaximo !== '' ||
+        filtros.busqueda !== ''
+
     return (
-        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-8">
+        <div className="space-y-6">
+            <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">
+                    Ingresos
+                </h1>
 
-            {/* NOTIFICACIONES */}
-            <Notification
-                tipo="success"
-                mensaje={mensaje}
-                onClose={() => setMensaje('')}
-            />
-
-            <Notification
-                tipo="error"
-                mensaje={error}
-                onClose={() => setError('')}
-            />
-
-            {/* ENCABEZADO */}
-            <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
-
-                <div className="min-w-0">
-                    <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
-                        Ingresos
-                    </h1>
-
-                    <p className="max-w-2xl text-sm leading-6 text-gray-500 sm:text-base">
-                        Registra y administra los ingresos
-                        económicos de tu hogar.
-                    </p>
-                </div>
-
-                <button
-                    onClick={cargarDatos}
-                    disabled={cargando || procesando}
-                    className="w-full shrink-0 rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                >
-                    {cargando
-                        ? 'Cargando...'
-                        : 'Actualizar'}
-                </button>
-
+                <p className="text-gray-500">
+                    Registra y administra tus ingresos.
+                </p>
             </div>
 
-            {/* FORMULARIO */}
-            <section className="mb-6 rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+            {error && (
+                <Notification
+                    tipo="error"
+                    mensaje={error}
+                    onClose={() => setError('')}
+                />
+            )}
 
-                <h2 className="mb-5 text-xl font-semibold text-slate-900">
+            {mensaje && (
+                <Notification
+                    tipo="success"
+                    mensaje={mensaje}
+                    onClose={() => setMensaje('')}
+                />
+            )}
+
+            <section className="mb-6 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
+                <h2 className="mb-4 text-xl font-semibold text-slate-900">
                     {editandoId
                         ? 'Editar ingreso'
                         : 'Registrar ingreso'}
                 </h2>
 
-                <form onSubmit={guardarIngreso}>
+                <form
+                    onSubmit={guardarIngreso}
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                >
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                            Categoría
+                        </label>
 
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <select
+                            name="idCategoria"
+                            value={formulario.idCategoria}
+                            onChange={manejarCambio}
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                        >
+                            <option value="">
+                                Selecciona una categoría
+                            </option>
 
-                        {/* CATEGORÍA */}
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label
-                                htmlFor="idCategoria"
-                                className="font-semibold text-gray-700"
-                            >
-                                Categoría
-                            </label>
-
-                            <select
-                                id="idCategoria"
-                                name="idCategoria"
-                                value={formulario.idCategoria}
-                                onChange={manejarCambio}
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
-                            >
-                                <option value="">
-                                    Selecciona una categoría
-                                </option>
-
-                                {categorias
-                                    .filter(
-                                        (categoria) =>
-                                            categoria.tipo ===
-                                            'Ingreso'
-                                    )
-                                    .map((categoria) => (
-                                        <option
-                                            key={
-                                                categoria.idCategoria
-                                            }
-                                            value={
-                                                categoria.idCategoria
-                                            }
-                                        >
-                                            {categoria.nombre}
-                                        </option>
-                                    ))}
-                            </select>
-                        </div>
-
-                        {/* MONTO */}
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label
-                                htmlFor="monto"
-                                className="font-semibold text-gray-700"
-                            >
-                                Monto
-                            </label>
-
-                            <input
-                                id="monto"
-                                type="number"
-                                name="monto"
-                                min="0"
-                                step="0.01"
-                                value={formulario.monto}
-                                onChange={manejarCambio}
-                                placeholder="0.00"
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
-                            />
-                        </div>
-
-                        {/* FECHA */}
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label
-                                htmlFor="fecha"
-                                className="font-semibold text-gray-700"
-                            >
-                                Fecha
-                            </label>
-
-                            <input
-                                id="fecha"
-                                type="date"
-                                name="fecha"
-                                value={formulario.fecha}
-                                onChange={manejarCambio}
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
-                            />
-                        </div>
-
-                        {/* DESCRIPCIÓN */}
-                        <div className="flex min-w-0 flex-col gap-2 md:col-span-2">
-                            <label
-                                htmlFor="descripcion"
-                                className="font-semibold text-gray-700"
-                            >
-                                Descripción
-                            </label>
-
-                            <input
-                                id="descripcion"
-                                type="text"
-                                name="descripcion"
-                                value={formulario.descripcion}
-                                onChange={manejarCambio}
-                                placeholder="Ej. Salario mensual"
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
-                            />
-                        </div>
-
+                            {categoriasIngreso.map(
+                                (categoria) => (
+                                    <option
+                                        key={
+                                            categoria.idCategoria
+                                        }
+                                        value={
+                                            categoria.idCategoria
+                                        }
+                                    >
+                                        {categoria.nombre}
+                                    </option>
+                                )
+                            )}
+                        </select>
                     </div>
 
-                    {/* BOTONES */}
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                            Monto
+                        </label>
 
+                        <input
+                            type="number"
+                            name="monto"
+                            value={formulario.monto}
+                            onChange={manejarCambio}
+                            min="0.01"
+                            step="0.01"
+                            placeholder="0.00"
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                            Fecha
+                        </label>
+
+                        <input
+                            type="date"
+                            name="fecha"
+                            value={formulario.fecha}
+                            onChange={manejarCambio}
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                            Descripción
+                        </label>
+
+                        <input
+                            type="text"
+                            name="descripcion"
+                            value={formulario.descripcion}
+                            onChange={manejarCambio}
+                            placeholder="Descripción del ingreso"
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-2 sm:flex-row md:col-span-2">
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="w-full rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                            className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {procesando
                                 ? 'Guardando...'
@@ -405,172 +562,369 @@ export default function Ingresos() {
                         {editandoId && (
                             <button
                                 type="button"
-                                className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                                 onClick={limpiarFormulario}
                                 disabled={procesando}
+                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Cancelar
                             </button>
                         )}
-
                     </div>
-
                 </form>
             </section>
 
-            {/* LISTA */}
-            <section className="mb-6 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
-
+            <section className="rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
                 <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <h2 className="text-xl font-semibold text-slate-900">
+                            Ingresos registrados
+                        </h2>
 
-                    <h2 className="text-xl font-semibold text-slate-900">
-                        Ingresos registrados
-                    </h2>
+                        <button
+                            type="button"
+                            onClick={exportarIngresos}
+                            disabled={
+                                cargando ||
+                                procesando ||
+                                ingresosFiltradosPorUI.length ===
+                                0
+                            }
+                            className="w-full rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            Exportar
+                        </button>
+                    </div>
 
                     <button
                         onClick={cargarDatos}
-                        disabled={cargando || procesando}
-                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        disabled={
+                            cargando || procesando
+                        }
+                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
                         {cargando
                             ? 'Cargando...'
                             : 'Actualizar'}
                     </button>
+                </div>
 
+                <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h3 className="font-semibold text-slate-900">
+                                Filtros
+                            </h3>
+
+                            <p className="text-sm text-slate-600">
+                                Filtra los ingresos por fecha,
+                                categoría, monto y descripción.
+                            </p>
+                        </div>
+
+                        {hayFiltrosActivos && (
+                            <button
+                                type="button"
+                                onClick={limpiarFiltros}
+                                className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-100"
+                            >
+                                Limpiar filtros
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="mb-1 block text-sm font-medium text-slate-700">
+                            Buscar por descripción
+                        </label>
+                        <input
+                            type="text"
+                            name="busqueda"
+                            value={filtros.busqueda}
+                            onChange={manejarCambioFiltro}
+                            placeholder="Ej. Supermercado, transporte..."
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">
+                                Fecha desde
+                            </label>
+
+                            <input
+                                type="date"
+                                name="fechaDesde"
+                                value={
+                                    filtros.fechaDesde
+                                }
+                                onChange={
+                                    manejarCambioFiltro
+                                }
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">
+                                Fecha hasta
+                            </label>
+
+                            <input
+                                type="date"
+                                name="fechaHasta"
+                                value={
+                                    filtros.fechaHasta
+                                }
+                                onChange={
+                                    manejarCambioFiltro
+                                }
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">
+                                Categoría
+                            </label>
+
+                            <select
+                                name="idCategoria"
+                                value={
+                                    filtros.idCategoria
+                                }
+                                onChange={
+                                    manejarCambioFiltro
+                                }
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500"
+                            >
+                                <option value="">
+                                    Todas
+                                </option>
+
+                                {categoriasIngreso.map(
+                                    (categoria) => (
+                                        <option
+                                            key={
+                                                categoria.idCategoria
+                                            }
+                                            value={
+                                                categoria.idCategoria
+                                            }
+                                        >
+                                            {
+                                                categoria.nombre
+                                            }
+                                        </option>
+                                    )
+                                )}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">
+                                Monto mínimo
+                            </label>
+
+                            <input
+                                type="number"
+                                name="montoMinimo"
+                                value={
+                                    filtros.montoMinimo
+                                }
+                                onChange={
+                                    manejarCambioFiltro
+                                }
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-slate-700">
+                                Monto máximo
+                            </label>
+
+                            <input
+                                type="number"
+                                name="montoMaximo"
+                                value={
+                                    filtros.montoMaximo
+                                }
+                                onChange={
+                                    manejarCambioFiltro
+                                }
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mt-4 text-sm text-slate-600">
+                        Mostrando{' '}
+                        <span className="font-semibold text-slate-900">
+                            {
+                                ingresosFiltradosPorUI.length
+                            }
+                        </span>{' '}
+                        ingreso(s).
+                    </div>
                 </div>
 
                 {cargando ? (
-                    <Loading mensaje="Cargando ingresos..." />
-
+                    <Loading />
                 ) : ingresos.length === 0 ? (
-
-                    <div className="rounded-lg bg-gray-50 p-6 text-center sm:p-8">
-                        <p className="text-sm text-gray-500 sm:text-base">
-                            No hay ingresos registrados.
+                    <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center">
+                        <p className="text-slate-600">
+                            No tienes ingresos registrados.
                         </p>
                     </div>
+                ) : ingresosFiltradosPorUI.length ===
+                    0 ? (
+                    <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center">
+                        <p className="text-slate-600">
+                            No hay ingresos que coincidan
+                            con los filtros.
+                        </p>
 
+                        <button
+                            type="button"
+                            onClick={limpiarFiltros}
+                            className="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                        >
+                            Limpiar filtros
+                        </button>
+                    </div>
                 ) : (
-
                     <>
-                        <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
-
-                            <table className="w-full min-w-[750px] border-collapse">
-
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[700px] border-collapse">
                                 <thead>
-                                    <tr>
-                                        <th className="whitespace-nowrap bg-gray-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                    <tr className="border-b border-slate-200 text-left">
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
                                             Fecha
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-gray-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
                                             Categoría
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-gray-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
                                             Monto
                                         </th>
 
-                                        <th className="bg-gray-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
                                             Descripción
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-gray-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
                                             Acciones
                                         </th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
+                                    {ingresosPagina.map(
+                                        (ingreso) => (
+                                            <tr
+                                                key={
+                                                    ingreso.idMovimiento
+                                                }
+                                                className="border-b border-slate-100 hover:bg-slate-50"
+                                            >
+                                                <td className="px-4 py-3 text-sm text-slate-700">
+                                                    {ingreso.fecha?.split(
+                                                        'T'
+                                                    )[0] ||
+                                                        ''}
+                                                </td>
 
-                                    {ingresosPagina.map((ingreso) => (
-                                        <tr
-                                            key={
-                                                ingreso.idMovimiento
-                                            }
-                                            className="transition hover:bg-gray-50"
-                                        >
+                                                <td className="px-4 py-3 text-sm text-slate-700">
+                                                    {obtenerNombreCategoria(
+                                                        ingreso.idCategoria
+                                                    )}
+                                                </td>
 
-                                            <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                                {new Date(
-                                                    ingreso.fecha
-                                                ).toLocaleDateString()}
-                                            </td>
+                                                <td className="px-4 py-3 text-sm font-semibold text-green-600">
+                                                    {formatearMoneda(ingreso.monto)}
+                                                </td>
 
-                                            <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                                {obtenerNombreCategoria(
-                                                    ingreso.idCategoria
-                                                )}
-                                            </td>
+                                                <td className="px-4 py-3 text-sm text-slate-700">
+                                                    {ingreso.descripcion ||
+                                                        'Sin descripción'}
+                                                </td>
 
-                                            <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm font-bold text-green-600 sm:px-3.5">
-                                                +$
-                                                {Number(
-                                                    ingreso.monto
-                                                ).toFixed(2)}
-                                            </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                editarIngreso(
+                                                                    ingreso
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                procesando
+                                                            }
+                                                            className="rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-semibold text-blue-700 hover:bg-blue-200 disabled:opacity-50"
+                                                        >
+                                                            Editar
+                                                        </button>
 
-                                            <td className="max-w-[250px] break-words border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                                {ingreso.descripcion ||
-                                                    '-'}
-                                            </td>
-
-                                            <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-
-                                                <div className="flex flex-col gap-2 sm:flex-row">
-
-                                                    <button
-                                                        onClick={() =>
-                                                            editarIngreso(
-                                                                ingreso
-                                                            )
-                                                        }
-                                                        disabled={procesando}
-                                                        className="w-full rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                                                    >
-                                                        Editar
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() =>
-                                                            eliminarIngreso(
-                                                                ingreso.idMovimiento
-                                                            )
-                                                        }
-                                                        disabled={procesando}
-                                                        className="w-full rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                                                    >
-                                                        {procesando
-                                                            ? 'Procesando...'
-                                                            : 'Eliminar'}
-                                                    </button>
-
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-                                    ))}
-
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                eliminarIngreso(
+                                                                    ingreso.idMovimiento
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                procesando
+                                                            }
+                                                            className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50"
+                                                        >
+                                                            Eliminar
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
                                 </tbody>
-
                             </table>
-
                         </div>
 
-                        {/* PAGINACIÓN */}
-                        <div className="px-1 pb-1">
-                            <Pagination
-                                paginaActual={paginaActual}
-                                totalPaginas={totalPaginas}
-                                cambiarPagina={cambiarPagina}
-                            />
-                        </div>
+                        {totalPaginas > 1 && (
+                            <div className="mt-5">
+                                <Pagination
+                                    paginaActual={
+                                        paginaActual
+                                    }
+                                    totalPaginas={
+                                        totalPaginas
+                                    }
+                                    cambiarPagina={
+                                        cambiarPagina
+                                    }
+                                />
+                            </div>
+                        )}
                     </>
                 )}
-
             </section>
-
-        </main>
+            <ConfirmModal
+                abierto={confirmModal.abierto}
+                titulo={confirmModal.titulo}
+                mensaje={confirmModal.mensaje}
+                onConfirmar={confirmarEliminarIngreso}
+                onCancelar={() => setConfirmModal({ abierto: false, id: null, titulo: '', mensaje: '' })}
+            />
+        </div>
     )
 }
+
+export default Ingresos

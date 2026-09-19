@@ -7,7 +7,28 @@ export function setOnUnauthorized(callback) {
 }
 
 function obtenerToken() {
-    return localStorage.getItem('token')
+    const token = localStorage.getItem('token')
+
+    if (!token) {
+        return null
+    }
+
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const expiracion = payload.exp * 1000
+
+        if (Date.now() >= expiracion) {
+            localStorage.removeItem('token')
+            localStorage.removeItem('usuario')
+            return null
+        }
+    } catch {
+        localStorage.removeItem('token')
+        localStorage.removeItem('usuario')
+        return null
+    }
+
+    return token
 }
 
 async function manejarRespuesta(res) {
@@ -126,6 +147,16 @@ export const authApi = {
         localStorage.removeItem('usuario')
     },
 }
+function extraerItems(respuesta) {
+    if (respuesta && Array.isArray(respuesta.items)) {
+        return respuesta.items
+    }
+    if (Array.isArray(respuesta)) {
+        return respuesta
+    }
+    return []
+}
+
 export const categoriasApi = {
     async listar() {
         return listarTodasLasPaginas('Categorias')
@@ -176,7 +207,8 @@ export const movimientosApi = {
             { headers: obtenerHeaders() }
         )
 
-        return manejarRespuesta(res)
+        const data = await manejarRespuesta(res)
+        return extraerItems(data)
     },
 
     async listar() {

@@ -1,7 +1,37 @@
-import { useEffect, useState } from 'react'
-import { movimientosApi } from '../services/api'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
+    PieChart,
+    Pie,
+    Cell,
+} from 'recharts'
+
+import {
+    categoriasApi,
+    movimientosApi,
+} from '../services/api'
+
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
+import { formatearMoneda } from '../utils/formato'
+
+const COLORES_CATEGORIAS = [
+    '#7c3aed',
+    '#2563eb',
+    '#16a34a',
+    '#dc2626',
+    '#f59e0b',
+    '#0891b2',
+    '#db2777',
+    '#65a30d',
+]
 
 export default function Dashboard() {
     const [movimientos, setMovimientos] = useState([])
@@ -16,11 +46,7 @@ export default function Dashboard() {
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
 
-    useEffect(() => {
-        cargarMovimientos()
-    }, [])
-
-    async function cargarMovimientos() {
+    const cargarDatos = useCallback(async () => {
         try {
             setCargando(true)
             setError('')
@@ -33,19 +59,26 @@ export default function Dashboard() {
             setMovimientos(data)
             setResumen(resumenData)
         } catch (err) {
-            setError(err.message)
+            setError(
+                err.message ||
+                'No se pudieron cargar los datos del dashboard.'
+            )
         } finally {
             setCargando(false)
         }
-    }
+    }, [])
 
-    async function actualizarDashboard() {
+    useEffect(() => {
+        cargarDatos()
+    }, [cargarDatos])
+
+    const actualizarDashboard = useCallback(async () => {
         try {
             setError('')
             setMensaje('')
             setProcesando(true)
 
-            await cargarMovimientos()
+            await cargarDatos()
 
             setMensaje(
                 'Resumen financiero actualizado correctamente.'
@@ -55,7 +88,7 @@ export default function Dashboard() {
         } finally {
             setProcesando(false)
         }
-    }
+    }, [cargarDatos])
 
     // Todos los ingresos, incluyendo las remesas
     const ingresos = Number(resumen.totalIngresos || 0)
@@ -63,34 +96,189 @@ export default function Dashboard() {
     // Todos los gastos
     const gastos = Number(resumen.totalGastos || 0)
 
-    // Solo remesas
-    const remesas = movimientos
-        .filter(
-            (movimiento) =>
-                movimiento.tipo === 'Ingreso' &&
-                movimiento.origenEmisora
-        )
-        .reduce(
-            (total, movimiento) =>
-                total + Number(movimiento.monto),
-            0
-        )
+    const gastos = useMemo(() => {
+        return movimientos
+            .filter(
+                (m) => m.tipo === 'Gasto'
+            )
+            .reduce(
+                (total, m) =>
+                    total + Number(m.monto || 0),
+                0
+            )
+    }, [movimientos])
+
+    const remesas = useMemo(() => {
+        return movimientos
+            .filter(
+                (m) =>
+                    m.tipo === 'Ingreso' &&
+                    m.origenEmisora
+            )
+            .reduce(
+                (total, m) =>
+                    total + Number(m.monto || 0),
+                0
+            )
+    }, [movimientos])
 
     // Balance
     const balance = Number(resumen.balance || ingresos - gastos)
 
-    // Últimos 5 movimientos
-    const movimientosRecientes = [...movimientos]
-        .sort(
-            (a, b) =>
-                new Date(b.fecha) -
-                new Date(a.fecha)
-        )
-        .slice(0, 5)
+    const movimientosRecientes = useMemo(() => {
+        return [...movimientos]
+            .sort(
+                (a, b) =>
+                    new Date(b.fecha) -
+                    new Date(a.fecha)
+            )
+            .slice(0, 5)
+    }, [movimientos])
 
-    function formatearMonto(monto) {
-        return `$${Number(monto).toFixed(2)}`
-    }
+    /*
+     * ==========================================
+     * DATOS PARA GRÁFICA DE INGRESOS Y GASTOS
+     * ==========================================
+     */
+
+    const datosMensuales = useMemo(() => {
+        const meses = {}
+
+        movimientos.forEach((movimiento) => {
+            const fecha = new Date(
+                movimiento.fecha
+            )
+
+            if (Number.isNaN(fecha.getTime())) {
+                return
+            }
+
+            const clave =
+                `${fecha.getFullYear()}-${String(
+                    fecha.getMonth() + 1
+                ).padStart(2, '0')}`
+
+            if (!meses[clave]) {
+                meses[clave] = {
+                    clave,
+                    mes: fecha.toLocaleDateString(
+                        'es-SV',
+                        {
+                            month: 'short',
+                            year: 'numeric',
+                        }
+                    ),
+                    ingresos: 0,
+                    gastos: 0,
+                }
+            }
+
+            const monto =
+                Number(movimiento.monto) || 0
+
+            if (
+                movimiento.tipo ===
+                'Ingreso'
+            ) {
+                meses[clave].ingresos += monto
+            }
+
+            if (
+                movimiento.tipo ===
+                'Gasto'
+            ) {
+                meses[clave].gastos += monto
+            }
+        })
+
+        return Object.values(meses)
+            .sort(
+                (a, b) =>
+                    a.clave.localeCompare(
+                        b.clave
+                    )
+            )
+            .slice(-6)
+    }, [movimientos])
+
+    /*
+     * ==========================================
+     * OBTENER NOMBRE DE CATEGORÍA
+     * ==========================================
+     */
+
+    const obtenerNombreCategoria =
+        useCallback(
+            (idCategoria) => {
+                const categoria =
+                    categorias.find(
+                        (c) =>
+                            c.idCategoria ===
+                            idCategoria
+                    )
+
+                return (
+                    categoria?.nombre ||
+                    'Sin categoría'
+                )
+            },
+            [categorias]
+        )
+
+    /*
+     * ==========================================
+     * DATOS PARA GRÁFICA DE GASTOS
+     * POR CATEGORÍA
+     * ==========================================
+     */
+
+    const gastosPorCategoria =
+        useMemo(() => {
+            const agrupados = {}
+
+            movimientos
+                .filter(
+                    (m) =>
+                        m.tipo ===
+                        'Gasto'
+                )
+                .forEach((gasto) => {
+                    const nombre =
+                        obtenerNombreCategoria(
+                            gasto.idCategoria
+                        )
+
+                    const monto =
+                        Number(
+                            gasto.monto
+                        ) || 0
+
+                    agrupados[nombre] =
+                        (agrupados[nombre] ||
+                            0) + monto
+                })
+
+            return Object.entries(
+                agrupados
+            )
+                .map(
+                    ([
+                        nombre,
+                        monto,
+                    ]) => ({
+                        nombre,
+                        monto,
+                    })
+                )
+                .sort(
+                    (a, b) =>
+                        b.monto -
+                        a.monto
+                )
+        }, [
+            movimientos,
+            obtenerNombreCategoria,
+        ])
 
     if (cargando) {
         return (
@@ -101,264 +289,441 @@ export default function Dashboard() {
     }
 
     return (
-        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-10">
+        <main className="mx-auto w-full max-w-6xl p-4 font-sans text-slate-800 sm:p-6 lg:p-10">
 
-            {/* NOTIFICACIONES */}
-            <Notification
-                tipo="success"
-                mensaje={mensaje}
-                onClose={() => setMensaje('')}
-            />
+            {/* ================================
+                NOTIFICACIONES
+            ================================= */}
 
-            <Notification
-                tipo="error"
-                mensaje={error}
-                onClose={() => setError('')}
-            />
+            {mensaje && (
+                <Notification
+                    tipo="success"
+                    mensaje={mensaje}
+                    onClose={() =>
+                        setMensaje('')
+                    }
+                />
+            )}
 
-            {/* ENCABEZADO */}
-            <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+            {error && (
+                <Notification
+                    tipo="error"
+                    mensaje={error}
+                    onClose={() =>
+                        setError('')
+                    }
+                />
+            )}
 
-                <div className="min-w-0">
-                    <h1 className="mb-1 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+            {/* ================================
+                ENCABEZADO
+            ================================= */}
+
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl">
                         Resumen financiero
                     </h1>
 
-                    <p className="text-sm leading-6 text-gray-500 sm:text-[0.95rem]">
-                        Consulta el estado actual de las
-                        finanzas de tu hogar.
+                    <p className="mt-1 text-sm text-slate-500">
+                        Consulta el estado actual de
+                        las finanzas de tu hogar.
                     </p>
                 </div>
 
                 <button
+                    type="button"
                     onClick={actualizarDashboard}
-                    disabled={procesando || cargando}
-                    className="w-full rounded-[10px] bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_4px_10px_rgba(37,99,235,0.2)] transition hover:-translate-y-px hover:bg-blue-700 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:shrink-0"
+                    disabled={procesando}
+                    className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {procesando
                         ? 'Actualizando...'
                         : 'Actualizar'}
                 </button>
-
             </div>
 
-            {/* TARJETAS DE RESUMEN */}
-            <section className="mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            {/* ================================
+                TARJETAS RESUMEN
+            ================================= */}
+
+            <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
                 {/* INGRESOS */}
-                <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_4px_15px_rgba(15,23,42,0.06)] transition hover:-translate-y-[3px] hover:shadow-[0_8px_22px_rgba(15,23,42,0.1)]">
 
-                    <div className="absolute left-0 top-0 h-full w-1 bg-green-600"></div>
-
-                    <span className="mb-3 block text-sm font-semibold text-slate-500">
+                <div className="rounded-xl border border-green-100 bg-green-50 p-5 shadow-sm">
+                    <p className="text-sm font-medium text-green-700">
                         Ingresos
-                    </span>
+                    </p>
 
-                    <strong className="mb-2 block break-words text-2xl font-bold text-green-600 sm:text-3xl">
-                        {formatearMonto(ingresos)}
-                    </strong>
-
-                    <small className="text-[0.82rem] text-slate-400">
-                        Total de ingresos
-                    </small>
-
+                    <p className="mt-2 text-2xl font-bold text-green-700">
+                        {formatearMoneda(
+                            ingresos
+                        )}
+                    </p>
                 </div>
 
                 {/* REMESAS */}
-                <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_4px_15px_rgba(15,23,42,0.06)] transition hover:-translate-y-[3px] hover:shadow-[0_8px_22px_rgba(15,23,42,0.1)]">
 
-                    <div className="absolute left-0 top-0 h-full w-1 bg-violet-600"></div>
-
-                    <span className="mb-3 block text-sm font-semibold text-slate-500">
+                <div className="rounded-xl border border-violet-100 bg-violet-50 p-5 shadow-sm">
+                    <p className="text-sm font-medium text-violet-700">
                         Remesas
-                    </span>
+                    </p>
 
-                    <strong className="mb-2 block break-words text-2xl font-bold text-violet-600 sm:text-3xl">
-                        {formatearMonto(remesas)}
-                    </strong>
-
-                    <small className="text-[0.82rem] text-slate-400">
-                        Remesas recibidas
-                    </small>
-
+                    <p className="mt-2 text-2xl font-bold text-violet-700">
+                        {formatearMoneda(
+                            remesas
+                        )}
+                    </p>
                 </div>
 
                 {/* GASTOS */}
-                <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_4px_15px_rgba(15,23,42,0.06)] transition hover:-translate-y-[3px] hover:shadow-[0_8px_22px_rgba(15,23,42,0.1)]">
 
-                    <div className="absolute left-0 top-0 h-full w-1 bg-red-600"></div>
-
-                    <span className="mb-3 block text-sm font-semibold text-slate-500">
+                <div className="rounded-xl border border-red-100 bg-red-50 p-5 shadow-sm">
+                    <p className="text-sm font-medium text-red-700">
                         Gastos
-                    </span>
+                    </p>
 
-                    <strong className="mb-2 block break-words text-2xl font-bold text-red-600 sm:text-3xl">
-                        {formatearMonto(gastos)}
-                    </strong>
-
-                    <small className="text-[0.82rem] text-slate-400">
-                        Total de gastos
-                    </small>
-
+                    <p className="mt-2 text-2xl font-bold text-red-700">
+                        {formatearMoneda(
+                            gastos
+                        )}
+                    </p>
                 </div>
 
                 {/* BALANCE */}
-                <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_4px_15px_rgba(15,23,42,0.06)] transition hover:-translate-y-[3px] hover:shadow-[0_8px_22px_rgba(15,23,42,0.1)]">
 
-                    <div className="absolute left-0 top-0 h-full w-1 bg-blue-600"></div>
-
-                    <span className="mb-3 block text-sm font-semibold text-slate-500">
-                        Balance
-                    </span>
-
-                    <strong
-                        className={`mb-2 block break-words text-2xl font-bold sm:text-3xl ${balance >= 0
-                                ? 'text-blue-600'
-                                : 'text-red-600'
-                            }`}
+                <div
+                    className={`rounded-xl border p-5 shadow-sm ${
+                        balance >= 0
+                            ? 'border-blue-100 bg-blue-50'
+                            : 'border-red-100 bg-red-50'
+                    }`}
+                >
+                    <p
+                        className={`text-sm font-medium ${
+                            balance >= 0
+                                ? 'text-blue-700'
+                                : 'text-red-700'
+                        }`}
                     >
-                        {formatearMonto(balance)}
-                    </strong>
+                        Balance
+                    </p>
 
-                    <small className="text-[0.82rem] text-slate-400">
-                        Ingresos - gastos
-                    </small>
-
+                    <p
+                        className={`mt-2 text-2xl font-bold ${
+                            balance >= 0
+                                ? 'text-blue-700'
+                                : 'text-red-700'
+                        }`}
+                    >
+                        {formatearMoneda(
+                            balance
+                        )}
+                    </p>
                 </div>
-
             </section>
 
-            {/* MOVIMIENTOS RECIENTES */}
-            <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-[0_4px_15px_rgba(15,23,42,0.06)] sm:p-6 lg:p-7">
+            {/* ================================
+                GRÁFICAS
+            ================================= */}
 
-                <div className="mb-5 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-                    <div className="min-w-0">
-                        <h2 className="text-xl font-semibold text-slate-900">
+                {/* GRÁFICA INGRESOS VS GASTOS */}
+
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+
+                    <div className="mb-5">
+                        <h2 className="text-lg font-bold text-slate-800">
+                            Ingresos vs. gastos
+                        </h2>
+
+                        <p className="text-sm text-slate-500">
+                            Comportamiento de los últimos
+                            meses registrados.
+                        </p>
+                    </div>
+
+                    {datosMensuales.length === 0 ? (
+                        <div className="flex h-72 items-center justify-center text-sm text-slate-500">
+                            No hay datos suficientes
+                            para mostrar la gráfica.
+                        </div>
+                    ) : (
+                        <div className="h-72 w-full">
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%"
+                            >
+                                <BarChart
+                                    data={
+                                        datosMensuales
+                                    }
+                                    margin={{
+                                        top: 10,
+                                        right: 10,
+                                        left: 10,
+                                        bottom: 10,
+                                    }}
+                                >
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                    />
+
+                                    <XAxis
+                                        dataKey="mes"
+                                    />
+
+                                    <YAxis />
+
+                                    <Tooltip
+                                        formatter={(
+                                            value
+                                        ) =>
+                                            formatearMoneda(
+                                                value
+                                            )
+                                        }
+                                    />
+
+                                    <Legend />
+
+                                    <Bar
+                                        dataKey="ingresos"
+                                        name="Ingresos"
+                                        fill="#16a34a"
+                                        radius={[
+                                            4,
+                                            4,
+                                            0,
+                                            0,
+                                        ]}
+                                    />
+
+                                    <Bar
+                                        dataKey="gastos"
+                                        name="Gastos"
+                                        fill="#dc2626"
+                                        radius={[
+                                            4,
+                                            4,
+                                            0,
+                                            0,
+                                        ]}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                </div>
+
+                {/* GRÁFICA GASTOS POR CATEGORÍA */}
+
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+
+                    <div className="mb-5">
+                        <h2 className="text-lg font-bold text-slate-800">
+                            Gastos por categoría
+                        </h2>
+
+                        <p className="text-sm text-slate-500">
+                            Distribución de los gastos
+                            registrados.
+                        </p>
+                    </div>
+
+                    {gastosPorCategoria.length ===
+                    0 ? (
+                        <div className="flex h-72 items-center justify-center text-sm text-slate-500">
+                            No hay gastos registrados
+                            para mostrar.
+                        </div>
+                    ) : (
+                        <div className="h-72 w-full">
+                            <ResponsiveContainer
+                                width="100%"
+                                height="100%"
+                            >
+                                <PieChart>
+                                    <Pie
+                                        data={
+                                            gastosPorCategoria
+                                        }
+                                        dataKey="monto"
+                                        nameKey="nombre"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={90}
+                                        label
+                                    >
+                                        {gastosPorCategoria.map(
+                                            (
+                                                entrada,
+                                                index
+                                            ) => (
+                                                <Cell
+                                                    key={
+                                                        entrada.nombre
+                                                    }
+                                                    fill={
+                                                        COLORES_CATEGORIAS[
+                                                            index %
+                                                                COLORES_CATEGORIAS.length
+                                                        ]
+                                                    }
+                                                />
+                                            )
+                                        )}
+                                    </Pie>
+
+                                    <Tooltip
+                                        formatter={(
+                                            value
+                                        ) =>
+                                            formatearMoneda(
+                                                value
+                                            )
+                                        }
+                                    />
+
+                                    <Legend />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* ================================
+                MOVIMIENTOS RECIENTES
+            ================================= */}
+
+            <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+
+                <div className="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-800">
                             Movimientos recientes
                         </h2>
 
-                        <p className="mt-1 text-sm text-gray-500">
-                            Últimos movimientos registrados.
+                        <p className="text-sm text-slate-500">
+                            Últimos movimientos
+                            registrados.
                         </p>
                     </div>
 
                     <button
+                        type="button"
                         onClick={actualizarDashboard}
                         disabled={procesando}
-                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:shrink-0"
+                        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {procesando
-                            ? 'Actualizando...'
-                            : 'Actualizar'}
+                        Actualizar
                     </button>
-
                 </div>
 
-                {movimientosRecientes.length === 0 ? (
-
-                    <p className="p-6 text-center text-sm text-slate-500 sm:p-8">
-                        Todavía no hay movimientos registrados.
-                    </p>
-
+                {movimientosRecientes.length ===
+                0 ? (
+                    <div className="p-8 text-center text-sm text-slate-500">
+                        No hay movimientos
+                        registrados.
+                    </div>
                 ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm">
 
-                    <div className="w-full overflow-x-auto">
-
-                        <table className="w-full min-w-[600px] border-collapse">
-
-                            <thead>
+                            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                                 <tr>
-
-                                    <th className="border-b border-slate-200 bg-slate-50 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:px-3.5">
+                                    <th className="px-5 py-3">
                                         Fecha
                                     </th>
 
-                                    <th className="border-b border-slate-200 bg-slate-50 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:px-3.5">
+                                    <th className="px-5 py-3">
                                         Tipo
                                     </th>
 
-                                    <th className="border-b border-slate-200 bg-slate-50 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:px-3.5">
+                                    <th className="px-5 py-3">
                                         Descripción
                                     </th>
 
-                                    <th className="border-b border-slate-200 bg-slate-50 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:px-3.5">
+                                    <th className="px-5 py-3 text-right">
                                         Monto
                                     </th>
-
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody className="divide-y divide-slate-100">
 
                                 {movimientosRecientes.map(
-                                    (movimiento) => (
-
+                                    (
+                                        movimiento
+                                    ) => (
                                         <tr
                                             key={
                                                 movimiento.idMovimiento
                                             }
-                                            className="transition hover:bg-slate-50"
+                                            className="hover:bg-slate-50"
                                         >
-
-                                            <td className="whitespace-nowrap border-b border-slate-100 px-3 py-4 text-sm text-slate-700 sm:px-3.5">
-                                                {new Date(
-                                                    movimiento.fecha
-                                                ).toLocaleDateString()}
+                                            <td className="whitespace-nowrap px-5 py-4 text-slate-600">
+                                                {movimiento.fecha
+                                                    ?.split(
+                                                        'T'
+                                                    )[0] ||
+                                                    ''}
                                             </td>
 
-                                            <td className="whitespace-nowrap border-b border-slate-100 px-3 py-4 text-sm text-slate-700 sm:px-3.5">
-
-                                                {movimiento.tipo ===
+                                            <td className="px-5 py-4">
+                                                <span
+                                                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                        movimiento.tipo ===
+                                                        'Ingreso'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-red-100 text-red-700'
+                                                    }`}
+                                                >
+                                                    {movimiento.tipo ===
                                                     'Ingreso'
-                                                    ? movimiento.origenEmisora
-                                                        ? 'Remesa'
-                                                        : 'Ingreso'
-                                                    : 'Gasto'}
-
-                                            </td>
-
-                                            <td className="max-w-[280px] border-b border-slate-100 px-3 py-4 text-sm text-slate-700 sm:px-3.5">
-                                                <span className="block break-words">
-                                                    {movimiento.descripcion ||
-                                                        'Sin descripción'}
+                                                        ? movimiento.origenEmisora
+                                                            ? 'Remesa'
+                                                            : 'Ingreso'
+                                                        : 'Gasto'}
                                                 </span>
                                             </td>
 
-                                            <td
-                                                className={`whitespace-nowrap border-b border-slate-100 px-3 py-4 text-sm font-bold sm:px-3.5 ${movimiento.tipo ===
-                                                        'Ingreso'
-                                                        ? 'text-green-600'
-                                                        : 'text-red-600'
-                                                    }`}
-                                            >
-
-                                                {movimiento.tipo ===
-                                                    'Ingreso'
-                                                    ? '+ '
-                                                    : '- '}
-
-                                                {formatearMonto(
-                                                    movimiento.monto
-                                                )}
-
+                                            <td className="max-w-xs px-5 py-4 text-slate-700">
+                                                {movimiento.descripcion ||
+                                                    'Sin descripción'}
                                             </td>
 
-                                        </tr>
+                                            <td
+                                                className={`whitespace-nowrap px-5 py-4 text-right font-semibold ${
+                                                    movimiento.tipo ===
+                                                    'Ingreso'
+                                                        ? 'text-green-600'
+                                                        : 'text-red-600'
+                                                }`}
+                                            >
+                                                {movimiento.tipo ===
+                                                'Ingreso'
+                                                    ? '+'
+                                                    : '-'}
 
+                                                {formatearMoneda(
+                                                    movimiento.monto
+                                                )}
+                                            </td>
+                                        </tr>
                                     )
                                 )}
 
                             </tbody>
-
                         </table>
-
                     </div>
-
                 )}
-
             </section>
-
         </main>
     )
 }

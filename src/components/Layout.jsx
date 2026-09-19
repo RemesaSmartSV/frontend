@@ -8,9 +8,7 @@ export default function Layout({
     usuario,
     cerrarSesion
 }) {
-
-    const [menuAbierto, setMenuAbierto] =
-        useState(false)
+    const [menuAbierto, setMenuAbierto] = useState(false)
     const [alertas, setAlertas] = useState([])
     const [cargandoAlertas, setCargandoAlertas] = useState(true)
     const [errorAlertas, setErrorAlertas] = useState('')
@@ -55,7 +53,6 @@ export default function Layout({
 
             <Navbar
                 usuario={usuario}
-                cerrarSesion={cerrarSesion}
                 menuAbierto={menuAbierto}
                 setMenuAbierto={setMenuAbierto}
                 alertas={alertas}
@@ -63,18 +60,16 @@ export default function Layout({
                 errorAlertas={errorAlertas}
             />
 
-            <div className="flex">
+            <Sidebar
+                usuario={usuario}
+                cerrarSesion={cerrarSesion}
+                menuAbierto={menuAbierto}
+                setMenuAbierto={setMenuAbierto}
+            />
 
-                <Sidebar
-                    menuAbierto={menuAbierto}
-                    setMenuAbierto={setMenuAbierto}
-                />
-
-                <main className="min-w-0 flex-1 p-4 sm:p-6">
-                    <Outlet />
-                </main>
-
-            </div>
+            <main className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:ml-64">
+                <Outlet />
+            </main>
 
         </div>
     )

@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, Menu, X } from 'lucide-react'
-import logo from '../assets/logo_remesa-sinfondo.png'
+import { Bell } from 'lucide-react'
 
 export default function Navbar({
     usuario,
-    cerrarSesion,
     menuAbierto,
     setMenuAbierto,
     alertas,
     cargandoAlertas,
     errorAlertas
 }) {
+    const nombreFamilia =
+        usuario?.familia ||
+        usuario?.nombreFamiliar ||
+        'Sin familia'
+
     const [alertasAbiertas, setAlertasAbiertas] = useState(false)
     const alertasRef = useRef(null)
 
@@ -31,38 +34,43 @@ export default function Navbar({
     }, [alertasAbiertas])
 
     return (
-        <header className="sticky top-0 z-50 flex h-20 items-center justify-between border-b border-gray-200 bg-white px-2 shadow-sm sm:px-0">
+        <header className="sticky top-0 z-30 h-16 border-b border-gray-200 bg-white lg:ml-64">
 
-            <div className="flex items-center gap-3">
+            <div className="flex h-full items-center px-4 sm:px-6 lg:px-8">
 
+                {/* BOTÓN MENÚ - SOLO CELULAR */}
                 <button
                     type="button"
                     onClick={() => setMenuAbierto(!menuAbierto)}
-                    className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 lg:hidden"
+                    className="mr-3 rounded-lg p-2 text-2xl text-[#123B8F] hover:bg-blue-50 lg:hidden"
                     aria-label={
                         menuAbierto
                             ? 'Cerrar menú'
                             : 'Abrir menú'
                     }
                 >
-                    {menuAbierto ? (
-                        <X size={24} />
-                    ) : (
-                        <Menu size={24} />
-                    )}
+                    {menuAbierto ? '✕' : '☰'}
                 </button>
 
-                <div className="flex items-center">
-                    <img
-                        src={logo}
-                        alt="RemesaSmartSV"
-                        className="h-34 w-auto object-contain sm:h-38"
-                    />
+                {/* NOMBRE EN CELULAR */}
+                <p className="text-base font-bold text-[#123B8F] lg:hidden">
+                    Familia {nombreFamilia}
+                </p>
+
+                {/* INFORMACIÓN DEL HOGAR EN COMPUTADORA */}
+                <div className="hidden lg:block">
+                    <p className="text-xs font-medium tracking-wider text-gray-500">
+                        HOGAR ACTIVO
+                    </p>
+
+                    <p className="text-base font-bold text-gray-800">
+                        {nombreFamilia}
+                    </p>
                 </div>
 
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="absolute right-4 top-0 flex h-full items-center gap-2 sm:right-6">
 
                 <div className="relative" ref={alertasRef}>
                     <button

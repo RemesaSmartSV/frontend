@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import ConfirmModal from '../components/ConfirmModal'
 
 export default function Remesas() {
     const [remesas, setRemesas] = useState([])
@@ -11,7 +12,7 @@ export default function Remesas() {
     const [formulario, setFormulario] = useState({
         idCategoria: '',
         monto: '',
-        fecha: '',
+        fecha: new Date().toISOString().split('T')[0],
         origenEmisora: '',
         descripcion: '',
     })
@@ -23,15 +24,28 @@ export default function Remesas() {
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
 
+    const [confirmModal, setConfirmModal] = useState({
+        abierto: false,
+        id: null,
+        titulo: '',
+        mensaje: '',
+    })
+
+    // FILTROS
+    const [filtros, setFiltros] = useState({
+        fechaDesde: '',
+        fechaHasta: '',
+        idCategoria: '',
+        montoMinimo: '',
+        montoMaximo: '',
+        busqueda: '',
+    })
+
     // PAGINACIÓN
     const [paginaActual, setPaginaActual] = useState(1)
     const registrosPorPagina = 5
 
-    useEffect(() => {
-        cargarDatos()
-    }, [])
-
-    async function cargarDatos() {
+    const cargarDatos = useCallback(async () => {
         try {
             setCargando(true)
             setError('')
@@ -51,14 +65,20 @@ export default function Remesas() {
             setRemesas(remesasFiltradas)
             setCategorias(categoriasData)
 
-            // Regresar a la primera página al actualizar
             setPaginaActual(1)
         } catch (err) {
-            setError(err.message)
+            setError(
+                err.message ||
+                'No se pudieron cargar las remesas.'
+            )
         } finally {
             setCargando(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        cargarDatos()
+    }, [cargarDatos])
 
     function manejarCambio(e) {
         const { name, value } = e.target
@@ -68,6 +88,94 @@ export default function Remesas() {
             [name]: value,
         })
     }
+
+    // CAMBIO DE FILTROS
+    function manejarCambioFiltro(e) {
+        const { name, value } = e.target
+
+        setFiltros({
+            ...filtros,
+            [name]: value,
+        })
+
+        setPaginaActual(1)
+    }
+
+    // LIMPIAR FILTROS
+    function limpiarFiltros() {
+        setFiltros({
+            fechaDesde: '',
+            fechaHasta: '',
+            idCategoria: '',
+            montoMinimo: '',
+            montoMaximo: '',
+            busqueda: '',
+        })
+
+        setPaginaActual(1)
+    }
+
+    // APLICAR FILTROS
+    const remesasFiltradas = useMemo(() => {
+        return remesas.filter((remesa) => {
+            // FILTRO POR CATEGORÍA
+            if (
+                filtros.idCategoria &&
+                Number(remesa.idCategoria) !==
+                Number(filtros.idCategoria)
+            ) {
+                return false
+            }
+
+            // FILTRO POR MONTO MÍNIMO
+            if (
+                filtros.montoMinimo !== '' &&
+                Number(remesa.monto) <
+                Number(filtros.montoMinimo)
+            ) {
+                return false
+            }
+
+            // FILTRO POR MONTO MÁXIMO
+            if (
+                filtros.montoMaximo !== '' &&
+                Number(remesa.monto) >
+                Number(filtros.montoMaximo)
+            ) {
+                return false
+            }
+
+            // FILTRO POR FECHA
+            const fechaRemesa =
+                remesa.fecha?.split('T')[0] || ''
+
+            if (
+                filtros.fechaDesde &&
+                fechaRemesa < filtros.fechaDesde
+            ) {
+                return false
+            }
+
+            if (
+                filtros.fechaHasta &&
+                fechaRemesa > filtros.fechaHasta
+            ) {
+                return false
+            }
+
+            // FILTRO POR BÚSQUEDA
+            if (filtros.busqueda) {
+                const termino = filtros.busqueda.toLowerCase()
+                const descripcion = (remesa.descripcion || '').toLowerCase()
+                const origen = (remesa.origenEmisora || '').toLowerCase()
+                if (!descripcion.includes(termino) && !origen.includes(termino)) {
+                    return false
+                }
+            }
+
+            return true
+        })
+    }, [remesas, filtros])
 
     async function guardarRemesa(e) {
         e.preventDefault()
@@ -126,7 +234,10 @@ export default function Remesas() {
             limpiarFormulario()
             await cargarDatos()
         } catch (err) {
-            setError(err.message)
+            setError(
+                err.message ||
+                'No se pudo guardar la remesa.'
+            )
         } finally {
             setProcesando(false)
         }
@@ -152,14 +263,18 @@ export default function Remesas() {
         })
     }
 
-    async function eliminarRemesa(id) {
-        const confirmar = window.confirm(
-            '¿Seguro que deseas eliminar esta remesa?'
-        )
+    function eliminarRemesa(id) {
+        setConfirmModal({
+            abierto: true,
+            id,
+            titulo: 'Eliminar remesa',
+            mensaje: '¿Seguro que deseas eliminar esta remesa? Esta acción no se puede deshacer.',
+        })
+    }
 
-        if (!confirmar) {
-            return
-        }
+    async function confirmarEliminarRemesa() {
+        const id = confirmModal.id
+        setConfirmModal({ abierto: false, id: null, titulo: '', mensaje: '' })
 
         try {
             setError('')
@@ -168,13 +283,11 @@ export default function Remesas() {
 
             await movimientosApi.eliminar(id)
 
-            setMensaje(
-                'Remesa eliminada correctamente.'
-            )
+            setMensaje('Remesa eliminada correctamente.')
 
             await cargarDatos()
         } catch (err) {
-            setError(err.message)
+            setError(err.message || 'No se pudo eliminar la remesa.')
         } finally {
             setProcesando(false)
         }
@@ -186,7 +299,7 @@ export default function Remesas() {
         setFormulario({
             idCategoria: '',
             monto: '',
-            fecha: '',
+            fecha: new Date().toISOString().split('T')[0],
             origenEmisora: '',
             descripcion: '',
         })
@@ -200,15 +313,107 @@ export default function Remesas() {
         return categoria?.nombre || 'Sin categoría'
     }
 
-    // DATOS DE PAGINACIÓN
+    // EXPORTAR REMESAS A CSV
+    function exportarRemesas() {
+        if (remesasFiltradas.length === 0) {
+            setError('No hay remesas para exportar.')
+            return
+        }
+
+        const encabezados = [
+            'Fecha',
+            'Origen',
+            'Categoría',
+            'Monto',
+            'Descripción',
+        ]
+
+        const filas = remesasFiltradas.map((remesa) => {
+            const fecha =
+                remesa.fecha?.split('T')[0] || ''
+
+            const origen =
+                remesa.origenEmisora || ''
+
+            const categoria =
+                obtenerNombreCategoria(
+                    remesa.idCategoria
+                )
+
+            const monto =
+                Number(remesa.monto).toFixed(2)
+
+            const descripcion =
+                remesa.descripcion || ''
+
+            return [
+                fecha,
+                origen,
+                categoria,
+                monto,
+                descripcion,
+            ]
+        })
+
+        function escaparCSV(valor) {
+            let texto = String(valor).replace(/"/g, '""')
+
+            if (/^[=+\-@\t\r]/.test(texto)) {
+                texto = "'" + texto
+            }
+
+            return `"${texto}"`
+        }
+
+        const contenidoCSV = [
+            encabezados.map(escaparCSV).join(','),
+            ...filas.map((fila) =>
+                fila.map(escaparCSV).join(',')
+            ),
+        ].join('\n')
+
+        // BOM para que Excel reconozca correctamente
+        // los caracteres especiales y tildes.
+        const BOM = '\uFEFF'
+
+        const archivo = new Blob(
+            [BOM + contenidoCSV],
+            {
+                type: 'text/csv;charset=utf-8;',
+            }
+        )
+
+        const url = URL.createObjectURL(archivo)
+
+        const enlace = document.createElement('a')
+        enlace.href = url
+
+        const fechaActual =
+            new Date().toISOString().split('T')[0]
+
+        enlace.download =
+            `remesas_${fechaActual}.csv`
+
+        document.body.appendChild(enlace)
+        enlace.click()
+        document.body.removeChild(enlace)
+
+        URL.revokeObjectURL(url)
+
+        setMensaje(
+            `${remesasFiltradas.length} remesa(s) exportada(s) correctamente.`
+        )
+    }
+
+    // PAGINACIÓN DE RESULTADOS FILTRADOS
     const totalPaginas = Math.ceil(
-        remesas.length / registrosPorPagina
+        remesasFiltradas.length / registrosPorPagina
     )
 
     const indiceInicial =
         (paginaActual - 1) * registrosPorPagina
 
-    const remesasPagina = remesas.slice(
+    const remesasPagina = remesasFiltradas.slice(
         indiceInicial,
         indiceInicial + registrosPorPagina
     )
@@ -223,7 +428,7 @@ export default function Remesas() {
     }
 
     return (
-        <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-8">
+        <div className="space-y-6">
 
             {/* NOTIFICACIONES */}
             <Notification
@@ -242,11 +447,11 @@ export default function Remesas() {
             <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
 
                 <div className="min-w-0">
-                    <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-[2rem]">
+                    <h1 className="text-2xl font-bold text-gray-800">
                         Remesas
                     </h1>
 
-                    <p className="text-sm text-gray-500 sm:text-base">
+                    <p className="text-gray-500">
                         Registra y administra las remesas
                         recibidas por tu hogar.
                     </p>
@@ -463,30 +668,243 @@ export default function Remesas() {
                         </p>
                     </div>
 
-                    <button
-                        onClick={cargarDatos}
-                        disabled={cargando || procesando}
-                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                    >
-                        {cargando
-                            ? 'Cargando...'
-                            : 'Actualizar'}
-                    </button>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+
+                        {/* BOTÓN EXPORTAR */}
+                        <button
+                            type="button"
+                            onClick={exportarRemesas}
+                            disabled={
+                                cargando ||
+                                procesando ||
+                                remesasFiltradas.length === 0
+                            }
+                            className="w-full rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            Exportar
+                        </button>
+
+                        {/* BOTÓN ACTUALIZAR */}
+                        <button
+                            onClick={cargarDatos}
+                            disabled={cargando || procesando}
+                            className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            {cargando
+                                ? 'Cargando...'
+                                : 'Actualizar'}
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {/* FILTROS */}
+                <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
+
+                    <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-900">
+                                Filtros
+                            </h3>
+
+                            <p className="text-sm text-gray-500">
+                                Filtra las remesas por fecha, categoría o monto.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={limpiarFiltros}
+                            className="w-full rounded-lg bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-600 sm:w-auto"
+                        >
+                            Limpiar filtros
+                        </button>
+
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="text-sm font-semibold text-gray-700">
+                            Buscar por descripción u origen
+                        </label>
+                        <input
+                            type="text"
+                            name="busqueda"
+                            value={filtros.busqueda}
+                            onChange={manejarCambioFiltro}
+                            placeholder="Ej. Estados Unidos, Western Union..."
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+
+                        {/* FECHA DESDE */}
+                        <div className="flex min-w-0 flex-col gap-2">
+
+                            <label
+                                htmlFor="fechaDesde"
+                                className="text-sm font-semibold text-gray-700"
+                            >
+                                Fecha desde
+                            </label>
+
+                            <input
+                                id="fechaDesde"
+                                type="date"
+                                name="fechaDesde"
+                                value={filtros.fechaDesde}
+                                onChange={manejarCambioFiltro}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10"
+                            />
+
+                        </div>
+
+                        {/* FECHA HASTA */}
+                        <div className="flex min-w-0 flex-col gap-2">
+
+                            <label
+                                htmlFor="fechaHasta"
+                                className="text-sm font-semibold text-gray-700"
+                            >
+                                Fecha hasta
+                            </label>
+
+                            <input
+                                id="fechaHasta"
+                                type="date"
+                                name="fechaHasta"
+                                value={filtros.fechaHasta}
+                                onChange={manejarCambioFiltro}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10"
+                            />
+
+                        </div>
+
+                        {/* CATEGORÍA */}
+                        <div className="flex min-w-0 flex-col gap-2">
+
+                            <label
+                                htmlFor="filtroCategoria"
+                                className="text-sm font-semibold text-gray-700"
+                            >
+                                Categoría
+                            </label>
+
+                            <select
+                                id="filtroCategoria"
+                                name="idCategoria"
+                                value={filtros.idCategoria}
+                                onChange={manejarCambioFiltro}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10"
+                            >
+                                <option value="">
+                                    Todas
+                                </option>
+
+                                {categorias
+                                    .filter(
+                                        (categoria) =>
+                                            categoria.tipo ===
+                                            'Ingreso'
+                                    )
+                                    .map((categoria) => (
+                                        <option
+                                            key={
+                                                categoria.idCategoria
+                                            }
+                                            value={
+                                                categoria.idCategoria
+                                            }
+                                        >
+                                            {categoria.nombre}
+                                        </option>
+                                    ))}
+                            </select>
+
+                        </div>
+
+                        {/* MONTO MÍNIMO */}
+                        <div className="flex min-w-0 flex-col gap-2">
+
+                            <label
+                                htmlFor="montoMinimo"
+                                className="text-sm font-semibold text-gray-700"
+                            >
+                                Monto mínimo
+                            </label>
+
+                            <input
+                                id="montoMinimo"
+                                type="number"
+                                name="montoMinimo"
+                                min="0"
+                                step="0.01"
+                                value={filtros.montoMinimo}
+                                onChange={manejarCambioFiltro}
+                                placeholder="0.00"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400"
+                            />
+
+                        </div>
+
+                        {/* MONTO MÁXIMO */}
+                        <div className="flex min-w-0 flex-col gap-2">
+
+                            <label
+                                htmlFor="montoMaximo"
+                                className="text-sm font-semibold text-gray-700"
+                            >
+                                Monto máximo
+                            </label>
+
+                            <input
+                                id="montoMaximo"
+                                type="number"
+                                name="montoMaximo"
+                                min="0"
+                                step="0.01"
+                                value={filtros.montoMaximo}
+                                onChange={manejarCambioFiltro}
+                                placeholder="0.00"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400"
+                            />
+
+                        </div>
+
+                    </div>
+
+                    {/* RESULTADOS */}
+                    <p className="mt-4 text-sm text-gray-600">
+                        Mostrando{' '}
+                        <span className="font-semibold">
+                            {remesasFiltradas.length}
+                        </span>{' '}
+                        de{' '}
+                        <span className="font-semibold">
+                            {remesas.length}
+                        </span>{' '}
+                        remesas.
+                    </p>
 
                 </div>
 
                 {cargando ? (
                     <Loading mensaje="Cargando remesas..." />
 
-                ) : remesas.length === 0 ? (
+                ) : remesasFiltradas.length === 0 ? (
 
                     <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-                        No hay remesas registradas.
+                        {remesas.length === 0
+                            ? 'No hay remesas registradas.'
+                            : 'No hay remesas que coincidan con los filtros.'}
                     </div>
 
                 ) : (
 
                     <>
+
                         <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
 
                             <table className="min-w-[950px] w-full border-collapse text-left text-sm">
@@ -608,11 +1026,20 @@ export default function Remesas() {
                             totalPaginas={totalPaginas}
                             cambiarPagina={cambiarPagina}
                         />
+
                     </>
                 )}
 
             </section>
 
-        </main>
+            <ConfirmModal
+                abierto={confirmModal.abierto}
+                titulo={confirmModal.titulo}
+                mensaje={confirmModal.mensaje}
+                onConfirmar={confirmarEliminarRemesa}
+                onCancelar={() => setConfirmModal({ abierto: false, id: null, titulo: '', mensaje: '' })}
+            />
+
+        </div>
     )
 }
