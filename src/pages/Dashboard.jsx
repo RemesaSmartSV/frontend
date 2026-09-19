@@ -5,6 +5,11 @@ import Loading from '../components/Loading'
 
 export default function Dashboard() {
     const [movimientos, setMovimientos] = useState([])
+    const [resumen, setResumen] = useState({
+        totalIngresos: 0,
+        totalGastos: 0,
+        balance: 0,
+    })
     const [cargando, setCargando] = useState(true)
     const [procesando, setProcesando] = useState(false)
 
@@ -20,9 +25,13 @@ export default function Dashboard() {
             setCargando(true)
             setError('')
 
-            const data = await movimientosApi.listar()
+            const [data, resumenData] = await Promise.all([
+                movimientosApi.listar(),
+                movimientosApi.resumen(),
+            ])
 
             setMovimientos(data)
+            setResumen(resumenData)
         } catch (err) {
             setError(err.message)
         } finally {
@@ -49,28 +58,10 @@ export default function Dashboard() {
     }
 
     // Todos los ingresos, incluyendo las remesas
-    const ingresos = movimientos
-        .filter(
-            (movimiento) =>
-                movimiento.tipo === 'Ingreso'
-        )
-        .reduce(
-            (total, movimiento) =>
-                total + Number(movimiento.monto),
-            0
-        )
+    const ingresos = Number(resumen.totalIngresos || 0)
 
     // Todos los gastos
-    const gastos = movimientos
-        .filter(
-            (movimiento) =>
-                movimiento.tipo === 'Gasto'
-        )
-        .reduce(
-            (total, movimiento) =>
-                total + Number(movimiento.monto),
-            0
-        )
+    const gastos = Number(resumen.totalGastos || 0)
 
     // Solo remesas
     const remesas = movimientos
@@ -86,7 +77,7 @@ export default function Dashboard() {
         )
 
     // Balance
-    const balance = ingresos - gastos
+    const balance = Number(resumen.balance || ingresos - gastos)
 
     // Últimos 5 movimientos
     const movimientosRecientes = [...movimientos]

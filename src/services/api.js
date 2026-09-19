@@ -162,6 +162,23 @@ export const categoriasApi = {
 }
 
 export const movimientosApi = {
+    async resumen(anio, mes) {
+        const parametros = new URLSearchParams()
+
+        if (anio != null && mes != null) {
+            parametros.set('anio', anio)
+            parametros.set('mes', mes)
+        }
+
+        const query = parametros.toString()
+        const res = await fetch(
+            `${API_URL}/Movimientos/resumen${query ? `?${query}` : ''}`,
+            { headers: obtenerHeaders() }
+        )
+
+        return manejarRespuesta(res)
+    },
+
     async listar() {
         return listarTodasLasPaginas('Movimientos')
     },
