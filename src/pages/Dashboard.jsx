@@ -96,18 +96,6 @@ export default function Dashboard() {
     // Todos los gastos
     const gastos = Number(resumen.totalGastos || 0)
 
-    const gastos = useMemo(() => {
-        return movimientos
-            .filter(
-                (m) => m.tipo === 'Gasto'
-            )
-            .reduce(
-                (total, m) =>
-                    total + Number(m.monto || 0),
-                0
-            )
-    }, [movimientos])
-
     const remesas = useMemo(() => {
         return movimientos
             .filter(
