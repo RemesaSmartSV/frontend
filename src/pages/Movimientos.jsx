@@ -3,8 +3,7 @@ import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
-import ConfirmModal from '../components/ConfirmModal'
-import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
+import { Download } from 'lucide-react'
 
 export default function Movimientos() {
     const [movimientos, setMovimientos] = useState([])
@@ -210,6 +209,15 @@ export default function Movimientos() {
             setError(err.message)
         } finally {
             setProcesando(false)
+        }
+    }
+
+    async function exportarMovimientos(formato) {
+        try {
+            setError('')
+            await movimientosApi.exportar(formato)
+        } catch (err) {
+            setError(err.message)
         }
     }
 
@@ -727,228 +735,31 @@ export default function Movimientos() {
                         Filtrar movimientos
                     </h2>
 
-                    <p className="mt-1 text-sm text-gray-500">
-                        Filtra los movimientos por fecha, categoría o monto.
-                    </p>
-
-                </div>
-
-                {/* BÚSQUEDA */}
-
-                <div className="mb-5 flex min-w-0 flex-col gap-2">
-
-                    <label
-                        htmlFor="busqueda"
-                        className="font-semibold text-gray-700"
-                    >
-                        Buscar por descripción
-                    </label>
-
-                    <input
-                        id="busqueda"
-                        type="text"
-                        name="busqueda"
-                        value={filtros.busqueda}
-                        onChange={manejarCambioFiltro}
-                        placeholder="Ej. Supermercado, transporte..."
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
-                    />
-
-                </div>
-
-                {/* FILTROS */}
-
-                <div className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-5">
-
-                    {/* FECHA DESDE */}
-
-                    <div className="flex min-w-0 flex-col gap-2">
-
-                        <label
-                            htmlFor="fechaDesde"
-                            className="font-semibold text-gray-700"
-                        >
-                            Fecha desde
-                        </label>
-
-                        <input
-                            id="fechaDesde"
-                            type="date"
-                            name="fechaDesde"
-                            value={filtros.fechaDesde}
-                            onChange={manejarCambioFiltro}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
-                        />
-
-                    </div>
-
-                    {/* FECHA HASTA */}
-
-                    <div className="flex min-w-0 flex-col gap-2">
-
-                        <label
-                            htmlFor="fechaHasta"
-                            className="font-semibold text-gray-700"
-                        >
-                            Fecha hasta
-                        </label>
-
-                        <input
-                            id="fechaHasta"
-                            type="date"
-                            name="fechaHasta"
-                            value={filtros.fechaHasta}
-                            onChange={manejarCambioFiltro}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
-                        />
-
-                    </div>
-
-                    {/* CATEGORÍA */}
-
-                    <div className="flex min-w-0 flex-col gap-2">
-
-                        <label
-                            htmlFor="filtroCategoria"
-                            className="font-semibold text-gray-700"
-                        >
-                            Categoría
-                        </label>
-
-                        <select
-                            id="filtroCategoria"
-                            name="idCategoria"
-                            value={filtros.idCategoria}
-                            onChange={manejarCambioFiltro}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
-                        >
-                            <option value="">
-                                Todas las categorías
-                            </option>
-
-                            {categorias.map((categoria) => (
-                                <option
-                                    key={categoria.idCategoria}
-                                    value={categoria.idCategoria}
-                                >
-                                    {categoria.nombre}
-                                </option>
-                            ))}
-
-                        </select>
-
-                    </div>
-
-                    {/* MONTO MÍNIMO */}
-
-                    <div className="flex min-w-0 flex-col gap-2">
-
-                        <label
-                            htmlFor="montoMinimo"
-                            className="font-semibold text-gray-700"
-                        >
-                            Monto mínimo
-                        </label>
-
-                        <input
-                            id="montoMinimo"
-                            type="number"
-                            name="montoMinimo"
-                            min="0"
-                            step="0.01"
-                            value={filtros.montoMinimo}
-                            onChange={manejarCambioFiltro}
-                            placeholder="Ej. 10.00"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
-                        />
-
-                    </div>
-
-                    {/* MONTO MÁXIMO */}
-
-                    <div className="flex min-w-0 flex-col gap-2">
-
-                        <label
-                            htmlFor="montoMaximo"
-                            className="font-semibold text-gray-700"
-                        >
-                            Monto máximo
-                        </label>
-
-                        <input
-                            id="montoMaximo"
-                            type="number"
-                            name="montoMaximo"
-                            min="0"
-                            step="0.01"
-                            value={filtros.montoMaximo}
-                            onChange={manejarCambioFiltro}
-                            placeholder="Ej. 500.00"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
-                        />
-
-                    </div>
-
-                </div>
-
-                {/* BOTONES */}
-
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-
-                    <button
-                        type="button"
-                        onClick={limpiarFiltros}
-                        className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 sm:w-auto"
-                    >
-                        Limpiar filtros
-                    </button>
-
-                    <p className="text-sm text-gray-500">
-                        {movimientosFiltrados.length === 1
-                            ? '1 movimiento encontrado'
-                            : `${movimientosFiltrados.length} movimientos encontrados`}
-                    </p>
-
-                </div>
-
-            </section>
-
-            {/* LISTA */}
-
-            <section className="mb-6 w-full overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
-
-                <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-
-                        <h2 className="text-xl font-semibold text-slate-900">
-                            Movimientos registrados
-                        </h2>
-
+                    <div className="flex flex-col gap-2 sm:flex-row">
                         <button
-                            type="button"
-                            onClick={exportarMovimientos}
-                            disabled={
-                                cargando ||
-                                procesando ||
-                                movimientosFiltrados.length === 0
-                            }
-                            className="w-full rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                            onClick={() => exportarMovimientos('csv')}
+                            disabled={cargando || procesando}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
-                            Exportar
+                            <Download size={17} aria-hidden="true" />
+                            CSV
                         </button>
-
+                        <button
+                            onClick={() => exportarMovimientos('json')}
+                            disabled={cargando || procesando}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            <Download size={17} aria-hidden="true" />
+                            JSON
+                        </button>
+                        <button
+                            onClick={cargarDatos}
+                            disabled={cargando || procesando}
+                            className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            {cargando ? 'Cargando...' : 'Actualizar'}
+                        </button>
                     </div>
-
-                    <button
-                        onClick={cargarDatos}
-                        disabled={cargando || procesando}
-                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                    >
-                        {cargando
-                            ? 'Cargando...'
-                            : 'Actualizar'}
-                    </button>
 
                 </div>
 

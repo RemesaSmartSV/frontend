@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
     BrowserRouter,
     Routes,
@@ -9,30 +9,11 @@ import {
 import Loading from './components/Loading'
 import Notification from './components/Notification'
 import Layout from './components/Layout'
+
 import { authApi, setOnUnauthorized } from './services/api'
 
-const Login = lazy(() => import('./pages/Login'))
-const Register = lazy(() => import('./pages/Register'))
-const Dashboard = lazy(() => import('./pages/Dashboard'))
-const Movimientos = lazy(() => import('./pages/Movimientos'))
-const Categorias = lazy(() => import('./pages/Categorias'))
-const Remesas = lazy(() => import('./pages/Remesas'))
-const Ingresos = lazy(() => import('./pages/Ingresos'))
-const Gastos = lazy(() => import('./pages/Gastos'))
-const Presupuestos = lazy(() => import('./pages/Presupuestos'))
-const EducacionFinanciera = lazy(() => import('./pages/EducacionFinanciera'))
 
-function ScrollToTop() {
-    const { pathname } = useLocation()
-
-    useEffect(() => {
-        window.scrollTo(0, 0)
-    }, [pathname])
-
-    return null
-}
-
-function AppContent() {
+export default function App() {
     const [usuario, setUsuario] = useState(() => {
         const usuarioGuardado =
             localStorage.getItem('usuario')
@@ -45,15 +26,12 @@ function AppContent() {
     const [mostrarRegistro, setMostrarRegistro] =
         useState(false)
 
-    const [mensajeSesion, setMensajeSesion] = useState('')
-
     useEffect(() => {
-        setOnUnauthorized(() => {
-            setUsuario(null)
-            setMostrarRegistro(false)
-            setMensajeSesion('Tu sesión expiró. Inicia sesión nuevamente.')
-        })
+        setOnUnauthorized(() => setUsuario(null))
+
+        return () => setOnUnauthorized(null)
     }, [])
+
 
     function manejarLogin(datosUsuario) {
         setMensajeSesion('')
