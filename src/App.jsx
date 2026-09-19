@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
     BrowserRouter,
     Routes,
@@ -19,11 +19,10 @@ import EducacionFinanciera from './pages/EducacionFinanciera'
 
 import Layout from './components/Layout'
 
-import { authApi } from './services/api'
+import { authApi, setOnUnauthorized } from './services/api'
 
 
 export default function App() {
-
     const [usuario, setUsuario] = useState(() => {
         const usuarioGuardado =
             localStorage.getItem('usuario')
@@ -35,6 +34,12 @@ export default function App() {
 
     const [mostrarRegistro, setMostrarRegistro] =
         useState(false)
+
+    useEffect(() => {
+        setOnUnauthorized(() => setUsuario(null))
+
+        return () => setOnUnauthorized(null)
+    }, [])
 
 
     function manejarLogin(datosUsuario) {
