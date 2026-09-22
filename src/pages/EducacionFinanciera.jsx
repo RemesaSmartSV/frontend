@@ -142,7 +142,7 @@ export default function EducacionFinanciera() {
                 >
                     {procesando
                         ? 'Actualizando...'
-                        : '🔄 Actualizar'}
+                        : 'Actualizar'}
                 </button>
 
             </div>

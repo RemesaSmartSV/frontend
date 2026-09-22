@@ -11,7 +11,7 @@ import {
     LogOut
 } from 'lucide-react'
 
-import logo from '../assets/remesa-smart.png'
+import logo from '../assets/remesa-smart (blanco).png'
 
 export default function Sidebar({
     usuario,
@@ -101,7 +101,7 @@ export default function Sidebar({
 
                         
 
-                    <p className="-mt-10 text-sm font-medium text-white/80 text-center">
+                    <p className="-mt-15 text-sm font-medium text-white/80 text-center">
                         Tus finanzas
                     </p>
 
