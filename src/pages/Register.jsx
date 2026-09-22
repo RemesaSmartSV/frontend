@@ -101,7 +101,7 @@ export default function Register({ volverLogin }) {
                 {/* ENCABEZADO */}
                 <div className="mb-7 text-center sm:mb-8">
 
-                    <h1 className="mb-5 text-2xl font-normal text-blue-600 sm:mb-6 sm:text-[2rem]">
+                    <h1 className="text-center text-2xl font-extrabold tracking-tight text-blue-600 sm:text-[1.8rem]">
                         RemesaSmartSV
                     </h1>
 
