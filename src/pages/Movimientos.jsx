@@ -3,6 +3,8 @@ import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import ConfirmModal from '../components/ConfirmModal'
+import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
 import { Download } from 'lucide-react'
 
 export default function Movimientos() {
@@ -212,7 +214,7 @@ export default function Movimientos() {
         }
     }
 
-    async function exportarMovimientos(formato) {
+    async function exportarMovimientosRemotos(formato) {
         try {
             setError('')
             await movimientosApi.exportar(formato)
@@ -339,7 +341,7 @@ export default function Movimientos() {
     // EXPORTAR CSV
     // =========================
 
-    function exportarMovimientos() {
+    function exportarMovimientosCSV() {
         if (movimientosFiltrados.length === 0) {
             setError('No hay movimientos para exportar.')
             return
@@ -737,7 +739,20 @@ export default function Movimientos() {
 
                     <div className="flex flex-col gap-2 sm:flex-row">
                         <button
-                            onClick={() => exportarMovimientos('csv')}
+                            type="button"
+                            onClick={exportarMovimientosCSV}
+                            disabled={
+                                cargando ||
+                                procesando ||
+                                movimientosFiltrados.length === 0
+                            }
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-green-200 px-4 py-2.5 font-semibold text-green-700 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            <Download size={17} aria-hidden="true" />
+                            CSV filtrado
+                        </button>
+                        <button
+                            onClick={() => exportarMovimientosRemotos('csv')}
                             disabled={cargando || procesando}
                             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
@@ -745,7 +760,7 @@ export default function Movimientos() {
                             CSV
                         </button>
                         <button
-                            onClick={() => exportarMovimientos('json')}
+                            onClick={() => exportarMovimientosRemotos('json')}
                             disabled={cargando || procesando}
                             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >

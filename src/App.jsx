@@ -1,4 +1,4 @@
-import { useEffect, useState, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import {
     BrowserRouter,
     Routes,
@@ -6,22 +6,22 @@ import {
     useLocation,
 } from 'react-router-dom'
 
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Movimientos from './pages/Movimientos'
-import Categorias from './pages/Categorias'
-import Remesas from './pages/Remesas'
-import Ingresos from './pages/Ingresos'
-import Gastos from './pages/Gastos'
-import Presupuestos from './pages/Presupuestos'
-import EducacionFinanciera from './pages/EducacionFinanciera'
-
 import Loading from './components/Loading'
 import Notification from './components/Notification'
 import Layout from './components/Layout'
 
 import { authApi, setOnUnauthorized } from './services/api'
+
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Movimientos = lazy(() => import('./pages/Movimientos'))
+const Categorias = lazy(() => import('./pages/Categorias'))
+const Remesas = lazy(() => import('./pages/Remesas'))
+const Ingresos = lazy(() => import('./pages/Ingresos'))
+const Gastos = lazy(() => import('./pages/Gastos'))
+const Presupuestos = lazy(() => import('./pages/Presupuestos'))
+const EducacionFinanciera = lazy(() => import('./pages/EducacionFinanciera'))
 
 function ScrollToTop() {
     const { pathname } = useLocation()
@@ -77,10 +77,12 @@ export default function App() {
                     mensaje={mensajeSesion}
                     onClose={() => setMensajeSesion('')}
                 />
-                <Login
-                    onLogin={manejarLogin}
-                    irRegistro={() => setMostrarRegistro(true)}
-                />
+                <Suspense fallback={<Loading mensaje="Cargando..." />}>
+                    <Login
+                        onLogin={manejarLogin}
+                        irRegistro={() => setMostrarRegistro(true)}
+                    />
+                </Suspense>
             </>
         )
     }

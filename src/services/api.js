@@ -207,8 +207,7 @@ export const movimientosApi = {
             { headers: obtenerHeaders() }
         )
 
-        const data = await manejarRespuesta(res)
-        return extraerItems(data)
+        return manejarRespuesta(res)
     },
 
     async listar() {

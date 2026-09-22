@@ -7,8 +7,8 @@ describe('App', () => {
         render(<App />)
     })
 
-    it('muestra el titulo de la app', () => {
+    it('muestra el titulo de la app', async () => {
         render(<App />)
-        expect(screen.getByText(/RemesaSmart/i)).toBeInTheDocument()
+        expect(await screen.findByText(/RemesaSmart/i)).toBeInTheDocument()
     })
 })

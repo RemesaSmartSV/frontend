@@ -175,19 +175,6 @@ export default function Navbar({
                         .toUpperCase()}
                 </div>
 
-                <button
-                    onClick={cerrarSesion}
-                    className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 active:scale-95 sm:px-4"
-                >
-                    <span className="hidden sm:inline">
-                        Cerrar sesión
-                    </span>
-
-                    <span className="sm:hidden">
-                        Salir
-                    </span>
-                </button>
-
             </div>
 
         </header>
