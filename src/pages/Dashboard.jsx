@@ -35,8 +35,11 @@ const COLORES_CATEGORIAS = [
 
 export default function Dashboard() {
     const [movimientos, setMovimientos] = useState([])
-    const [categorias, setCategorias] = useState([])
-
+    const [resumen, setResumen] = useState({
+        totalIngresos: 0,
+        totalGastos: 0,
+        balance: 0,
+    })
     const [cargando, setCargando] = useState(true)
     const [procesando, setProcesando] = useState(false)
 
@@ -48,25 +51,13 @@ export default function Dashboard() {
             setCargando(true)
             setError('')
 
-            const [
-                movimientosData,
-                categoriasData,
-            ] = await Promise.all([
+            const [data, resumenData] = await Promise.all([
                 movimientosApi.listar(),
-                categoriasApi.listar(),
+                movimientosApi.resumen(),
             ])
 
-            setMovimientos(
-                Array.isArray(movimientosData)
-                    ? movimientosData
-                    : []
-            )
-
-            setCategorias(
-                Array.isArray(categoriasData)
-                    ? categoriasData
-                    : []
-            )
+            setMovimientos(data)
+            setResumen(resumenData)
         } catch (err) {
             setError(
                 err.message ||
@@ -99,29 +90,11 @@ export default function Dashboard() {
         }
     }, [cargarDatos])
 
-    const ingresos = useMemo(() => {
-        return movimientos
-            .filter(
-                (m) => m.tipo === 'Ingreso'
-            )
-            .reduce(
-                (total, m) =>
-                    total + Number(m.monto || 0),
-                0
-            )
-    }, [movimientos])
+    // Todos los ingresos, incluyendo las remesas
+    const ingresos = Number(resumen.totalIngresos || 0)
 
-    const gastos = useMemo(() => {
-        return movimientos
-            .filter(
-                (m) => m.tipo === 'Gasto'
-            )
-            .reduce(
-                (total, m) =>
-                    total + Number(m.monto || 0),
-                0
-            )
-    }, [movimientos])
+    // Todos los gastos
+    const gastos = Number(resumen.totalGastos || 0)
 
     const remesas = useMemo(() => {
         return movimientos
@@ -137,7 +110,8 @@ export default function Dashboard() {
             )
     }, [movimientos])
 
-    const balance = ingresos - gastos
+    // Balance
+    const balance = Number(resumen.balance || ingresos - gastos)
 
     const movimientosRecientes = useMemo(() => {
         return [...movimientos]

@@ -43,11 +43,7 @@ async function manejarRespuesta(res) {
     if (res.status === 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('usuario')
-
-        if (onUnauthorized) {
-            onUnauthorized()
-        }
-
+        onUnauthorized?.()
         throw new Error('Sesión expirada. Inicia sesión nuevamente.')
     }
 
@@ -56,8 +52,10 @@ async function manejarRespuesta(res) {
     try {
         const data = await res.json()
 
-        if (data.message) {
-            mensaje = data.message
+        if (data.message || data.title || data.detail) {
+            mensaje = data.message || data.detail || data.title
+        } else if (data.errors) {
+            mensaje = Object.values(data.errors).flat().join(' ')
         }
     } catch {
         // No se pudo leer la respuesta
@@ -66,11 +64,13 @@ async function manejarRespuesta(res) {
     throw new Error(mensaje)
 }
 
-function obtenerHeaders() {
+function obtenerHeaders(incluyeBody = false) {
     const token = obtenerToken()
 
-    const headers = {
-        'Content-Type': 'application/json',
+    const headers = {}
+
+    if (incluyeBody) {
+        headers['Content-Type'] = 'application/json'
     }
 
     if (token) {
@@ -78,6 +78,33 @@ function obtenerHeaders() {
     }
 
     return headers
+}
+
+async function listarTodasLasPaginas(ruta) {
+    const pageSize = 100
+    const primeraRespuesta = await fetch(
+        `${API_URL}/${ruta}?page=1&pageSize=${pageSize}`,
+        { headers: obtenerHeaders() }
+    )
+    const primeraPagina = await manejarRespuesta(primeraRespuesta)
+
+    if (Array.isArray(primeraPagina)) {
+        return primeraPagina
+    }
+
+    const items = [...(primeraPagina.items || [])]
+    const totalPages = primeraPagina.totalPages || 1
+
+    for (let page = 2; page <= totalPages; page += 1) {
+        const res = await fetch(
+            `${API_URL}/${ruta}?page=${page}&pageSize=${pageSize}`,
+            { headers: obtenerHeaders() }
+        )
+        const data = await manejarRespuesta(res)
+        items.push(...(data.items || []))
+    }
+
+    return items
 }
 
 export const authApi = {
@@ -132,18 +159,13 @@ function extraerItems(respuesta) {
 
 export const categoriasApi = {
     async listar() {
-        const res = await fetch(`${API_URL}/Categorias`, {
-            headers: obtenerHeaders(),
-        })
-
-        const data = await manejarRespuesta(res)
-        return extraerItems(data)
+        return listarTodasLasPaginas('Categorias')
     },
 
     async crear(categoria) {
         const res = await fetch(`${API_URL}/Categorias`, {
             method: 'POST',
-            headers: obtenerHeaders(),
+            headers: obtenerHeaders(true),
             body: JSON.stringify(categoria),
         })
 
@@ -153,7 +175,7 @@ export const categoriasApi = {
     async actualizar(id, categoria) {
         const res = await fetch(`${API_URL}/Categorias/${id}`, {
             method: 'PUT',
-            headers: obtenerHeaders(),
+            headers: obtenerHeaders(true),
             body: JSON.stringify(categoria),
         })
 
@@ -171,19 +193,31 @@ export const categoriasApi = {
 }
 
 export const movimientosApi = {
-    async listar() {
-        const res = await fetch(`${API_URL}/Movimientos`, {
-            headers: obtenerHeaders(),
-        })
+    async resumen(anio, mes) {
+        const parametros = new URLSearchParams()
 
-        const data = await manejarRespuesta(res)
-        return extraerItems(data)
+        if (anio != null && mes != null) {
+            parametros.set('anio', anio)
+            parametros.set('mes', mes)
+        }
+
+        const query = parametros.toString()
+        const res = await fetch(
+            `${API_URL}/Movimientos/resumen${query ? `?${query}` : ''}`,
+            { headers: obtenerHeaders() }
+        )
+
+        return manejarRespuesta(res)
+    },
+
+    async listar() {
+        return listarTodasLasPaginas('Movimientos')
     },
 
     async crear(movimiento) {
         const res = await fetch(`${API_URL}/Movimientos`, {
             method: 'POST',
-            headers: obtenerHeaders(),
+            headers: obtenerHeaders(true),
             body: JSON.stringify(movimiento),
         })
 
@@ -193,7 +227,7 @@ export const movimientosApi = {
     async actualizar(id, movimiento) {
         const res = await fetch(`${API_URL}/Movimientos/${id}`, {
             method: 'PUT',
-            headers: obtenerHeaders(),
+            headers: obtenerHeaders(true),
             body: JSON.stringify(movimiento),
         })
 
@@ -216,7 +250,7 @@ export const movimientosApi = {
         )
 
         if (!res.ok) {
-            throw new Error(`Error ${res.status}`)
+            await manejarRespuesta(res)
         }
 
         const blob = await res.blob()
@@ -251,7 +285,7 @@ export const presupuestosApi = {
     async crear(presupuesto) {
         const res = await fetch(`${API_URL}/Presupuestos`, {
             method: 'POST',
-            headers: obtenerHeaders(),
+            headers: obtenerHeaders(true),
             body: JSON.stringify(presupuesto),
         })
 
@@ -261,7 +295,7 @@ export const presupuestosApi = {
     async actualizar(id, presupuesto) {
         const res = await fetch(`${API_URL}/Presupuestos/${id}`, {
             method: 'PUT',
-            headers: obtenerHeaders(),
+            headers: obtenerHeaders(true),
             body: JSON.stringify(presupuesto),
         })
 

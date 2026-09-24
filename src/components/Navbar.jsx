@@ -155,6 +155,26 @@ export default function Navbar({
                     )}
                 </div>
 
+                <div className="hidden text-right sm:block">
+                    <p className="text-xs text-gray-400">
+                        Hola
+                    </p>
+
+                    <p className="font-semibold text-gray-700">
+                        {usuario?.nombre || 'Usuario'}
+                    </p>
+
+                    <p className="text-xs text-gray-400">
+                        {usuario?.rol || 'Miembro'}
+                    </p>
+                </div>
+
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 sm:h-10 sm:w-10 sm:text-base">
+                    {(usuario?.nombre || 'U')
+                        .charAt(0)
+                        .toUpperCase()}
+                </div>
+
             </div>
 
         </header>
