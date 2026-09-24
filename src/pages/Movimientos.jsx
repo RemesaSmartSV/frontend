@@ -778,6 +778,128 @@ export default function Movimientos() {
 
                 </div>
 
+                <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
+                    <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-900">
+                                Filtros
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                                Filtra los movimientos por fecha, categoría, monto y descripción.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={limpiarFiltros}
+                            className="w-full rounded-lg bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-600 sm:w-auto"
+                        >
+                            Limpiar filtros
+                        </button>
+                    </div>
+
+                    <div className="mb-4 flex flex-col gap-2">
+                        <label
+                            htmlFor="busquedaMovimientos"
+                            className="text-sm font-semibold text-gray-700"
+                        >
+                            Buscar por descripción
+                        </label>
+                        <input
+                            id="busquedaMovimientos"
+                            type="text"
+                            name="busqueda"
+                            value={filtros.busqueda}
+                            onChange={manejarCambioFiltro}
+                            placeholder="Ej. Supermercado, transporte..."
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+                        <div className="flex min-w-0 flex-col gap-2">
+                            <label htmlFor="fechaDesde" className="text-sm font-semibold text-gray-700">
+                                Fecha desde
+                            </label>
+                            <input
+                                id="fechaDesde"
+                                type="date"
+                                name="fechaDesde"
+                                value={filtros.fechaDesde}
+                                onChange={manejarCambioFiltro}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                            />
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-2">
+                            <label htmlFor="fechaHasta" className="text-sm font-semibold text-gray-700">
+                                Fecha hasta
+                            </label>
+                            <input
+                                id="fechaHasta"
+                                type="date"
+                                name="fechaHasta"
+                                value={filtros.fechaHasta}
+                                onChange={manejarCambioFiltro}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                            />
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-2">
+                            <label htmlFor="filtroCategoriaMovimientos" className="text-sm font-semibold text-gray-700">
+                                Categoría
+                            </label>
+                            <select
+                                id="filtroCategoriaMovimientos"
+                                name="idCategoria"
+                                value={filtros.idCategoria}
+                                onChange={manejarCambioFiltro}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                            >
+                                <option value="">Todas</option>
+                                {categorias.map((categoria) => (
+                                    <option key={categoria.idCategoria} value={categoria.idCategoria}>
+                                        {categoria.nombre}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-2">
+                            <label htmlFor="montoMinimo" className="text-sm font-semibold text-gray-700">
+                                Monto mínimo
+                            </label>
+                            <input
+                                id="montoMinimo"
+                                type="number"
+                                name="montoMinimo"
+                                min="0"
+                                step="0.01"
+                                value={filtros.montoMinimo}
+                                onChange={manejarCambioFiltro}
+                                placeholder="0.00"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                            />
+                        </div>
+
+                        <div className="flex min-w-0 flex-col gap-2">
+                            <label htmlFor="montoMaximo" className="text-sm font-semibold text-gray-700">
+                                Monto máximo
+                            </label>
+                            <input
+                                id="montoMaximo"
+                                type="number"
+                                name="montoMaximo"
+                                min="0"
+                                step="0.01"
+                                value={filtros.montoMaximo}
+                                onChange={manejarCambioFiltro}
+                                placeholder="0.00"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 {cargando ? (
 
                     <Loading mensaje="Cargando movimientos..." />
