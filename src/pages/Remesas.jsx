@@ -4,6 +4,7 @@ import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import ConfirmModal from '../components/ConfirmModal'
+import { obtenerFechaHoy } from '../utils/formato'
 
 export default function Remesas() {
     const [remesas, setRemesas] = useState([])
@@ -12,7 +13,7 @@ export default function Remesas() {
     const [formulario, setFormulario] = useState({
         idCategoria: '',
         monto: '',
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: obtenerFechaHoy(),
         origenEmisora: '',
         descripcion: '',
     })
@@ -299,7 +300,7 @@ export default function Remesas() {
         setFormulario({
             idCategoria: '',
             monto: '',
-            fecha: new Date().toISOString().split('T')[0],
+            fecha: obtenerFechaHoy(),
             origenEmisora: '',
             descripcion: '',
         })
@@ -388,8 +389,7 @@ export default function Remesas() {
         const enlace = document.createElement('a')
         enlace.href = url
 
-        const fechaActual =
-            new Date().toISOString().split('T')[0]
+        const fechaActual = obtenerFechaHoy()
 
         enlace.download =
             `remesas_${fechaActual}.csv`

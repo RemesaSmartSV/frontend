@@ -6,6 +6,7 @@ import { alertasApi } from '../services/api'
 
 export default function Layout({
     usuario,
+    nombreFamiliar,
     cerrarSesion
 }) {
     const [menuAbierto, setMenuAbierto] = useState(false)
@@ -53,6 +54,7 @@ export default function Layout({
 
             <Navbar
                 usuario={usuario}
+                nombreFamiliar={nombreFamiliar}
                 menuAbierto={menuAbierto}
                 setMenuAbierto={setMenuAbierto}
                 alertas={alertas}
