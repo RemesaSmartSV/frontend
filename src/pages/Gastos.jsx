@@ -385,8 +385,7 @@ export default function Gastos() {
         const enlace = document.createElement('a')
         enlace.href = url
 
-        const fechaActual =
-            new Date().toISOString().split('T')[0]
+        const fechaActual = obtenerFechaHoy()
 
         enlace.download =
             `gastos_${fechaActual}.csv`

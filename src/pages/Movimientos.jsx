@@ -428,10 +428,7 @@ export default function Movimientos() {
 
         enlace.href = url
 
-        const fechaActual =
-            new Date()
-                .toISOString()
-                .split('T')[0]
+        const fechaActual = obtenerFechaHoy()
 
         enlace.download =
             `movimientos_${fechaActual}.csv`

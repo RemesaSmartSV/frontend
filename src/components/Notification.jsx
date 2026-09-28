@@ -1,8 +1,6 @@
 import { useEffect } from 'react'
 
 export default function Notification({ tipo = 'success', mensaje, onClose }) {
-    if (!mensaje) return null
-
     const estilos = {
         success: 'border-green-500 bg-green-100 text-green-800',
         error: 'border-red-500 bg-red-100 text-red-800',
@@ -18,11 +16,15 @@ export default function Notification({ tipo = 'success', mensaje, onClose }) {
     }
 
     useEffect(() => {
-        if (tipo === 'success' && onClose) {
-            const timer = setTimeout(onClose, 4000)
-            return () => clearTimeout(timer)
+        if (!mensaje || tipo !== 'success' || !onClose) {
+            return undefined
         }
-    }, [tipo, onClose])
+
+        const timer = setTimeout(onClose, 4000)
+        return () => clearTimeout(timer)
+    }, [tipo, mensaje, onClose])
+
+    if (!mensaje) return null
 
     return (
         <div

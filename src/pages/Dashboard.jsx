@@ -20,7 +20,7 @@ import {
 
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
-import { formatearMoneda } from '../utils/formato'
+import { formatearMoneda, parsearFechaLocal } from '../utils/formato'
 
 const COLORES_CATEGORIAS = [
     '#7c3aed',
@@ -115,11 +115,17 @@ export default function Dashboard() {
 
     const movimientosRecientes = useMemo(() => {
         return [...movimientos]
-            .sort(
-                (a, b) =>
-                    new Date(b.fecha) -
-                    new Date(a.fecha)
-            )
+            .filter((movimiento) => {
+                return (
+                    parsearFechaLocal(movimiento.fecha) !== null
+                )
+            })
+            .sort((a, b) => {
+                return (
+                    parsearFechaLocal(b.fecha) -
+                    parsearFechaLocal(a.fecha)
+                )
+            })
             .slice(0, 5)
     }, [movimientos])
 
@@ -133,11 +139,9 @@ export default function Dashboard() {
         const meses = {}
 
         movimientos.forEach((movimiento) => {
-            const fecha = new Date(
-                movimiento.fecha
-            )
+            const fecha = parsearFechaLocal(movimiento.fecha)
 
-            if (Number.isNaN(fecha.getTime())) {
+            if (!fecha || Number.isNaN(fecha.getTime())) {
                 return
             }
 

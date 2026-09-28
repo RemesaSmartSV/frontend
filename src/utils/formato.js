@@ -7,5 +7,28 @@ export function formatearMoneda(monto) {
 }
 
 export function obtenerFechaHoy() {
-    return new Date().toISOString().split('T')[0]
+    const hoy = new Date()
+
+    const anio = hoy.getFullYear()
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+    const dia = String(hoy.getDate()).padStart(2, '0')
+
+    return `${anio}-${mes}-${dia}`
+}
+
+export function parsearFechaLocal(fecha) {
+    if (!fecha) {
+        return null
+    }
+
+    const soloFecha = String(fecha).split('T')[0]
+    const partes = soloFecha.split('-').map(Number)
+
+    if (partes.length !== 3 || partes.some(Number.isNaN)) {
+        return null
+    }
+
+    const [anio, mes, dia] = partes
+
+    return new Date(anio, mes - 1, dia)
 }

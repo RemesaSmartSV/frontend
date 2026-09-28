@@ -147,6 +147,16 @@ export const authApi = {
         localStorage.removeItem('usuario')
     },
 }
+export const hogaresApi = {
+    async obtenerMiHogar() {
+        const res = await fetch(`${API_URL}/Hogares`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+}
+
 function extraerItems(respuesta) {
     if (respuesta && Array.isArray(respuesta.items)) {
         return respuesta.items

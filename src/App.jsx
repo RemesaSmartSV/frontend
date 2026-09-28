@@ -10,7 +10,11 @@ import Loading from './components/Loading'
 import Notification from './components/Notification'
 import Layout from './components/Layout'
 
-import { authApi, setOnUnauthorized } from './services/api'
+import {
+    authApi,
+    hogaresApi,
+    setOnUnauthorized,
+} from './services/api'
 
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
@@ -40,6 +44,35 @@ export default function App() {
     })
     const [mostrarRegistro, setMostrarRegistro] = useState(false)
     const [mensajeSesion, setMensajeSesion] = useState('')
+    const [nombreFamiliar, setNombreFamiliar] = useState('')
+
+    useEffect(() => {
+        if (!usuario) {
+            setNombreFamiliar('')
+            return
+        }
+
+        let vigente = true
+
+        async function cargarNombreFamiliar() {
+            try {
+                const hogar = await hogaresApi.obtenerMiHogar()
+
+                if (vigente && hogar?.nombreFamiliar) {
+                    setNombreFamiliar(hogar.nombreFamiliar)
+                }
+            } catch {
+                // El nombre del hogar es informativo: si falla, se
+                // mantiene el valor anterior y la app sigue usable.
+            }
+        }
+
+        cargarNombreFamiliar()
+
+        return () => {
+            vigente = false
+        }
+    }, [usuario])
 
     useEffect(() => {
         setOnUnauthorized(() => {
@@ -96,6 +129,7 @@ export default function App() {
                         element={
                             <Layout
                                 usuario={usuario}
+                                nombreFamiliar={nombreFamiliar}
                                 cerrarSesion={cerrarSesion}
                             />
                         }

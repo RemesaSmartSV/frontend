@@ -4,7 +4,7 @@ import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
-import { formatearMoneda } from '../utils/formato'
+import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
 
 function Ingresos() {
     const [ingresos, setIngresos] = useState([])
@@ -13,7 +13,7 @@ function Ingresos() {
     const [formulario, setFormulario] = useState({
         idCategoria: '',
         monto: '',
-        fecha: new Date().toISOString().split('T')[0],
+        fecha: obtenerFechaHoy(),
         descripcion: '',
     })
 
@@ -194,7 +194,7 @@ function Ingresos() {
         setFormulario({
             idCategoria: '',
             monto: '',
-            fecha: new Date().toISOString().split('T')[0],
+            fecha: obtenerFechaHoy(),
             descripcion: '',
         })
 
@@ -391,10 +391,7 @@ function Ingresos() {
 
         enlace.href = url
 
-        const fechaActual =
-            new Date()
-                .toISOString()
-                .split('T')[0]
+        const fechaActual = obtenerFechaHoy()
 
         enlace.download =
             `ingresos_${fechaActual}.csv`

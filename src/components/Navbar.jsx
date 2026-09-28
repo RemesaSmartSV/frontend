@@ -3,13 +3,15 @@ import { Bell } from 'lucide-react'
 
 export default function Navbar({
     usuario,
+    nombreFamiliar,
     menuAbierto,
     setMenuAbierto,
     alertas,
     cargandoAlertas,
     errorAlertas
 }) {
-    const nombreFamilia =
+    const nombreHogar =
+        nombreFamiliar ||
         usuario?.familia ||
         usuario?.nombreFamiliar ||
         'Sin familia'
@@ -54,7 +56,7 @@ export default function Navbar({
 
                 {/* NOMBRE EN CELULAR */}
                 <p className="text-base font-bold text-[#123B8F] lg:hidden">
-                    Familia {nombreFamilia}
+                    Familia {nombreHogar}
                 </p>
 
                 {/* INFORMACIÓN DEL HOGAR EN COMPUTADORA */}
@@ -64,7 +66,7 @@ export default function Navbar({
                     </p>
 
                     <p className="text-base font-bold text-gray-800">
-                        {nombreFamilia}
+                        {nombreHogar}
                     </p>
                 </div>
 
