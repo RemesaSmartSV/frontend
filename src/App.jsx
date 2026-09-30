@@ -9,6 +9,7 @@ import {
 import Loading from './components/Loading'
 import Notification from './components/Notification'
 import Layout from './components/Layout'
+import Presentacion from './pages/Presentacion'
 
 import {
     authApi,
@@ -26,6 +27,14 @@ const Ingresos = lazy(() => import('./pages/Ingresos'))
 const Gastos = lazy(() => import('./pages/Gastos'))
 const Presupuestos = lazy(() => import('./pages/Presupuestos'))
 const EducacionFinanciera = lazy(() => import('./pages/EducacionFinanciera'))
+
+// La presentación comercial es una vista pública: se consulta en cada render
+// para que funcione con o sin sesión, sin depender del router (sus enlaces
+// apuntan a rutas absolutas y navegan con recarga).
+function esPresentacion() {
+    const ruta = window.location.pathname.replace(/\/+$/, '') || '/'
+    return ruta === '/presentacion'
+}
 
 function ScrollToTop() {
     const { pathname } = useLocation()
@@ -92,6 +101,10 @@ export default function App() {
         authApi.cerrarSesion()
         setUsuario(null)
         setMostrarRegistro(false)
+    }
+
+    if (esPresentacion()) {
+        return <Presentacion />
     }
 
     if (!usuario) {
