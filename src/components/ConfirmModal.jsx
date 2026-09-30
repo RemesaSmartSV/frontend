@@ -37,6 +37,7 @@ export default function ConfirmModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-modal-title"
+            aria-describedby="confirm-modal-mensaje"
         >
             <div
                 className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
@@ -53,7 +54,10 @@ export default function ConfirmModal({
                     {titulo}
                 </h3>
 
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                <p
+                    id="confirm-modal-mensaje"
+                    className="mt-2 text-sm leading-relaxed text-gray-600"
+                >
                     {mensaje}
                 </p>
 

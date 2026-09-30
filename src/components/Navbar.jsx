@@ -50,6 +50,8 @@ export default function Navbar({
                             ? 'Cerrar menú'
                             : 'Abrir menú'
                     }
+                    aria-expanded={menuAbierto}
+                    aria-controls="menu-lateral"
                 >
                     {menuAbierto ? '✕' : '☰'}
                 </button>
@@ -81,6 +83,7 @@ export default function Navbar({
                         className="relative rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
                         aria-label="Ver alertas"
                         aria-expanded={alertasAbiertas}
+                        aria-controls="panel-alertas"
                     >
                         <Bell size={21} />
 
@@ -92,7 +95,10 @@ export default function Navbar({
                     </button>
 
                     {alertasAbiertas && (
-                        <div className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white p-4 shadow-xl">
+                        <div
+                            id="panel-alertas"
+                            className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
+                        >
                             <div className="mb-3 flex items-center justify-between gap-3">
                                 <h2 className="font-semibold text-gray-800">
                                     Alertas de presupuesto

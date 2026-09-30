@@ -78,6 +78,7 @@ export default function Sidebar({
             )}
             {/* SIDEBAR */}
             <aside
+                id="menu-lateral"
                 className={`fixed left-0 top-0 z-40 flex h-screen w-64 flex-col overflow-hidden bg-[#123B8F] px-5 pt-0 pb-6 text-white shadow-xl transition-transform duration-300  
                 ${menuAbierto
                         ? 'translate-x-0'
@@ -118,7 +119,10 @@ export default function Sidebar({
 
 
                 {/* ENLACES */}
-                <nav className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0">
+                <nav
+                    aria-label="Navegación principal"
+                    className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0"
+                >
 
                     <div className="flex flex-col gap-2">
 

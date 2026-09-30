@@ -12,10 +12,35 @@ export default function Register({ volverLogin }) {
 
     const [mensaje, setMensaje] = useState('')
     const [error, setError] = useState('')
+    // Validación de campo: se muestra junto a los inputs y se asocia con
+    // aria-describedby/aria-invalid para lectores de pantalla.
+    const [errorCampo, setErrorCampo] = useState('')
+    const [camposConError, setCamposConError] = useState([])
     const [cargando, setCargando] = useState(false)
+
+    function marcarError(mensajeError, campos) {
+        setErrorCampo(mensajeError)
+        setCamposConError(campos)
+    }
+
+    function limpiarErrorCampo() {
+        setErrorCampo('')
+        setCamposConError([])
+    }
+
+    function ariaDe(campo) {
+        return camposConError.includes(campo)
+            ? {
+                  'aria-invalid': 'true',
+                  'aria-describedby': 'registro-error-campo',
+              }
+            : {}
+    }
 
     function manejarCambio(e) {
         const { name, value } = e.target
+
+        limpiarErrorCampo()
 
         setFormulario({
             ...formulario,
@@ -35,16 +60,24 @@ export default function Register({ volverLogin }) {
             !formulario.contrasena.trim() ||
             !formulario.nombreFamiliar.trim()
         ) {
-            setError('Completa todos los campos.')
+            marcarError('Completa todos los campos.', [
+                'nombre',
+                'correo',
+                'contrasena',
+                'nombreFamiliar',
+            ])
             return
         }
 
         if (formulario.contrasena.length < 6) {
-            setError(
-                'La contraseña debe tener al menos 6 caracteres.'
+            marcarError(
+                'La contraseña debe tener al menos 6 caracteres.',
+                ['contrasena']
             )
             return
         }
+
+        limpiarErrorCampo()
 
         try {
             setCargando(true)
@@ -142,6 +175,7 @@ export default function Register({ volverLogin }) {
                             autoComplete="name"
                             required
                             disabled={cargando}
+                            {...ariaDe('nombre')}
                             className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
 
@@ -167,6 +201,7 @@ export default function Register({ volverLogin }) {
                             autoComplete="email"
                             required
                             disabled={cargando}
+                            {...ariaDe('correo')}
                             className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
 
@@ -193,6 +228,7 @@ export default function Register({ volverLogin }) {
                             minLength={6}
                             required
                             disabled={cargando}
+                            {...ariaDe('contrasena')}
                             className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
 
@@ -218,10 +254,22 @@ export default function Register({ volverLogin }) {
                             autoComplete="organization"
                             required
                             disabled={cargando}
+                            {...ariaDe('nombreFamiliar')}
                             className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
 
                     </div>
+
+                    {/* ERROR DE VALIDACIÓN ASOCIADO A LOS CAMPOS */}
+                    {errorCampo && (
+                        <p
+                            id="registro-error-campo"
+                            role="alert"
+                            className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+                        >
+                            {errorCampo}
+                        </p>
+                    )}
 
                     {/* BOTÓN */}
                     <button
