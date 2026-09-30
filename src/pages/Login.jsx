@@ -7,15 +7,29 @@ export default function Login({ onLogin, irRegistro }) {
     const [contrasena, setContrasena] = useState('')
 
     const [error, setError] = useState('')
+    // Error de validación del propio campo: se muestra junto a los inputs y se
+    // asocia con aria-describedby/aria-invalid para lectores de pantalla.
+    const [errorCampo, setErrorCampo] = useState('')
     const [cargando, setCargando] = useState(false)
+
+    // Mientras haya error de validación, los inputs quedan marcados como
+    // inválidos y describidos por el mensaje que se muestra debajo.
+    const ariaError = errorCampo
+        ? {
+              'aria-invalid': 'true',
+              'aria-describedby': 'login-error-campo',
+          }
+        : {}
 
     async function iniciarSesion(e) {
         e.preventDefault()
 
         if (!correo.trim() || !contrasena.trim()) {
-            setError('Completa todos los campos.')
+            setErrorCampo('Completa todos los campos.')
             return
         }
+
+        setErrorCampo('')
 
         try {
             setCargando(true)
@@ -84,12 +98,15 @@ export default function Login({ onLogin, irRegistro }) {
                             id="correo"
                             type="email"
                             value={correo}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setCorreo(e.target.value)
-                            }
+                                setErrorCampo('')
+                            }}
                             placeholder="correo@ejemplo.com"
                             autoComplete="email"
+                            required
                             disabled={cargando}
+                            {...ariaError}
                             className="w-full min-w-0 rounded-[9px] border border-gray-300 bg-white px-3.5 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
 
@@ -109,16 +126,30 @@ export default function Login({ onLogin, irRegistro }) {
                             id="contrasena"
                             type="password"
                             value={contrasena}
-                            onChange={(e) =>
+                            onChange={(e) => {
                                 setContrasena(e.target.value)
-                            }
+                                setErrorCampo('')
+                            }}
                             placeholder="Contraseña"
                             autoComplete="current-password"
+                            required
                             disabled={cargando}
+                            {...ariaError}
                             className="w-full min-w-0 rounded-[9px] border border-gray-300 bg-white px-3.5 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
 
                     </div>
+
+                    {/* ERROR DE VALIDACIÓN ASOCIADO A LOS CAMPOS */}
+                    {errorCampo && (
+                        <p
+                            id="login-error-campo"
+                            role="alert"
+                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+                        >
+                            {errorCampo}
+                        </p>
+                    )}
 
                     {/* BOTÓN */}
                     <button
@@ -166,6 +197,31 @@ export default function Login({ onLogin, irRegistro }) {
                     </a>
 
                 </div>
+
+                {/* ENLACES LEGALES (accesibles sin sesión) */}
+                <nav
+                    aria-label="Enlaces legales"
+                    className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs"
+                >
+                    <a
+                        href="/politica-de-privacidad"
+                        className="text-slate-400 transition hover:text-blue-600 hover:underline"
+                    >
+                        Privacidad
+                    </a>
+                    <a
+                        href="/terminos-y-condiciones"
+                        className="text-slate-400 transition hover:text-blue-600 hover:underline"
+                    >
+                        Términos y condiciones
+                    </a>
+                    <a
+                        href="/politica-de-cookies"
+                        className="text-slate-400 transition hover:text-blue-600 hover:underline"
+                    >
+                        Política de cookies
+                    </a>
+                </nav>
 
             </section>
 

@@ -11,6 +11,9 @@ import Loading from './components/Loading'
 import Notification from './components/Notification'
 import Layout from './components/Layout'
 import Presentacion from './pages/Presentacion'
+import PoliticaPrivacidad from './pages/PoliticaPrivacidad'
+import TerminosYCondiciones from './pages/TerminosYCondiciones'
+import PoliticaDeCookies from './pages/PoliticaDeCookies'
 
 import {
     authApi,
@@ -37,6 +40,19 @@ function esPresentacion() {
     return ruta === '/presentacion'
 }
 
+// Las páginas legales deben poder leerse SIN sesión, así que siguen el mismo
+// camino que la presentación: se resuelven antes del router.
+const PAGINAS_PUBLICAS = {
+    '/politica-de-privacidad': PoliticaPrivacidad,
+    '/terminos-y-condiciones': TerminosYCondiciones,
+    '/politica-de-cookies': PoliticaDeCookies,
+}
+
+function paginaPublica() {
+    const ruta = window.location.pathname.replace(/\/+$/, '') || '/'
+    return PAGINAS_PUBLICAS[ruta] ?? null
+}
+
 function ScrollToTop() {
     const { pathname } = useLocation()
 
@@ -50,7 +66,21 @@ function ScrollToTop() {
 export default function App() {
     const [usuario, setUsuario] = useState(() => {
         const usuarioGuardado = localStorage.getItem('usuario')
-        return usuarioGuardado ? JSON.parse(usuarioGuardado) : null
+        if (!usuarioGuardado) {
+            return null
+        }
+
+        try {
+            const datos = JSON.parse(usuarioGuardado)
+            if (datos && typeof datos === 'object') {
+                return datos
+            }
+        } catch {
+            // Valor corrupto: se descarta en lugar de romper el arranque.
+        }
+
+        localStorage.removeItem('usuario')
+        return null
     })
     const [mostrarRegistro, setMostrarRegistro] = useState(false)
     const [mensajeSesion, setMensajeSesion] = useState('')
@@ -102,6 +132,12 @@ export default function App() {
         authApi.cerrarSesion()
         setUsuario(null)
         setMostrarRegistro(false)
+    }
+
+    const Publica = paginaPublica()
+
+    if (Publica) {
+        return <Publica />
     }
 
     if (esPresentacion()) {
