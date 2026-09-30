@@ -3,6 +3,7 @@ import {
     BrowserRouter,
     Routes,
     Route,
+    Navigate,
     useLocation,
 } from 'react-router-dom'
 
@@ -158,6 +159,11 @@ export default function App() {
                             path="/educacion-financiera"
                             element={<EducacionFinanciera />}
                         />
+                        {/* Sin este catch-all, cualquier ruta desconocida
+                            (por ejemplo un enlace viejo tras renombrar una
+                            pagina en un merge) dejaba la app en pantalla
+                            en blanco. */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
                     </Route>
                 </Routes>
             </Suspense>
