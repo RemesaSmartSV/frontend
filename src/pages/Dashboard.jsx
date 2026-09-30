@@ -35,6 +35,7 @@ const COLORES_CATEGORIAS = [
 
 export default function Dashboard() {
     const [movimientos, setMovimientos] = useState([])
+    const [categorias, setCategorias] = useState([])
     const [resumen, setResumen] = useState({
         totalIngresos: 0,
         totalGastos: 0,
@@ -51,13 +52,17 @@ export default function Dashboard() {
             setCargando(true)
             setError('')
 
-            const [data, resumenData] = await Promise.all([
+            const [data, resumenData, categoriasData] = await Promise.all([
                 movimientosApi.listar(),
                 movimientosApi.resumen(),
+                categoriasApi.listar(),
             ])
 
             setMovimientos(data)
             setResumen(resumenData)
+            setCategorias(
+                Array.isArray(categoriasData) ? categoriasData : []
+            )
         } catch (err) {
             setError(
                 err.message ||
