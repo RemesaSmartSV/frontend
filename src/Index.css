@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/*
+ * Indicador de foco visible para quien navega con teclado (WCAG 2.4.7).
+ * Se usa :focus-visible para que NO aparezca al hacer clic con el ratón.
+ * Los <input> quedan fuera: ya definen su propio anillo con utilidades de
+ * Tailwind y duplicarlo solo ensucia el indicador.
+ */
+:where(a, button, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
