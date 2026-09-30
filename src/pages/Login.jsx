@@ -155,6 +155,18 @@ export default function Login({ onLogin, irRegistro }) {
 
                 </div>
 
+                {/* PRESENTACIÓN COMERCIAL */}
+                <div className="mt-5 text-center">
+
+                    <a
+                        href="/presentacion"
+                        className="text-xs font-medium text-slate-400 transition hover:text-blue-600 hover:underline"
+                    >
+                        Ver presentación del producto
+                    </a>
+
+                </div>
+
             </section>
 
         </main>

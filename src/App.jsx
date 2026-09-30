@@ -3,13 +3,19 @@ import {
     BrowserRouter,
     Routes,
     Route,
-    useLocation
+    useLocation,
 } from 'react-router-dom'
 
 import Loading from './components/Loading'
 import Notification from './components/Notification'
 import Layout from './components/Layout'
-import { authApi, setOnUnauthorized } from './services/api'
+import Presentacion from './pages/Presentacion'
+
+import {
+    authApi,
+    hogaresApi,
+    setOnUnauthorized,
+} from './services/api'
 
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
@@ -22,6 +28,14 @@ const Gastos = lazy(() => import('./pages/Gastos'))
 const Presupuestos = lazy(() => import('./pages/Presupuestos'))
 const EducacionFinanciera = lazy(() => import('./pages/EducacionFinanciera'))
 
+// La presentación comercial es una vista pública: se consulta en cada render
+// para que funcione con o sin sesión, sin depender del router (sus enlaces
+// apuntan a rutas absolutas y navegan con recarga).
+function esPresentacion() {
+    const ruta = window.location.pathname.replace(/\/+$/, '') || '/'
+    return ruta === '/presentacion'
+}
+
 function ScrollToTop() {
     const { pathname } = useLocation()
 
@@ -32,27 +46,50 @@ function ScrollToTop() {
     return null
 }
 
-function AppContent() {
+export default function App() {
     const [usuario, setUsuario] = useState(() => {
-        const usuarioGuardado =
-            localStorage.getItem('usuario')
-
-        return usuarioGuardado
-            ? JSON.parse(usuarioGuardado)
-            : null
+        const usuarioGuardado = localStorage.getItem('usuario')
+        return usuarioGuardado ? JSON.parse(usuarioGuardado) : null
     })
-
-    const [mostrarRegistro, setMostrarRegistro] =
-        useState(false)
-
+    const [mostrarRegistro, setMostrarRegistro] = useState(false)
     const [mensajeSesion, setMensajeSesion] = useState('')
+    const [nombreFamiliar, setNombreFamiliar] = useState('')
+
+    useEffect(() => {
+        if (!usuario) {
+            setNombreFamiliar('')
+            return
+        }
+
+        let vigente = true
+
+        async function cargarNombreFamiliar() {
+            try {
+                const hogar = await hogaresApi.obtenerMiHogar()
+
+                if (vigente && hogar?.nombreFamiliar) {
+                    setNombreFamiliar(hogar.nombreFamiliar)
+                }
+            } catch {
+                // El nombre del hogar es informativo: si falla, se
+                // mantiene el valor anterior y la app sigue usable.
+            }
+        }
+
+        cargarNombreFamiliar()
+
+        return () => {
+            vigente = false
+        }
+    }, [usuario])
 
     useEffect(() => {
         setOnUnauthorized(() => {
             setUsuario(null)
-            setMostrarRegistro(false)
             setMensajeSesion('Tu sesión expiró. Inicia sesión nuevamente.')
         })
+
+        return () => setOnUnauthorized(null)
     }, [])
 
     function manejarLogin(datosUsuario) {
@@ -66,18 +103,15 @@ function AppContent() {
         setMostrarRegistro(false)
     }
 
-    // Si no hay usuario, mostrar Login o Register
+    if (esPresentacion()) {
+        return <Presentacion />
+    }
 
     if (!usuario) {
-
         if (mostrarRegistro) {
             return (
                 <Suspense fallback={<Loading mensaje="Cargando..." />}>
-                    <Register
-                        volverLogin={() =>
-                            setMostrarRegistro(false)
-                        }
-                    />
+                    <Register volverLogin={() => setMostrarRegistro(false)} />
                 </Suspense>
             )
         }
@@ -92,84 +126,41 @@ function AppContent() {
                 <Suspense fallback={<Loading mensaje="Cargando..." />}>
                     <Login
                         onLogin={manejarLogin}
-                        irRegistro={() =>
-                            setMostrarRegistro(true)
-                        }
+                        irRegistro={() => setMostrarRegistro(true)}
                     />
                 </Suspense>
             </>
         )
     }
 
-
-    // Usuario autenticado
-
     return (
         <BrowserRouter>
-
             <ScrollToTop />
-
             <Suspense fallback={<Loading mensaje="Cargando página..." />}>
                 <Routes>
-
                     <Route
                         element={
                             <Layout
                                 usuario={usuario}
+                                nombreFamiliar={nombreFamiliar}
                                 cerrarSesion={cerrarSesion}
                             />
                         }
                     >
-
-                        <Route
-                            path="/"
-                            element={<Dashboard />}
-                        />
-
-                        <Route
-                            path="/movimientos"
-                            element={<Movimientos />}
-                        />
-
-                        <Route
-                            path="/categorias"
-                            element={<Categorias />}
-                        />
-
-                        <Route
-                            path="/remesas"
-                            element={<Remesas />}
-                        />
-
-                        <Route
-                            path="/ingresos"
-                            element={<Ingresos />}
-                        />
-
-                        <Route
-                            path="/gastos"
-                            element={<Gastos />}
-                        />
-
-                        <Route
-                            path="/presupuestos"
-                            element={<Presupuestos />}
-                        />
-
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/movimientos" element={<Movimientos />} />
+                        <Route path="/categorias" element={<Categorias />} />
+                        <Route path="/remesas" element={<Remesas />} />
+                        <Route path="/ingresos" element={<Ingresos />} />
+                        <Route path="/gastos" element={<Gastos />} />
+                        <Route path="/presupuestos" element={<Presupuestos />} />
                         <Route
                             path="/educacion-financiera"
                             element={<EducacionFinanciera />}
                         />
-
                     </Route>
-
                 </Routes>
             </Suspense>
-
         </BrowserRouter>
     )
-}
-
-export default function App() {
-    return <AppContent />
 }
