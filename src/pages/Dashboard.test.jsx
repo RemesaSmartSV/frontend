@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import Dashboard from './Dashboard'
 
 // Mock de global.fetch que responde con las formas REALES que devuelve el
@@ -90,5 +90,37 @@ describe('Dashboard', () => {
         expect(
             llamadas.some((url) => url.includes('/Categorias'))
         ).toBe(true)
+    })
+
+    it('muestra la tarjeta de Ahorro consolidado', async () => {
+        render(<Dashboard />)
+
+        expect(
+            await screen.findByText('Ahorro')
+        ).toBeInTheDocument()
+    })
+
+    it('el selector de período pide el resumen filtrado por mes', async () => {
+        render(<Dashboard />)
+
+        await screen.findByRole('heading', {
+            name: /Resumen financiero/i,
+        })
+
+        // Primer clic: cambia de historial al mes actual.
+        fireEvent.click(
+            screen.getByRole('button', {
+                name: /Todo el historial/i,
+            })
+        )
+
+        // La última llamada a /resumen debe llevar anio y mes.
+        const llamadasResumen = llamadas.filter((url) =>
+            url.includes('/resumen')
+        )
+
+        expect(
+            llamadasResumen[llamadasResumen.length - 1]
+        ).toMatch(/resumen\?anio=\d{4}&mes=\d{1,2}/)
     })
 })

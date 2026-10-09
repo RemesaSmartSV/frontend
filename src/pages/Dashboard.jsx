@@ -16,6 +16,8 @@ import {
 import {
     categoriasApi,
     movimientosApi,
+    ahorroApi,
+    alertasApi,
 } from '../services/api'
 
 import Notification from '../components/Notification'
@@ -33,7 +35,18 @@ const COLORES_CATEGORIAS = [
     '#65a30d',
 ]
 
+function nombreMes(anio, mes) {
+    const fecha = new Date(anio, mes - 1, 1)
+
+    return fecha.toLocaleDateString('es-SV', {
+        month: 'long',
+        year: 'numeric',
+    })
+}
+
 export default function Dashboard() {
+    const hoy = new Date()
+
     const [movimientos, setMovimientos] = useState([])
     const [categorias, setCategorias] = useState([])
     const [resumen, setResumen] = useState({
@@ -41,8 +54,16 @@ export default function Dashboard() {
         totalGastos: 0,
         balance: 0,
     })
+    const [metas, setMetas] = useState([])
+    const [alertas, setAlertas] = useState([])
     const [cargando, setCargando] = useState(true)
     const [procesando, setProcesando] = useState(false)
+
+    // Periodo de los KPIs: 'historial' conserva el comportamiento anterior de
+    // totales acumulados; 'mes' filtra resumen y remesas al mes seleccionado.
+    const [modoPeriodo, setModoPeriodo] = useState('historial')
+    const [anio, setAnio] = useState(hoy.getFullYear())
+    const [mes, setMes] = useState(hoy.getMonth() + 1)
 
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
@@ -52,10 +73,30 @@ export default function Dashboard() {
             setCargando(true)
             setError('')
 
-            const [data, resumenData, categoriasData] = await Promise.all([
+            const filtroMes =
+                modoPeriodo === 'mes'
+                    ? { anio, mes }
+                    : {}
+
+            // Ahorro y alertas son complementarios: si uno falla, el dashboard
+            // sigue mostrando el resto (promesa propia con catch).
+            const [
+                data,
+                resumenData,
+                categoriasData,
+                metasData,
+                alertasData,
+            ] = await Promise.all([
                 movimientosApi.listar(),
-                movimientosApi.resumen(),
+                movimientosApi.resumen(filtroMes.anio, filtroMes.mes),
                 categoriasApi.listar(),
+                ahorroApi.listarMetas().catch(() => []),
+                alertasApi
+                    .listarPorPeriodo(
+                        new Date(anio, mes - 1, 1),
+                        new Date(anio, mes, 0)
+                    )
+                    .catch(() => []),
             ])
 
             setMovimientos(data)
@@ -63,6 +104,8 @@ export default function Dashboard() {
             setCategorias(
                 Array.isArray(categoriasData) ? categoriasData : []
             )
+            setMetas(Array.isArray(metasData) ? metasData : [])
+            setAlertas(Array.isArray(alertasData) ? alertasData : [])
         } catch (err) {
             setError(
                 err.message ||
@@ -71,7 +114,7 @@ export default function Dashboard() {
         } finally {
             setCargando(false)
         }
-    }, [])
+    }, [modoPeriodo, anio, mes])
 
     useEffect(() => {
         cargarDatos()
@@ -108,12 +151,41 @@ export default function Dashboard() {
                     m.tipo === 'Ingreso' &&
                     m.origenEmisora
             )
+            .filter((m) => {
+                if (modoPeriodo !== 'mes') {
+                    return true
+                }
+
+                const fecha = parsearFechaLocal(m.fecha)
+
+                return (
+                    fecha !== null &&
+                    !Number.isNaN(fecha.getTime()) &&
+                    fecha.getFullYear() === anio &&
+                    fecha.getMonth() + 1 === mes
+                )
+            })
             .reduce(
                 (total, m) =>
                     total + Number(m.monto || 0),
                 0
             )
-    }, [movimientos])
+    }, [movimientos, modoPeriodo, anio, mes])
+
+    // Ahorro consolidado de las metas del hogar (saldo actual, no flujo).
+    const ahorroTotal = useMemo(() => {
+        return metas.reduce(
+            (total, meta) => total + Number(meta.montoActual || 0),
+            0
+        )
+    }, [metas])
+
+    function cambiarMes(direccion) {
+        const nuevo = new Date(anio, mes - 1 + direccion, 1)
+
+        setAnio(nuevo.getFullYear())
+        setMes(nuevo.getMonth() + 1)
+    }
 
     // Balance
     const balance = Number(resumen.balance || ingresos - gastos)
@@ -329,23 +401,62 @@ export default function Dashboard() {
                     </p>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={actualizarDashboard}
-                    disabled={procesando}
-                    className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    {procesando
-                        ? 'Actualizando...'
-                        : 'Actualizar'}
-                </button>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+                        <button
+                            type="button"
+                            onClick={() => cambiarMes(-1)}
+                            aria-label="Mes anterior"
+                            className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100"
+                        >
+                            ‹
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setModoPeriodo(
+                                    modoPeriodo === 'mes'
+                                        ? 'historial'
+                                        : 'mes'
+                                )
+                            }
+                            aria-pressed={modoPeriodo === 'mes'}
+                            className="rounded-md px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                        >
+                            {modoPeriodo === 'mes'
+                                ? nombreMes(anio, mes)
+                                : 'Todo el historial'}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => cambiarMes(1)}
+                            aria-label="Mes siguiente"
+                            className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100"
+                        >
+                            ›
+                        </button>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={actualizarDashboard}
+                        disabled={procesando}
+                        className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {procesando
+                            ? 'Actualizando...'
+                            : 'Actualizar'}
+                    </button>
+                </div>
             </div>
 
             {/* ================================
                 TARJETAS RESUMEN
             ================================= */}
 
-            <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
 
                 {/* INGRESOS */}
 
@@ -371,6 +482,20 @@ export default function Dashboard() {
                     <p className="mt-2 text-2xl font-bold text-violet-700">
                         {formatearMoneda(
                             remesas
+                        )}
+                    </p>
+                </div>
+
+                {/* AHORRO */}
+
+                <div className="rounded-xl border border-teal-100 bg-teal-50 p-5 shadow-sm">
+                    <p className="text-sm font-medium text-teal-700">
+                        Ahorro
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold text-teal-700">
+                        {formatearMoneda(
+                            ahorroTotal
                         )}
                     </p>
                 </div>
@@ -591,6 +716,121 @@ export default function Dashboard() {
                         </div>
                     )}
                 </div>
+            </section>
+
+            {/* ================================
+                ALERTAS DE PRESUPUESTO
+            ================================= */}
+
+            {alertas.length > 0 && (
+                <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <h2 className="mb-4 text-lg font-bold text-slate-800">
+                        ⚠️ Alertas de presupuesto
+                    </h2>
+
+                    <ul className="space-y-3">
+                        {alertas.map((alerta, indice) => {
+                            const esCritica =
+                                alerta.tipoAlerta === 'Crítico'
+
+                            return (
+                                <li
+                                    key={`alerta-${indice}`}
+                                    className={`rounded-lg border-l-4 p-3 ${
+                                        esCritica
+                                            ? 'border-red-500 bg-red-50'
+                                            : 'border-amber-500 bg-amber-50'
+                                    }`}
+                                >
+                                    <div className="mb-1 flex items-center justify-between gap-2">
+                                        <strong className={`text-xs uppercase ${
+                                            esCritica
+                                                ? 'text-red-700'
+                                                : 'text-amber-700'
+                                        }`}>
+                                            {alerta.tipoAlerta}
+                                        </strong>
+
+                                        <span className="text-xs font-semibold text-gray-600">
+                                            {alerta.porcentajeUsado}%
+                                        </span>
+                                    </div>
+
+                                    <p className="text-sm leading-5 text-gray-700">
+                                        {alerta.mensaje}
+                                    </p>
+                                </li>
+                            )
+                        })}
+                    </ul>
+                </section>
+            )}
+
+            {/* ================================
+                METAS DE AHORRO
+            ================================= */}
+
+            <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                    <h2 className="text-lg font-bold text-slate-800">
+                        🐷 Metas de ahorro
+                    </h2>
+
+                    <a
+                        href="/ahorro"
+                        className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+                    >
+                        Ver todas
+                    </a>
+                </div>
+
+                {metas.length === 0 ? (
+                    <p className="py-4 text-center text-sm text-slate-500">
+                        Aún no hay metas de ahorro.
+                    </p>
+                ) : (
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {metas.slice(0, 3).map((meta) => {
+                            const objetivo =
+                                Number(meta.montoObjetivo || 0)
+                            const actual =
+                                Number(meta.montoActual || 0)
+                            const porcentaje = objetivo > 0
+                                ? (actual / objetivo) * 100
+                                : 0
+                            const barra = Math.min(
+                                Math.max(porcentaje, 0),
+                                100
+                            )
+
+                            return (
+                                <div
+                                    key={meta.idMeta}
+                                    className="rounded-lg border border-slate-100 p-4"
+                                >
+                                    <p className="truncate font-medium text-slate-800">
+                                        {meta.titulo}
+                                    </p>
+
+                                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                        <div
+                                            className="h-full rounded-full bg-green-500 transition-all duration-500"
+                                            style={{
+                                                width: `${barra}%`,
+                                            }}
+                                        />
+                                    </div>
+
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        {porcentaje.toFixed(0)}% ·{' '}
+                                        {formatearMoneda(actual)} de{' '}
+                                        {formatearMoneda(objetivo)}
+                                    </p>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
             </section>
 
             {/* ================================
