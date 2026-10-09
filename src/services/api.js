@@ -302,6 +302,68 @@ export const movimientosApi = {
     },
 }
 
+export const ahorroApi = {
+    async listarMetas() {
+        return listarTodasLasPaginas('MetasAhorro')
+    },
+
+    async crearMeta(meta) {
+        const res = await fetch(`${API_URL}/MetasAhorro`, {
+            method: 'POST',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify(meta),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async actualizarMeta(id, meta) {
+        const res = await fetch(`${API_URL}/MetasAhorro/${id}`, {
+            method: 'PUT',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify(meta),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async eliminarMeta(id) {
+        const res = await fetch(`${API_URL}/MetasAhorro/${id}`, {
+            method: 'DELETE',
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async listarAportes(metaId) {
+        const res = await fetch(`${API_URL}/Aportes?metaId=${metaId}`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async crearAporte(aporte) {
+        const res = await fetch(`${API_URL}/Aportes`, {
+            method: 'POST',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify(aporte),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async eliminarAporte(id) {
+        const res = await fetch(`${API_URL}/Aportes/${id}`, {
+            method: 'DELETE',
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+}
+
 export const presupuestosApi = {
     async listar() {
         const res = await fetch(`${API_URL}/Presupuestos`, {

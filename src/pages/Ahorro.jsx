@@ -1,0 +1,657 @@
+import { useCallback, useEffect, useState } from 'react'
+import { ahorroApi } from '../services/api'
+
+import Notification from '../components/Notification'
+import ConfirmModal from '../components/ConfirmModal'
+import Loading from '../components/Loading'
+import Pagination from '../components/Pagination'
+
+function formatearMoneda(monto) {
+    return `$${Number(monto || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`
+}
+
+function formatearFecha(fecha) {
+    if (!fecha) return '-'
+
+    const valor = new Date(fecha)
+
+    if (Number.isNaN(valor.getTime())) return '-'
+
+    return valor.toLocaleDateString('es-SV', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    })
+}
+
+function Ahorro() {
+    const [metas, setMetas] = useState([])
+    const [cargando, setCargando] = useState(true)
+    const [procesando, setProcesando] = useState(false)
+
+    const [error, setError] = useState('')
+    const [mensaje, setMensaje] = useState('')
+
+    const [formulario, setFormulario] = useState({
+        titulo: '',
+        montoObjetivo: '',
+        fechaLimite: '',
+        descripcion: '',
+    })
+
+    const [editando, setEditando] = useState(null)
+
+    const [aportes, setAportes] = useState([])
+    const [metaDetalle, setMetaDetalle] = useState(null)
+    const [aporteForm, setAporteForm] = useState({ monto: '', fecha: '' })
+    const [cargandoAportes, setCargandoAportes] = useState(false)
+
+    const [confirmMeta, setConfirmMeta] = useState({ abierto: false, id: null })
+    const [confirmAporte, setConfirmAporte] = useState({ abierto: false, id: null })
+
+    const [paginaActual, setPaginaActual] = useState(1)
+    const metasPorPagina = 6
+
+    const limpiarFormulario = () => {
+        setFormulario({
+            titulo: '',
+            montoObjetivo: '',
+            fechaLimite: '',
+            descripcion: '',
+        })
+        setEditando(null)
+    }
+
+    const cargarDatos = useCallback(async () => {
+        try {
+            setCargando(true)
+            setError('')
+            const datos = await ahorroApi.listarMetas()
+            setMetas(datos || [])
+            setPaginaActual(1)
+        } catch (err) {
+            setError(err.message || 'No se pudieron cargar las metas de ahorro.')
+        } finally {
+            setCargando(false)
+        }
+    }, [])
+
+    useEffect(() => {
+        cargarDatos()
+    }, [cargarDatos])
+
+    const totalAhorro = metas.reduce(
+        (total, meta) => total + Number(meta.montoActual || 0),
+        0
+    )
+    const totalObjetivo = metas.reduce(
+        (total, meta) => total + Number(meta.montoObjetivo || 0),
+        0
+    )
+
+    const manejarCambio = (e) => {
+        const { name, value } = e.target
+        setFormulario((prev) => ({ ...prev, [name]: value }))
+    }
+
+    const validarFormulario = () => {
+        if (!formulario.titulo.trim()) {
+            setError('Ingresa un título para la meta.')
+            return false
+        }
+        if (!formulario.montoObjetivo || Number(formulario.montoObjetivo) <= 0) {
+            setError('El monto objetivo debe ser mayor que 0.')
+            return false
+        }
+        if (!formulario.fechaLimite) {
+            setError('Selecciona la fecha objetivo.')
+            return false
+        }
+        return true
+    }
+
+    const manejarSubmit = async (e) => {
+        e.preventDefault()
+        setError('')
+        setMensaje('')
+
+        if (!validarFormulario()) return
+
+        try {
+            setProcesando(true)
+
+            const datos = {
+                titulo: formulario.titulo.trim(),
+                montoObjetivo: Number(formulario.montoObjetivo),
+                fechaLimite: `${formulario.fechaLimite}T00:00:00Z`,
+            }
+
+            // El backend ignora descripcion/estado al actualizar; no se envía estado
+            // para no forzar una transición no soportada.
+            if (editando) {
+                await ahorroApi.actualizarMeta(editando, datos)
+                setMensaje('Meta actualizada correctamente.')
+            } else {
+                await ahorroApi.crearMeta(datos)
+                setMensaje('Meta creada correctamente.')
+            }
+
+            limpiarFormulario()
+            await cargarDatos()
+        } catch (err) {
+            setError(err.message || 'No se pudo guardar la meta.')
+        } finally {
+            setProcesando(false)
+        }
+    }
+
+    const editarMeta = (meta) => {
+        setEditando(meta.idMeta)
+        setFormulario({
+            titulo: meta.titulo || '',
+            montoObjetivo: String(meta.montoObjetivo || ''),
+            fechaLimite: meta.fechaLimite ? meta.fechaLimite.substring(0, 10) : '',
+            descripcion: meta.descripcion || '',
+        })
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    const solicitarEliminarMeta = (id) => {
+        setConfirmMeta({ abierto: true, id })
+    }
+
+    const confirmarEliminarMeta = async () => {
+        try {
+            setProcesando(true)
+            setError('')
+            await ahorroApi.eliminarMeta(confirmMeta.id)
+            if (metaDetalle && Number(metaDetalle.idMeta) === Number(confirmMeta.id)) {
+                setMetaDetalle(null)
+                setAportes([])
+            }
+            setMensaje('Meta eliminada correctamente.')
+            setConfirmMeta({ abierto: false, id: null })
+            await cargarDatos()
+        } catch (err) {
+            setError(err.message || 'No se pudo eliminar la meta.')
+        } finally {
+            setProcesando(false)
+        }
+    }
+
+    const abrirDetalle = async (meta) => {
+        try {
+            setCargandoAportes(true)
+            setMetaDetalle(meta)
+            setAporteForm({ monto: '', fecha: '' })
+            const datos = await ahorroApi.listarAportes(meta.idMeta)
+            setAportes(datos || [])
+            setError('')
+        } catch (err) {
+            setError(err.message || 'No se pudieron cargar los aportes.')
+        } finally {
+            setCargandoAportes(false)
+        }
+    }
+
+    const manejarCambioAporte = (e) => {
+        const { name, value } = e.target
+        setAporteForm((prev) => ({ ...prev, [name]: value }))
+    }
+
+    const registrarAporte = async (e) => {
+        e.preventDefault()
+        setError('')
+        setMensaje('')
+
+        const monto = Number(aporteForm.monto)
+
+        if (!aporteForm.monto || monto <= 0) {
+            setError('El monto del aporte debe ser mayor que 0.')
+            return
+        }
+
+        try {
+            setProcesando(true)
+
+            await ahorroApi.crearAporte({
+                idMeta: Number(metaDetalle.idMeta),
+                monto,
+                fecha: aporteForm.fecha ? `${aporteForm.fecha}T00:00:00Z` : new Date().toISOString(),
+            })
+
+            setMensaje('Aporte registrado correctamente.')
+            setAporteForm({ monto: '', fecha: '' })
+            await abrirDetalle(metaDetalle)
+            await cargarDatos()
+        } catch (err) {
+            setError(err.message || 'No se pudo registrar el aporte.')
+        } finally {
+            setProcesando(false)
+        }
+    }
+
+    const solicitarEliminarAporte = (id) => {
+        setConfirmAporte({ abierto: true, id })
+    }
+
+    const confirmarEliminarAporte = async () => {
+        try {
+            setProcesando(true)
+            setError('')
+            await ahorroApi.eliminarAporte(confirmAporte.id)
+            setMensaje('Aporte eliminado correctamente.')
+            setConfirmAporte({ abierto: false, id: null })
+            if (metaDetalle) {
+                await abrirDetalle(metaDetalle)
+                await cargarDatos()
+            }
+        } catch (err) {
+            setError(err.message || 'No se pudo eliminar el aporte.')
+        } finally {
+            setProcesando(false)
+        }
+    }
+
+    const calcularProgreso = (meta) => {
+        const objetivo = Number(meta.montoObjetivo || 0)
+        const actual = Number(meta.montoActual || 0)
+        const porcentaje = objetivo > 0 ? (actual / objetivo) * 100 : 0
+        return {
+            actual,
+            objetivo,
+            porcentaje,
+            porcentajeBarra: Math.min(Math.max(porcentaje, 0), 100),
+            restante: Math.max(objetivo - actual, 0),
+        }
+    }
+
+    const colorBarra = (meta) => {
+        if (
+            String(meta.estado || '').toLowerCase() === 'completada' ||
+            Number(meta.montoActual) >= Number(meta.montoObjetivo)
+        ) {
+            return 'bg-green-500'
+        }
+        return 'bg-blue-600'
+    }
+
+    // Cargando
+    if (cargando) {
+        return <Loading />
+    }
+
+    const totalPaginas = Math.max(Math.ceil(metas.length / metasPorPagina), 1)
+
+    const metasPaginadas = metas.slice(
+        (paginaActual - 1) * metasPorPagina,
+        paginaActual * metasPorPagina
+    )
+
+    return (
+        <div className="space-y-6">
+            {/* ENCABEZADO */}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-800">Ahorro</h1>
+                    <p className="text-gray-500">
+                        Crea metas de ahorro, registra aportes y sigue tu progreso.
+                    </p>
+                </div>
+
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={cargarDatos}
+                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                        Actualizar
+                    </button>
+                </div>
+            </div>
+
+            {/* NOTIFICACIONES */}
+            {error && (
+                <Notification tipo="error" mensaje={error} onClose={() => setError('')} />
+            )}
+
+            {mensaje && (
+                <Notification tipo="success" mensaje={mensaje} onClose={() => setMensaje('')} />
+            )}
+
+            {/* TARJETAS RESUMEN */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="rounded-xl bg-white p-5 shadow-sm">
+                    <p className="text-sm text-gray-500">Total ahorrado</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-800">
+                        {formatearMoneda(totalAhorro)}
+                    </p>
+                </div>
+
+                <div className="rounded-xl bg-white p-5 shadow-sm">
+                    <p className="text-sm text-gray-500">Total objetivo</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-800">
+                        {formatearMoneda(totalObjetivo)}
+                    </p>
+                </div>
+
+                <div className="rounded-xl bg-white p-5 shadow-sm">
+                    <p className="text-sm text-gray-500">Progreso global</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-800">
+                        {totalObjetivo > 0
+                            ? `${((totalAhorro / totalObjetivo) * 100).toFixed(0)}%`
+                            : '0%'}
+                    </p>
+                </div>
+            </div>
+
+            {/* FORMULARIO META */}
+            <div className="rounded-xl bg-white p-6 shadow-sm">
+                <h2 className="mb-4 text-lg font-semibold text-gray-800">
+                    {editando ? 'Editar meta' : 'Crear meta de ahorro'}
+                </h2>
+
+                <form onSubmit={manejarSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                        <label htmlFor="ahorro-meta-titulo" className="mb-1 block text-sm font-medium text-gray-700">
+                            Título
+                        </label>
+
+                        <input
+                            id="ahorro-meta-titulo"
+                            type="text"
+                            name="titulo"
+                            value={formulario.titulo}
+                            onChange={manejarCambio}
+                            placeholder="Ej. Fondo de emergencia"
+                            maxLength={150}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="ahorro-meta-objetivo" className="mb-1 block text-sm font-medium text-gray-700">
+                            Monto objetivo
+                        </label>
+
+                        <input
+                            id="ahorro-meta-objetivo"
+                            type="number"
+                            name="montoObjetivo"
+                            min="0.01"
+                            step="0.01"
+                            value={formulario.montoObjetivo}
+                            onChange={manejarCambio}
+                            placeholder="Ej. 500.00"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="ahorro-meta-fecha" className="mb-1 block text-sm font-medium text-gray-700">
+                            Fecha objetivo
+                        </label>
+
+                        <input
+                            id="ahorro-meta-fecha"
+                            type="date"
+                            name="fechaLimite"
+                            value={formulario.fechaLimite}
+                            onChange={manejarCambio}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div className="flex gap-2 md:col-span-3">
+                        <button
+                            type="submit"
+                            disabled={procesando}
+                            className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            {procesando
+                                ? 'Guardando...'
+                                : editando
+                                    ? 'Actualizar meta'
+                                    : 'Crear meta'}
+                        </button>
+
+                        {editando && (
+                            <button
+                                type="button"
+                                onClick={limpiarFormulario}
+                                className="rounded-lg border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                Cancelar
+                            </button>
+                        )}
+                    </div>
+                </form>
+            </div>
+
+            {/* LISTADO DE METAS */}
+            {metas.length === 0 ? (
+                <div className="rounded-xl bg-white p-10 text-center shadow-sm">
+                    <p className="text-4xl">🐷</p>
+                    <p className="mt-2 font-semibold text-gray-800">Sin metas de ahorro</p>
+                    <p className="text-sm text-gray-500">
+                        Crea tu primera meta para empezar a ahorrar.
+                    </p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {metasPaginadas.map((meta) => {
+                        const progreso = calcularProgreso(meta)
+
+                        return (
+                            <div key={meta.idMeta} className="rounded-xl bg-white p-6 shadow-sm">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <h3 className="font-semibold text-gray-800">
+                                            {meta.titulo}
+                                        </h3>
+                                        <p className="text-sm text-gray-500">
+                                            Fecha objetivo: {formatearFecha(meta.fechaLimite)}
+                                        </p>
+                                    </div>
+
+                                    <span
+                                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                            String(meta.estado || '').toLowerCase() ===
+                                            'completada'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-blue-100 text-blue-700'
+                                        }`}
+                                    >
+                                        {meta.estado || 'En progreso'}
+                                    </span>
+                                </div>
+
+                                <div className="mt-4">
+                                    <div className="mb-1 flex justify-between text-xs text-gray-500">
+                                        <span>{formatearMoneda(progreso.actual)}</span>
+                                        <span className="font-semibold text-gray-700">
+                                            {progreso.porcentaje.toFixed(0)}%
+                                        </span>
+                                        <span>{formatearMoneda(progreso.objetivo)}</span>
+                                    </div>
+
+                                    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${colorBarra(meta)}`}
+                                            style={{
+                                                width: `${progreso.porcentajeBarra}%`,
+                                            }}
+                                        />
+                                    </div>
+
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        {progreso.restante > 0
+                                            ? `Restan ${formatearMoneda(progreso.restante)}`
+                                            : '¡Meta alcanzada!'}
+                                    </p>
+                                </div>
+
+                                <div className="mt-4 flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => abrirDetalle(meta)}
+                                        className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                                    >
+                                        {metaDetalle && Number(metaDetalle.idMeta) === Number(meta.idMeta)
+                                            ? 'Aporte registrado'
+                                            : 'Registrar aporte'}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => editarMeta(meta)}
+                                        className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                                    >
+                                        Editar
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => solicitarEliminarMeta(meta.idMeta)}
+                                        className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            )}
+
+            {/* PAGINACIÓN */}
+            {totalPaginas > 1 && (
+                <Pagination
+                    paginaActual={paginaActual}
+                    totalPaginas={totalPaginas}
+                    cambiarPagina={setPaginaActual}
+                />
+            )}
+
+            {/* DETALLE / APORTES */}
+            {metaDetalle && (
+                <div className="rounded-xl bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-gray-800">
+                            Aportes de «{metaDetalle.titulo}»
+                        </h2>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setMetaDetalle(null)
+                                setAportes([])
+                            }}
+                            className="rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                            Cerrar
+                        </button>
+                    </div>
+
+                    <form onSubmit={registrarAporte} className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div>
+                        <label htmlFor="ahorro-aporte-monto" className="mb-1 block text-sm font-medium text-gray-700">
+                            Monto
+                        </label>
+
+                        <input
+                            id="ahorro-aporte-monto"
+                            type="number"
+                            name="monto"
+                                min="0.01"
+                                step="0.01"
+                                value={aporteForm.monto}
+                                onChange={manejarCambioAporte}
+                                placeholder="Ej. 25.00"
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div>
+                        <label htmlFor="ahorro-aporte-fecha" className="mb-1 block text-sm font-medium text-gray-700">
+                            Fecha
+                        </label>
+
+                        <input
+                            id="ahorro-aporte-fecha"
+                            type="date"
+                            name="fecha"
+                                value={aporteForm.fecha}
+                                onChange={manejarCambioAporte}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                            />
+                        </div>
+
+                        <div className="flex items-end">
+                            <button
+                                type="submit"
+                                disabled={procesando}
+                                className="rounded-lg bg-green-600 px-5 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                            >
+                                {procesando ? 'Registrando...' : 'Registrar aporte'}
+                            </button>
+                        </div>
+                    </form>
+
+                    {cargandoAportes ? (
+                        <Loading />
+                    ) : aportes.length === 0 ? (
+                        <p className="py-6 text-center text-sm text-gray-500">
+                            Esta meta todavía no tiene aportes.
+                        </p>
+                    ) : (
+                        <ul className="divide-y divide-gray-100">
+                            {aportes.map((aporte) => (
+                                <li key={aporte.idAporte} className="flex items-center justify-between py-3">
+                                    <div>
+                                        <span className="font-medium text-gray-800">
+                                            {formatearMoneda(aporte.monto)}
+                                        </span>
+                                        <span className="ml-2 text-sm text-gray-500">
+                                            · {formatearFecha(aporte.fecha)}
+                                        </span>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => solicitarEliminarAporte(aporte.idAporte)}
+                                        className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
+
+            {/* MODALES DE CONFIRMACIÓN */}
+            <ConfirmModal
+                abierto={confirmMeta.abierto}
+                titulo="Eliminar meta"
+                mensaje="¿Estás segura de que deseas eliminar esta meta junto con su historial de aportes?"
+                onConfirmar={confirmarEliminarMeta}
+                onCancelar={() => setConfirmMeta({ abierto: false, id: null })}
+            />
+
+            <ConfirmModal
+                abierto={confirmAporte.abierto}
+                titulo="Eliminar aporte"
+                mensaje="¿Estás segura de que deseas eliminar este aporte?"
+                onConfirmar={confirmarEliminarAporte}
+                onCancelar={() => setConfirmAporte({ abierto: false, id: null })}
+            />
+        </div>
+    )
+}
+
+export default Ahorro

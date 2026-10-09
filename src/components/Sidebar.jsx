@@ -7,6 +7,7 @@ import {
     TrendingUp,
     TrendingDown,
     Wallet,
+    PiggyBank,
     BookOpen,
     User,
     LogOut
@@ -56,6 +57,11 @@ export default function Sidebar({
             to: '/presupuestos',
             nombre: 'Presupuestos',
             icono: Wallet,
+        },
+        {
+            to: '/ahorro',
+            nombre: 'Ahorro',
+            icono: PiggyBank,
         },
         {
             to: '/educacion-financiera',
