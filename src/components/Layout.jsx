@@ -2,21 +2,103 @@ import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
-import { alertasApi } from '../services/api'
+import { alertasApi, notificacionesApi, invitacionesApi } from '../services/api'
 
 export default function Layout({
     usuario,
     nombreFamiliar,
-    cerrarSesion
+    cerrarSesion,
+    onSesionActualizada
 }) {
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [alertas, setAlertas] = useState([])
     const [cargandoAlertas, setCargandoAlertas] = useState(true)
     const [errorAlertas, setErrorAlertas] = useState('')
 
+    const [notificaciones, setNotificaciones] = useState([])
+    const [invitaciones, setInvitaciones] = useState([])
+    const [procesandoInvitacion, setProcesandoInvitacion] = useState(false)
+    const [errorInvitacion, setErrorInvitacion] = useState('')
+
     useEffect(() => {
         cargarAlertas()
     }, [])
+
+    useEffect(() => {
+        let vigente = true
+
+        async function cargarBandeja() {
+            try {
+                const [notif, inv] = await Promise.all([
+                    notificacionesApi.listar(1, 10),
+                    invitacionesApi.mias(),
+                ])
+
+                if (!vigente) return
+
+                setNotificaciones(notif.items || [])
+                setInvitaciones(inv || [])
+            } catch {
+                // La bandeja es informativa: si falla, la app sigue usable.
+            }
+        }
+
+        cargarBandeja()
+
+        const temporizador = setInterval(cargarBandeja, 60000)
+
+        return () => {
+            vigente = false
+            clearInterval(temporizador)
+        }
+    }, [usuario?.token])
+
+    async function responderInvitacion(id, accion) {
+        try {
+            setProcesandoInvitacion(true)
+            setErrorInvitacion('')
+
+            if (accion === 'aceptar') {
+                const datosUsuario = await invitacionesApi.aceptar(id)
+
+                // Mismo contrato que HogarPendiente: el backend devuelve un
+                // LoginResponse refrescado con el token nuevo.
+                localStorage.setItem('token', datosUsuario.token)
+                localStorage.setItem('usuario', JSON.stringify(datosUsuario))
+                onSesionActualizada?.(datosUsuario)
+            } else {
+                await invitacionesApi.rechazar(id)
+            }
+
+            const [notif, inv] = await Promise.all([
+                notificacionesApi.listar(1, 10),
+                invitacionesApi.mias(),
+            ])
+            setNotificaciones(notif.items || [])
+            setInvitaciones(inv || [])
+        } catch (err) {
+            setErrorInvitacion(
+                err.message || 'No se pudo responder la invitación.'
+            )
+        } finally {
+            setProcesandoInvitacion(false)
+        }
+    }
+
+    async function marcarLeida(id) {
+        try {
+            await notificacionesApi.marcarLeida(id)
+            setNotificaciones((prev) =>
+                prev.map((n) =>
+                    Number(n.idNotificacion) === Number(id)
+                        ? { ...n, leida: true }
+                        : n
+                )
+            )
+        } catch {
+            // Si falla el marcado, la próxima recarga lo reintenta.
+        }
+    }
 
     async function cargarAlertas() {
         try {
@@ -60,6 +142,12 @@ export default function Layout({
                 alertas={alertas}
                 cargandoAlertas={cargandoAlertas}
                 errorAlertas={errorAlertas}
+                notificaciones={notificaciones}
+                invitaciones={invitaciones}
+                procesandoInvitacion={procesandoInvitacion}
+                errorInvitacion={errorInvitacion}
+                onResponderInvitacion={responderInvitacion}
+                onMarcarLeida={marcarLeida}
             />
 
             <Sidebar

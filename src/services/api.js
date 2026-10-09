@@ -172,6 +172,15 @@ export const hogaresApi = {
 }
 
 export const usuariosApi = {
+    // GET /api/Usuarios: miembros del hogar actual (el backend filtra por IdHogar).
+    async listar() {
+        const res = await fetch(`${API_URL}/Usuarios`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
     // PUT /api/Usuarios/perfil: 204 sin cuerpo; manejarRespuesta devuelve null.
     async actualizarPerfil(nombre) {
         const res = await fetch(`${API_URL}/Usuarios/perfil`, {
@@ -179,6 +188,104 @@ export const usuariosApi = {
             headers: obtenerHeaders(true),
             body: JSON.stringify({ nombre }),
         })
+
+        return manejarRespuesta(res)
+    },
+
+    // PUT /api/Usuarios/{id}: solo Admin; cambia nombre y/o rol del miembro.
+    async actualizarMiembro(id, datos) {
+        const res = await fetch(`${API_URL}/Usuarios/${id}`, {
+            method: 'PUT',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify(datos),
+        })
+
+        return manejarRespuesta(res)
+    },
+}
+
+export const invitacionesApi = {
+    // GET /api/Invitaciones/mias: invitaciones pendientes dirigidas a mí.
+    async mias() {
+        const res = await fetch(`${API_URL}/Invitaciones/mias`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    // GET /api/Invitaciones: invitaciones enviadas al hogar actual.
+    async enviadas() {
+        const res = await fetch(`${API_URL}/Invitaciones`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async invitar(correo) {
+        const res = await fetch(`${API_URL}/Invitaciones`, {
+            method: 'POST',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify({ correo }),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    // POST /api/Invitaciones/{id}/aceptar: responde un LoginResponse refrescado
+    // (token nuevo con idHogar y rol Miembro). Quien lo consume debe persistir
+    // 'token' y 'usuario' igual que en authApi.login.
+    async aceptar(id) {
+        const res = await fetch(
+            `${API_URL}/Invitaciones/${id}/aceptar`,
+            {
+                method: 'POST',
+                headers: obtenerHeaders(),
+            }
+        )
+
+        return manejarRespuesta(res)
+    },
+
+    async rechazar(id) {
+        const res = await fetch(
+            `${API_URL}/Invitaciones/${id}/rechazar`,
+            {
+                method: 'POST',
+                headers: obtenerHeaders(),
+            }
+        )
+
+        return manejarRespuesta(res)
+    },
+}
+
+export const notificacionesApi = {
+    // GET /api/Notificaciones: { items, total, sinLeer, page, pageSize }.
+    async listar(page = 1, pageSize = 10) {
+        const res = await fetch(
+            `${API_URL}/Notificaciones?page=${page}&pageSize=${pageSize}`,
+            { headers: obtenerHeaders() }
+        )
+
+        return manejarRespuesta(res)
+    },
+
+    async marcarLeida(id) {
+        const res = await fetch(
+            `${API_URL}/Notificaciones/${id}/marcar-leida`,
+            { method: 'PUT', headers: obtenerHeaders() }
+        )
+
+        return manejarRespuesta(res)
+    },
+
+    async marcarTodasLeidas() {
+        const res = await fetch(
+            `${API_URL}/Notificaciones/marcar-todas-leidas`,
+            { method: 'PUT', headers: obtenerHeaders() }
+        )
 
         return manejarRespuesta(res)
     },

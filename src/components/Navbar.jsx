@@ -8,7 +8,13 @@ export default function Navbar({
     setMenuAbierto,
     alertas,
     cargandoAlertas,
-    errorAlertas
+    errorAlertas,
+    notificaciones = [],
+    invitaciones = [],
+    procesandoInvitacion = false,
+    errorInvitacion = '',
+    onResponderInvitacion,
+    onMarcarLeida
 }) {
     const nombreHogar =
         nombreFamiliar ||
@@ -87,9 +93,11 @@ export default function Navbar({
                     >
                         <Bell size={21} />
 
-                        {alertas.length > 0 && (
+                        {(alertas.length + invitaciones.length + notificaciones.filter((n) => !n.leida).length) > 0 && (
                             <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                                {alertas.length > 9 ? '9+' : alertas.length}
+                                {(alertas.length + invitaciones.length + notificaciones.filter((n) => !n.leida).length) > 9
+                                    ? '9+'
+                                    : alertas.length + invitaciones.length + notificaciones.filter((n) => !n.leida).length}
                             </span>
                         )}
                     </button>
@@ -99,6 +107,88 @@ export default function Navbar({
                             id="panel-alertas"
                             className="absolute right-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
                         >
+                            {invitaciones.length > 0 && (
+                                <div className="mb-4">
+                                    <h2 className="mb-2 font-semibold text-gray-800">
+                                        Invitaciones de familia
+                                    </h2>
+
+                                    {errorInvitacion && (
+                                        <p role="alert" className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                                            {errorInvitacion}
+                                        </p>
+                                    )}
+
+                                    <ul className="space-y-2">
+                                        {invitaciones.map((inv) => (
+                                            <li
+                                                key={inv.idInvitacion}
+                                                className="rounded-lg border border-blue-200 bg-blue-50 p-3"
+                                            >
+                                                <p className="text-sm text-gray-700">
+                                                    Te invitaron a unirte a una familia en RemesaSmart SV.
+                                                </p>
+
+                                                <div className="mt-2 flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        disabled={procesandoInvitacion}
+                                                        onClick={() => onResponderInvitacion?.(inv.idInvitacion, 'aceptar')}
+                                                        className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                                                    >
+                                                        Aceptar
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        disabled={procesandoInvitacion}
+                                                        onClick={() => onResponderInvitacion?.(inv.idInvitacion, 'rechazar')}
+                                                        className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                                    >
+                                                        Rechazar
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {notificaciones.length > 0 && (
+                                <div className="mb-4">
+                                    <div className="mb-2 flex items-center justify-between gap-3">
+                                        <h2 className="font-semibold text-gray-800">
+                                            Notificaciones
+                                        </h2>
+
+                                        <span className="text-xs text-gray-500">
+                                            {notificaciones.filter((n) => !n.leida).length} sin leer
+                                        </span>
+                                    </div>
+
+                                    <ul className="max-h-56 space-y-2 overflow-y-auto">
+                                        {notificaciones.map((notif) => (
+                                            <li
+                                                key={notif.idNotificacion}
+                                                className={`rounded-lg p-3 text-sm ${notif.leida ? 'bg-gray-50 text-gray-500' : 'bg-indigo-50 text-gray-700'}`}
+                                            >
+                                                <p>{notif.mensaje}</p>
+
+                                                {!notif.leida && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => onMarcarLeida?.(notif.idNotificacion)}
+                                                        className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        Marcar leída
+                                                    </button>
+                                                )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
                             <div className="mb-3 flex items-center justify-between gap-3">
                                 <h2 className="font-semibold text-gray-800">
                                     Alertas de presupuesto

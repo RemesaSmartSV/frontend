@@ -10,6 +10,7 @@ import {
     PiggyBank,
     BookOpen,
     User,
+    Users,
     LogOut
 } from 'lucide-react'
 
@@ -67,6 +68,11 @@ export default function Sidebar({
             to: '/educacion-financiera',
             nombre: 'Educación Financiera',
             icono: BookOpen,
+        },
+        {
+            to: '/hogar',
+            nombre: 'Mi Familia',
+            icono: Users,
         },
         {
             to: '/perfil',

@@ -31,6 +31,7 @@ const Ingresos = lazy(() => import('./pages/Ingresos'))
 const Gastos = lazy(() => import('./pages/Gastos'))
 const Presupuestos = lazy(() => import('./pages/Presupuestos'))
 const Ahorro = lazy(() => import('./pages/Ahorro'))
+const MiHogar = lazy(() => import('./pages/MiHogar'))
 const EducacionFinanciera = lazy(() => import('./pages/EducacionFinanciera'))
 const MiPerfil = lazy(() => import('./pages/MiPerfil'))
 const HogarPendiente = lazy(() => import('./pages/HogarPendiente'))
@@ -197,6 +198,7 @@ export default function App() {
                                 usuario={usuario}
                                 nombreFamiliar={nombreFamiliar}
                                 cerrarSesion={cerrarSesion}
+                                onSesionActualizada={manejarLogin}
                             />
                         }
                     >
@@ -208,6 +210,7 @@ export default function App() {
                         <Route path="/gastos" element={<Gastos />} />
                         <Route path="/presupuestos" element={<Presupuestos />} />
                         <Route path="/ahorro" element={<Ahorro />} />
+                        <Route path="/hogar" element={<MiHogar />} />
                         <Route
                             path="/educacion-financiera"
                             element={<EducacionFinanciera />}
