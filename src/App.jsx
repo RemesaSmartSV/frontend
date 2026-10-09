@@ -31,6 +31,8 @@ const Ingresos = lazy(() => import('./pages/Ingresos'))
 const Gastos = lazy(() => import('./pages/Gastos'))
 const Presupuestos = lazy(() => import('./pages/Presupuestos'))
 const EducacionFinanciera = lazy(() => import('./pages/EducacionFinanciera'))
+const MiPerfil = lazy(() => import('./pages/MiPerfil'))
+const HogarPendiente = lazy(() => import('./pages/HogarPendiente'))
 
 // La presentación comercial es una vista pública: se consulta en cada render
 // para que funcione con o sin sesión, sin depender del router (sus enlaces
@@ -170,6 +172,19 @@ export default function App() {
         )
     }
 
+    // Gate único de "hogar pendiente": una cuenta recién creada llega con
+    // idHogar null (el backend solo lo completa al crear el hogar). Mientras
+    // falte, no se monta el router: se muestra la pantalla de creación y
+    // manejarLogin re-evalúa este mismo render al recibir el LoginResponse
+    // refrescado.
+    if (!usuario.idHogar) {
+        return (
+            <Suspense fallback={<Loading mensaje="Cargando..." />}>
+                <HogarPendiente onHogarCreado={manejarLogin} />
+            </Suspense>
+        )
+    }
+
     return (
         <BrowserRouter>
             <ScrollToTop />
@@ -195,6 +210,7 @@ export default function App() {
                             path="/educacion-financiera"
                             element={<EducacionFinanciera />}
                         />
+                        <Route path="/perfil" element={<MiPerfil />} />
                         {/* Sin este catch-all, cualquier ruta desconocida
                             (por ejemplo un enlace viejo tras renombrar una
                             pagina en un merge) dejaba la app en pantalla

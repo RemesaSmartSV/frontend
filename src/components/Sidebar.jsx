@@ -8,6 +8,7 @@ import {
     TrendingDown,
     Wallet,
     BookOpen,
+    User,
     LogOut
 } from 'lucide-react'
 
@@ -60,6 +61,11 @@ export default function Sidebar({
             to: '/educacion-financiera',
             nombre: 'Educación Financiera',
             icono: BookOpen,
+        },
+        {
+            to: '/perfil',
+            nombre: 'Mi perfil',
+            icono: User,
         },
     ]
 

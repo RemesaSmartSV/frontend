@@ -59,8 +59,8 @@ describe('Accesibilidad de los formularios', () => {
         fireEvent.change(screen.getByLabelText('Contraseña'), {
             target: { value: '123' },
         })
-        fireEvent.change(screen.getByLabelText('Nombre familiar'), {
-            target: { value: 'Familia Ana' },
+        fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+            target: { value: '123' },
         })
 
         const form = screen
@@ -79,6 +79,44 @@ describe('Accesibilidad de los formularios', () => {
             'true'
         )
         expect(screen.getByLabelText('Nombre')).not.toHaveAttribute(
+            'aria-invalid'
+        )
+        // La longitud se valida antes que la coincidencia: la confirmación
+        // queda limpia aunque esté completa.
+        expect(
+            screen.getByLabelText('Confirmar contraseña')
+        ).not.toHaveAttribute('aria-invalid')
+    })
+
+    it('Register marca la confirmación cuando las contraseñas no coinciden', async () => {
+        render(<Register volverLogin={() => {}} />)
+
+        fireEvent.change(screen.getByLabelText('Nombre'), {
+            target: { value: 'Ana' },
+        })
+        fireEvent.change(screen.getByLabelText('Correo'), {
+            target: { value: 'ana@demo.com' },
+        })
+        fireEvent.change(screen.getByLabelText('Contraseña'), {
+            target: { value: 'secreta123' },
+        })
+        fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+            target: { value: 'distinta123' },
+        })
+
+        const form = screen
+            .getByRole('button', { name: 'Crear cuenta' })
+            .closest('form')
+        fireEvent.submit(form)
+
+        const alerta = await screen.findByRole('alert')
+        expect(alerta).toHaveTextContent('Las contraseñas no coinciden.')
+        expect(alerta).toHaveAttribute('id', 'registro-error-campo')
+
+        expect(
+            screen.getByLabelText('Confirmar contraseña')
+        ).toHaveAttribute('aria-invalid', 'true')
+        expect(screen.getByLabelText('Contraseña')).not.toHaveAttribute(
             'aria-invalid'
         )
     })

@@ -45,6 +45,7 @@ const RUTAS = [
     { ruta: '/gastos', titulo: /^Gastos$/i },
     { ruta: '/presupuestos', titulo: /^Presupuestos$/i },
     { ruta: '/educacion-financiera', titulo: /Educaci/i },
+    { ruta: '/perfil', titulo: /^Mi perfil$/i },
 ]
 
 beforeEach(() => {
@@ -81,9 +82,18 @@ beforeEach(() => {
     window.scrollTo = vi.fn()
 
     localStorage.setItem('token', tokenDePrueba())
+    // idHogar numérico: sin hogar el gate de App muestra HogarPendiente y
+    // no monta el router, así que el smoke test de rutas necesita sesión
+    // con hogar creado.
     localStorage.setItem(
         'usuario',
-        JSON.stringify({ idUsuario: 1, correo: 'prueba@remesa.test' })
+        JSON.stringify({
+            idUsuario: 1,
+            nombre: 'Prueba',
+            correo: 'prueba@remesa.test',
+            rol: 'Admin',
+            idHogar: 1,
+        })
     )
     window.history.pushState({}, '', '/')
 })
@@ -105,10 +115,17 @@ describe('Rutas autenticadas', () => {
 
         // Si algun componente lanza durante el render, React desmonta el
         // arbol y findByRole nunca encuentra el encabezado -> el test falla.
-        const encabezado = await screen.findByRole('heading', {
-            level: 1,
-            name: titulo,
-        })
+        // El timeout ampliado cubre el primer import perezoso en frio con la
+        // suite completa en paralela (medido: ~1.2s en un solo worker); un
+        // crash real sigue fallando igualmente.
+        const encabezado = await screen.findByRole(
+            'heading',
+            {
+                level: 1,
+                name: titulo,
+            },
+            { timeout: 5000 }
+        )
 
         expect(encabezado).toBeInTheDocument()
 

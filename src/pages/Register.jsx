@@ -7,7 +7,7 @@ export default function Register({ volverLogin }) {
         nombre: '',
         correo: '',
         contrasena: '',
-        nombreFamiliar: '',
+        confirmarContrasena: '',
     })
 
     const [mensaje, setMensaje] = useState('')
@@ -58,13 +58,13 @@ export default function Register({ volverLogin }) {
             !formulario.nombre.trim() ||
             !formulario.correo.trim() ||
             !formulario.contrasena.trim() ||
-            !formulario.nombreFamiliar.trim()
+            !formulario.confirmarContrasena.trim()
         ) {
             marcarError('Completa todos los campos.', [
                 'nombre',
                 'correo',
                 'contrasena',
-                'nombreFamiliar',
+                'confirmarContrasena',
             ])
             return
         }
@@ -77,6 +77,15 @@ export default function Register({ volverLogin }) {
             return
         }
 
+        // La comprobación local evita un viaje al servidor cuando las claves
+        // difieren; el backend (400) sigue cubriendo el resto de los casos.
+        if (formulario.contrasena !== formulario.confirmarContrasena) {
+            marcarError('Las contraseñas no coinciden.', [
+                'confirmarContrasena',
+            ])
+            return
+        }
+
         limpiarErrorCampo()
 
         try {
@@ -86,7 +95,7 @@ export default function Register({ volverLogin }) {
                 nombre: formulario.nombre.trim(),
                 correo: formulario.correo.trim(),
                 contrasena: formulario.contrasena,
-                nombreFamiliar: formulario.nombreFamiliar.trim(),
+                confirmarContrasena: formulario.confirmarContrasena,
             }
 
             const respuesta =
@@ -100,7 +109,7 @@ export default function Register({ volverLogin }) {
                 nombre: '',
                 correo: '',
                 contrasena: '',
-                nombreFamiliar: '',
+                confirmarContrasena: '',
             })
         } catch (err) {
             setError(
@@ -234,27 +243,27 @@ export default function Register({ volverLogin }) {
 
                     </div>
 
-                    {/* NOMBRE FAMILIAR */}
+                    {/* CONFIRMAR CONTRASEÑA */}
                     <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
 
                         <label
-                            htmlFor="nombreFamiliar"
+                            htmlFor="confirmarContrasena"
                             className="text-sm font-semibold text-gray-700 sm:text-base"
                         >
-                            Nombre familiar
+                            Confirmar contraseña
                         </label>
 
                         <input
-                            id="nombreFamiliar"
-                            type="text"
-                            name="nombreFamiliar"
-                            value={formulario.nombreFamiliar}
+                            id="confirmarContrasena"
+                            type="password"
+                            name="confirmarContrasena"
+                            value={formulario.confirmarContrasena}
                             onChange={manejarCambio}
-                            placeholder="Ej. Familia Duarte"
-                            autoComplete="organization"
+                            placeholder="Repite tu contraseña"
+                            autoComplete="new-password"
                             required
                             disabled={cargando}
-                            {...ariaDe('nombreFamiliar')}
+                            {...ariaDe('confirmarContrasena')}
                             className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
 

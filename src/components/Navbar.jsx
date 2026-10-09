@@ -177,11 +177,19 @@ export default function Navbar({
                     </p>
                 </div>
 
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 sm:h-10 sm:w-10 sm:text-base">
+                {/* Enlace al perfil propio. Es un ancla simple (mismo
+                    patrón que los enlaces legales) para que el Navbar siga
+                    renderizando fuera de un Router en los tests. */}
+                <a
+                    href="/perfil"
+                    aria-label="Mi perfil"
+                    title="Mi perfil"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 transition hover:ring-2 hover:ring-blue-300 sm:h-10 sm:w-10 sm:text-base"
+                >
                     {(usuario?.nombre || 'U')
                         .charAt(0)
                         .toUpperCase()}
-                </div>
+                </a>
 
             </div>
 

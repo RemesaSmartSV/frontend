@@ -155,6 +155,33 @@ export const hogaresApi = {
 
         return manejarRespuesta(res)
     },
+
+    // POST /api/Hogares: responde el LoginResponse refrescado (token nuevo,
+    // rol e idHogar con valor). Quien inicia la sesión persiste; la pantalla
+    // que consume este resultado guarda `token` y `usuario` con las mismas
+    // claves que usa authApi.login.
+    async crear(nombreFamiliar) {
+        const res = await fetch(`${API_URL}/Hogares`, {
+            method: 'POST',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify({ nombreFamiliar }),
+        })
+
+        return manejarRespuesta(res)
+    },
+}
+
+export const usuariosApi = {
+    // PUT /api/Usuarios/perfil: 204 sin cuerpo; manejarRespuesta devuelve null.
+    async actualizarPerfil(nombre) {
+        const res = await fetch(`${API_URL}/Usuarios/perfil`, {
+            method: 'PUT',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify({ nombre }),
+        })
+
+        return manejarRespuesta(res)
+    },
 }
 
 function extraerItems(respuesta) {
