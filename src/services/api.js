@@ -182,11 +182,11 @@ export const usuariosApi = {
     },
 
     // PUT /api/Usuarios/perfil: 204 sin cuerpo; manejarRespuesta devuelve null.
-    async actualizarPerfil(nombre) {
+    async actualizarPerfil(datos) {
         const res = await fetch(`${API_URL}/Usuarios/perfil`, {
             method: 'PUT',
             headers: obtenerHeaders(true),
-            body: JSON.stringify({ nombre }),
+            body: JSON.stringify(datos),
         })
 
         return manejarRespuesta(res)

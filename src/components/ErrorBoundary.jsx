@@ -33,13 +33,13 @@ export default class ErrorBoundary extends Component {
                 className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-50 px-6 text-center"
             >
                 <h1 className="text-2xl font-semibold text-gray-900">
-                    Algo salió mal
+                    La página encontró un problema
                 </h1>
 
                 <p className="max-w-md text-sm text-gray-600">
-                    La aplicación encontró un error inesperado. Recarga para
-                    volver a intentarlo; si persiste, cierra la sesión desde
-                    otro navegador o avisa al equipo.
+                    No se pudo mostrar esta sección. Recarga la página para
+                    intentarlo de nuevo; si el problema continúa, cierra sesión
+                    y vuelve a entrar.
                 </p>
 
                 <button
