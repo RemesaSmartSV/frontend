@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { hogaresApi, usuariosApi } from '../services/api'
 import { useTheme } from '../context/ThemeContext.jsx'
 import Loading from '../components/Loading'
@@ -9,6 +10,7 @@ import Notification from '../components/Notification'
 // Rol, IdHogar y Correo no se editan aquí: no hay endpoints de auto-servicio
 // para ellos y no deben escalarse desde el frontend.
 export default function MiPerfil() {
+    const { t, i18n } = useTranslation()
     const { cambiarTema } = useTheme()
     const [usuario, setUsuario] = useState(null)
     const [nombreHogar, setNombreHogar] = useState('')
@@ -307,7 +309,7 @@ export default function MiPerfil() {
                             <button
                                 key={opcion.valor}
                                 type="button"
-                                onClick={() => setIdioma(opcion.valor)}
+                                onClick={() => { setIdioma(opcion.valor); i18n.changeLanguage(opcion.valor); localStorage.setItem('idioma', opcion.valor) }}
                                 aria-pressed={idioma === opcion.valor}
                                 className={`rounded-lg border px-4 py-3 text-sm font-medium transition ${
                                     idioma === opcion.valor

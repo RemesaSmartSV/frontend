@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
     Home,
     ClipboardList,
@@ -22,61 +23,62 @@ export default function Sidebar({
     menuAbierto,
     setMenuAbierto
 }) {
+    const { t } = useTranslation()
 
     const enlaces = [
         {
             to: '/',
-            nombre: 'Inicio',
+            nombre: t('nav.inicio'),
             icono: Home,
         },
         {
             to: '/movimientos',
-            nombre: 'Movimientos',
+            nombre: t('nav.movimientos'),
             icono: ClipboardList,
         },
         {
             to: '/categorias',
-            nombre: 'Categorías',
+            nombre: t('nav.categorias'),
             icono: Tags,
         },
         {
             to: '/remesas',
-            nombre: 'Remesas',
+            nombre: t('nav.remesas'),
             icono: Banknote,
         },
         {
             to: '/ingresos',
-            nombre: 'Ingresos',
+            nombre: t('nav.ingresos'),
             icono: TrendingUp,
         },
         {
             to: '/gastos',
-            nombre: 'Gastos',
+            nombre: t('nav.gastos'),
             icono: TrendingDown,
         },
         {
             to: '/presupuestos',
-            nombre: 'Presupuestos',
+            nombre: t('nav.presupuestos'),
             icono: Wallet,
         },
         {
             to: '/ahorro',
-            nombre: 'Ahorro',
+            nombre: t('nav.ahorro'),
             icono: PiggyBank,
         },
         {
             to: '/educacion-financiera',
-            nombre: 'Educación Financiera',
+            nombre: t('nav.educacion'),
             icono: BookOpen,
         },
         {
             to: '/hogar',
-            nombre: 'Mi Familia',
+            nombre: t('nav.familia'),
             icono: Users,
         },
         {
             to: '/perfil',
-            nombre: 'Mi perfil',
+            nombre: t('nav.perfil'),
             icono: User,
         },
     ]
@@ -219,7 +221,7 @@ export default function Sidebar({
                         <button
                             type="button"
                             onClick={cerrarSesion}
-                            title="Cerrar sesión"
+                            title={t('nav.cerrarSesion')}
                             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-blue-100 transition hover:bg-white/10 hover:text-white"
                         >
                             <LogOut
