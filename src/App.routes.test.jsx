@@ -2,6 +2,30 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import App from './App'
 
+// Mock de useTranslation para que los tests no dependan de i18n.
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => {
+            const map = {
+                'dashboard.titulo': 'Resumen financiero',
+                'dashboard.subtitulo': 'Consulta el estado.',
+                'dashboard.ingresos': 'Ingresos',
+                'dashboard.gastos': 'Gastos',
+                'dashboard.ahorro': 'Ahorro',
+                'dashboard.balance': 'Balance',
+                'dashboard.remesas': 'Remesas',
+                'dashboard.alertas': 'Alertas',
+                'dashboard.metas': 'Metas',
+                'dashboard.movimientosRecientes': 'Movimientos recientes',
+                'dashboard.todoHistorial': 'Todo el historial',
+                'nav.categorias': 'Categorías',
+            }
+            return map[key] || key
+        },
+        i18n: { changeLanguage: () => {} },
+    }),
+}))
+
 // Smoke test de navegacion.
 //
 // Su motivo de existir: durante la integracion de las ramas del equipo,

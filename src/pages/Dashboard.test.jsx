@@ -2,6 +2,30 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import Dashboard from './Dashboard'
 
+// Mock de useTranslation: devuelve las claves como texto (suficiente para tests).
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => {
+            const map = {
+                'dashboard.titulo': 'Resumen financiero',
+                'dashboard.subtitulo': 'Consulta el estado actual de las finanzas de tu hogar.',
+                'dashboard.ingresos': 'Ingresos',
+                'dashboard.gastos': 'Gastos',
+                'dashboard.ahorro': 'Ahorro',
+                'dashboard.balance': 'Balance',
+                'dashboard.remesas': 'Remesas',
+                'dashboard.alertas': 'Alertas de presupuesto',
+                'dashboard.metas': 'Metas de ahorro',
+                'dashboard.movimientosRecientes': 'Movimientos recientes',
+                'dashboard.todoHistorial': 'Todo el historial',
+                'nav.categorias': 'Categorías',
+            }
+            return map[key] || key
+        },
+        i18n: { changeLanguage: () => {} },
+    }),
+}))
+
 // Mock de global.fetch que responde con las formas REALES que devuelve el
 // backend en producción, y que registra cada URL solicitada.
 let fetchMock

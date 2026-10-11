@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
     ResponsiveContainer,
     BarChart,
@@ -45,6 +46,7 @@ function nombreMes(anio, mes) {
 }
 
 export default function Dashboard() {
+    const { t } = useTranslation()
     const hoy = new Date()
 
     const [movimientos, setMovimientos] = useState([])
@@ -392,12 +394,11 @@ export default function Dashboard() {
 
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl">
-                        Resumen financiero
+                        {t('dashboard.titulo')}
                     </h1>
 
                     <p className="mt-1 text-sm text-slate-500">
-                        Consulta el estado actual de
-                        las finanzas de tu hogar.
+                        {t('dashboard.subtitulo')}
                     </p>
                 </div>
 
@@ -426,7 +427,7 @@ export default function Dashboard() {
                         >
                             {modoPeriodo === 'mes'
                                 ? nombreMes(anio, mes)
-                                : 'Todo el historial'}
+                                : t('dashboard.todoHistorial')}
                         </button>
 
                         <button
@@ -462,7 +463,7 @@ export default function Dashboard() {
 
                 <div className="rounded-xl border border-green-100 bg-green-50 p-5 shadow-sm">
                     <p className="text-sm font-medium text-green-700">
-                        Ingresos
+                        {t('dashboard.ingresos')}
                     </p>
 
                     <p className="mt-2 text-2xl font-bold text-green-700">
@@ -476,7 +477,7 @@ export default function Dashboard() {
 
                 <div className="rounded-xl border border-violet-100 bg-violet-50 p-5 shadow-sm">
                     <p className="text-sm font-medium text-violet-700">
-                        Remesas
+                        {t('dashboard.remesas')}
                     </p>
 
                     <p className="mt-2 text-2xl font-bold text-violet-700">
@@ -490,7 +491,7 @@ export default function Dashboard() {
 
                 <div className="rounded-xl border border-teal-100 bg-teal-50 p-5 shadow-sm">
                     <p className="text-sm font-medium text-teal-700">
-                        Ahorro
+                        {t('dashboard.ahorro')}
                     </p>
 
                     <p className="mt-2 text-2xl font-bold text-teal-700">
@@ -504,7 +505,7 @@ export default function Dashboard() {
 
                 <div className="rounded-xl border border-red-100 bg-red-50 p-5 shadow-sm">
                     <p className="text-sm font-medium text-red-700">
-                        Gastos
+                        {t('dashboard.gastos')}
                     </p>
 
                     <p className="mt-2 text-2xl font-bold text-red-700">
@@ -530,7 +531,7 @@ export default function Dashboard() {
                                 : 'text-red-700'
                         }`}
                     >
-                        Balance
+                        {t('dashboard.balance')}
                     </p>
 
                     <p
@@ -559,7 +560,7 @@ export default function Dashboard() {
 
                     <div className="mb-5">
                         <h2 className="text-lg font-bold text-slate-800">
-                            Ingresos vs. gastos
+                            {t('dashboard.ingresos')} vs. {t('dashboard.gastos')}
                         </h2>
 
                         <p className="text-sm text-slate-500">
@@ -647,7 +648,7 @@ export default function Dashboard() {
 
                     <div className="mb-5">
                         <h2 className="text-lg font-bold text-slate-800">
-                            Gastos por categoría
+                            {t('dashboard.gastos')} / {t('nav.categorias')}
                         </h2>
 
                         <p className="text-sm text-slate-500">
@@ -725,7 +726,7 @@ export default function Dashboard() {
             {alertas.length > 0 && (
                 <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h2 className="mb-4 text-lg font-bold text-slate-800">
-                        ⚠️ Alertas de presupuesto
+                        ⚠️ {t('dashboard.alertas')}
                     </h2>
 
                     <ul className="space-y-3">
@@ -773,7 +774,7 @@ export default function Dashboard() {
             <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <h2 className="text-lg font-bold text-slate-800">
-                        🐷 Metas de ahorro
+                        🐷 {t('dashboard.metas')}
                     </h2>
 
                     <a
@@ -843,7 +844,7 @@ export default function Dashboard() {
 
                     <div>
                         <h2 className="text-lg font-bold text-slate-800">
-                            Movimientos recientes
+                            {t('dashboard.movimientosRecientes')}
                         </h2>
 
                         <p className="text-sm text-slate-500">
