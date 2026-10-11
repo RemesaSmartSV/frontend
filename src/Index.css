@@ -38,6 +38,84 @@ body {
 }
 
 /*
+ * Overrides globales de dark mode para clases Tailwind usadas en el código.
+ * Cubre los 216 usos hardcodeados sin necesidad de editar cada componente.
+ */
+.dark .bg-white { background-color: var(--color-surface); }
+.dark .bg-gray-50 { background-color: var(--color-bg); }
+.dark .bg-gray-100 { background-color: var(--color-surface-hover); }
+.dark .bg-gray-200 { background-color: var(--color-border); }
+.dark .bg-slate-50 { background-color: var(--color-bg); }
+.dark .bg-slate-100 { background-color: var(--color-surface-hover); }
+.dark .bg-slate-200 { background-color: var(--color-border); }
+
+.dark .text-gray-800,
+.dark .text-gray-900,
+.dark .text-slate-800,
+.dark .text-slate-900 { color: var(--color-text); }
+
+.dark .text-gray-700 { color: var(--color-text); }
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-500,
+.dark .text-slate-600 { color: var(--color-text-secondary); }
+.dark .text-gray-400 { color: var(--color-text-secondary); opacity: 0.7; }
+
+.dark .border-gray-200,
+.dark .border-gray-300,
+.dark .border-slate-200,
+.dark .border-slate-300,
+.dark .border-slate-100 { border-color: var(--color-border); }
+
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-border); }
+
+.dark .hover\:bg-gray-50:hover { background-color: var(--color-surface-hover); }
+.dark .hover\:bg-gray-100:hover { background-color: var(--color-surface-hover); }
+.dark .hover\:bg-slate-50:hover { background-color: var(--color-surface-hover); }
+
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder { color: var(--color-text-secondary); opacity: 0.5; }
+
+.dark .shadow-sm { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+.dark .shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); }
+.dark .shadow-lg { box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); }
+.dark .shadow-xl { box-shadow: 0 20px 25px rgba(0, 0, 0, 0.3); }
+
+/* Gradientes de login/registro */
+.dark .bg-gradient-to-br { background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%); }
+
+/* Tablas */
+.dark thead { background-color: var(--color-surface-hover); }
+.dark tbody tr { border-color: var(--color-border); }
+.dark tbody tr:hover { background-color: var(--color-surface-hover); }
+
+/* Sidebar mantiene su identidad #123B8F en ambos temas */
+.dark aside.bg-\[\#123B8F\] { background-color: #0c2560; }
+
+/* Navbar */
+.dark header.bg-white { background-color: var(--color-surface); border-color: var(--color-border); }
+
+/* Modales y overlays */
+.dark .fixed.inset-0.bg-black\/40 { background-color: rgba(0, 0, 0, 0.6); }
+
+/* Chips y badges */
+.dark .bg-green-100 { background-color: rgba(34, 197, 94, 0.15); }
+.dark .bg-red-100 { background-color: rgba(239, 68, 68, 0.15); }
+.dark .bg-yellow-100 { background-color: rgba(251, 191, 36, 0.15); }
+.dark .bg-blue-100 { background-color: rgba(59, 130, 246, 0.15); }
+.dark .bg-violet-100 { background-color: rgba(139, 92, 246, 0.15); }
+.dark .bg-teal-100 { background-color: rgba(20, 184, 166, 0.15); }
+
+/*
  * Indicador de foco visible para quien navega con teclado (WCAG 2.4.7).
  */
 :where(a, button, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
