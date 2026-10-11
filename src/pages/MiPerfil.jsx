@@ -344,7 +344,10 @@ export default function MiPerfil() {
                 </div>
             </form>
 
-            {/* SECCIÓN 5: SEGURIDAD — Cambiar contraseña */}
+            {/* SECCIÓN 5: PREFERENCIAS DE NOTIFICACIONES */}
+            <PreferenciasNotificaciones />
+
+            {/* SECCIÓN 6: SEGURIDAD — Cambiar contraseña */}
             <CambiarContrasena />
         </div>
     )
@@ -468,6 +471,52 @@ function CambiarContrasena() {
                     {guardando ? 'Cambiando...' : 'Cambiar contraseña'}
                 </button>
             </form>
+        </section>
+    )
+}
+
+function PreferenciasNotificaciones() {
+    const [prefs, setPrefs] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('notifPrefs') || '{}')
+        } catch { return {} }
+    })
+
+    const opciones = [
+        { key: 'invitaciones', label: 'Invitaciones familiares', desc: 'Recibir correo al ser invitado a una familia.' },
+        { key: 'alertasPresupuesto', label: 'Alertas de presupuesto', desc: 'Avisos cuando un presupuesto alcanza el 80% o supera el límite.' },
+        { key: 'seguridad', label: 'Notificaciones de seguridad', desc: 'Cambios de contraseña y actividad sospechosa.' },
+    ]
+
+    function toggle(key) {
+        const nuevos = { ...prefs, [key]: !prefs[key] }
+        setPrefs(nuevos)
+        localStorage.setItem('notifPrefs', JSON.stringify(nuevos))
+    }
+
+    return (
+        <section className="rounded-xl bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-800">Notificaciones por correo</h2>
+            <p className="mb-4 text-sm text-gray-500">
+                Elige qué correos quieres recibir. Las invitaciones siempre se muestran en la aplicación.
+            </p>
+
+            <div className="space-y-4">
+                {opciones.map((op) => (
+                    <label key={op.key} className="flex items-start gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={prefs[op.key] !== false}
+                            onChange={() => toggle(op.key)}
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <div>
+                            <span className="text-sm font-medium text-gray-700">{op.label}</span>
+                            <p className="text-xs text-gray-400">{op.desc}</p>
+                        </div>
+                    </label>
+                ))}
+            </div>
         </section>
     )
 }
