@@ -212,6 +212,16 @@ export const usuariosApi = {
 
         return manejarRespuesta(res)
     },
+
+    // POST /api/Usuarios/abandonar-familia: el usuario sale de su familia actual.
+    async abandonarFamilia() {
+        const res = await fetch(`${API_URL}/Usuarios/abandonar-familia`, {
+            method: 'POST',
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
 }
 
 export const invitacionesApi = {
