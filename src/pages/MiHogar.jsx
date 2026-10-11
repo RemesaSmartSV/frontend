@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
     hogaresApi,
     usuariosApi,
@@ -23,6 +24,7 @@ function formatearFecha(fecha) {
 }
 
 export default function MiHogar() {
+    const { t } = useTranslation()
     const [hogar, setHogar] = useState(null)
     const [miembros, setMiembros] = useState([])
     const [enviadas, setEnviadas] = useState([])
@@ -118,9 +120,7 @@ export default function MiHogar() {
                     {hogar?.nombreFamiliar || 'Mi familia'}
                 </h1>
 
-                <p className="text-gray-500">
-                    Administra los miembros de tu familia y sus roles.
-                </p>
+                <p className="text-gray-500">{t('familia.subtitulo')}</p>
             </div>
 
             {error && (
@@ -135,7 +135,7 @@ export default function MiHogar() {
                 {/* MIEMBROS */}
                 <div className="rounded-xl bg-white p-6 shadow-sm">
                     <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                        Miembros ({miembros.length})
+                        {t('familia.miembros')} ({miembros.length})
                     </h2>
 
                     <ul className="divide-y divide-gray-100">
@@ -215,7 +215,7 @@ export default function MiHogar() {
                     <div className="space-y-6">
                         <div className="rounded-xl bg-white p-6 shadow-sm">
                             <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                                Invitar miembro
+                                {t('familia.invitar')}
                             </h2>
 
                             <form onSubmit={invitar} className="flex flex-col gap-3 sm:flex-row">
@@ -246,7 +246,7 @@ export default function MiHogar() {
 
                         <div className="rounded-xl bg-white p-6 shadow-sm">
                             <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                                Invitaciones enviadas
+                                    {t('familia.invitacionesEnviadas')}
                             </h2>
 
                             {enviadas.length === 0 ? (
@@ -329,7 +329,7 @@ export default function MiHogar() {
                 ) : (
                     <div className="rounded-xl bg-white p-6 shadow-sm">
                         <p className="text-sm text-gray-500">
-                            Solo un administrador de la familia puede invitar nuevos miembros.
+                                    {t('familia.soloAdmin')}
                         </p>
                     </div>
                 )}

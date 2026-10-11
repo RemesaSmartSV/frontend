@@ -2,6 +2,30 @@
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react'
 import Ahorro from './Ahorro'
 
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => {
+            const map = {
+                'ahorro.titulo': 'Ahorro',
+                'ahorro.subtitulo': 'Crea metas de ahorro, registra aportes y sigue tu progreso.',
+                'ahorro.totalAhorrado': 'Total ahorrado',
+                'ahorro.totalObjetivo': 'Total objetivo',
+                'ahorro.progresoGlobal': 'Progreso global',
+                'ahorro.crearMeta': 'Crear meta de ahorro',
+                'ahorro.editarMeta': 'Editar meta',
+                'ahorro.tituloMeta': 'Título',
+                'ahorro.montoObjetivo': 'Monto objetivo',
+                'ahorro.fechaObjetivo': 'Fecha objetivo',
+                'ahorro.registrarAporte': 'Registrar aporte',
+                'ahorro.sinMetas': 'Sin metas de ahorro',
+                'common.cargando': 'Cargando...',
+            }
+            return map[key] || key
+        },
+        i18n: { changeLanguage: () => {} },
+    }),
+}))
+
 // La página consume ahorroApi (MetasAhorro + Aportes). Se stubbea global.fetch
 // igual que en el resto de la suite.
 

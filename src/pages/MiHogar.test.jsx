@@ -2,6 +2,26 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import MiHogar from './MiHogar'
 
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => {
+            const map = {
+                'familia.titulo': 'Mi Familia',
+                'familia.subtitulo': 'Administra los miembros de tu familia y sus roles.',
+                'familia.miembros': 'Miembros',
+                'familia.invitar': 'Invitar miembro',
+                'familia.invitacionesEnviadas': 'Invitaciones enviadas',
+                'familia.sinInvitaciones': 'No hay invitaciones enviadas todavía.',
+                'familia.soloAdmin': 'Solo un administrador de la familia puede invitar nuevos miembros.',
+                'familia.administrador': 'Administrador',
+                'familia.miembro': 'Miembro',
+            }
+            return map[key] || key
+        },
+        i18n: { changeLanguage: () => {} },
+    }),
+}))
+
 // Stub de fetch por ruta: Hogares, Usuarios (miembros) e Invitaciones.
 // El rol se lee de localStorage clave 'usuario' (la misma de authApi.login).
 

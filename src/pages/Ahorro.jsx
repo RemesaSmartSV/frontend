@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ahorroApi } from '../services/api'
 
 import Notification from '../components/Notification'
@@ -28,6 +29,7 @@ function formatearFecha(fecha) {
 }
 
 function Ahorro() {
+    const { t } = useTranslation()
     const [metas, setMetas] = useState([])
     const [cargando, setCargando] = useState(true)
     const [procesando, setProcesando] = useState(false)
@@ -296,10 +298,8 @@ function Ahorro() {
             {/* ENCABEZADO */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Ahorro</h1>
-                    <p className="text-gray-500">
-                        Crea metas de ahorro, registra aportes y sigue tu progreso.
-                    </p>
+                    <h1 className="text-2xl font-bold text-gray-800">{t('ahorro.titulo')}</h1>
+                    <p className="text-gray-500">{t('ahorro.subtitulo')}</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -325,21 +325,21 @@ function Ahorro() {
             {/* TARJETAS RESUMEN */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="rounded-xl bg-white p-5 shadow-sm">
-                    <p className="text-sm text-gray-500">Total ahorrado</p>
+                    <p className="text-sm text-gray-500">{t('ahorro.totalAhorrado')}</p>
                     <p className="mt-1 text-2xl font-bold text-gray-800">
                         {formatearMoneda(totalAhorro)}
                     </p>
                 </div>
 
                 <div className="rounded-xl bg-white p-5 shadow-sm">
-                    <p className="text-sm text-gray-500">Total objetivo</p>
+                    <p className="text-sm text-gray-500">{t('ahorro.totalObjetivo')}</p>
                     <p className="mt-1 text-2xl font-bold text-gray-800">
                         {formatearMoneda(totalObjetivo)}
                     </p>
                 </div>
 
                 <div className="rounded-xl bg-white p-5 shadow-sm">
-                    <p className="text-sm text-gray-500">Progreso global</p>
+                    <p className="text-sm text-gray-500">{t('ahorro.progresoGlobal')}</p>
                     <p className="mt-1 text-2xl font-bold text-gray-800">
                         {totalObjetivo > 0
                             ? `${((totalAhorro / totalObjetivo) * 100).toFixed(0)}%`
@@ -351,13 +351,13 @@ function Ahorro() {
             {/* FORMULARIO META */}
             <div className="rounded-xl bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                    {editando ? 'Editar meta' : 'Crear meta de ahorro'}
+                    {editando ? t('ahorro.editarMeta') : t('ahorro.crearMeta')}
                 </h2>
 
                 <form onSubmit={manejarSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                         <label htmlFor="ahorro-meta-titulo" className="mb-1 block text-sm font-medium text-gray-700">
-                            Título
+                            {t('ahorro.tituloMeta')}
                         </label>
 
                         <input
@@ -374,7 +374,7 @@ function Ahorro() {
 
                     <div>
                         <label htmlFor="ahorro-meta-objetivo" className="mb-1 block text-sm font-medium text-gray-700">
-                            Monto objetivo
+                            {t('ahorro.montoObjetivo')}
                         </label>
 
                         <input
@@ -392,7 +392,7 @@ function Ahorro() {
 
                     <div>
                         <label htmlFor="ahorro-meta-fecha" className="mb-1 block text-sm font-medium text-gray-700">
-                            Fecha objetivo
+                            {t('ahorro.fechaObjetivo')}
                         </label>
 
                         <input
@@ -435,7 +435,7 @@ function Ahorro() {
             {metas.length === 0 ? (
                 <div className="rounded-xl bg-white p-10 text-center shadow-sm">
                     <p className="text-4xl">🐷</p>
-                    <p className="mt-2 font-semibold text-gray-800">Sin metas de ahorro</p>
+                    <p className="mt-2 font-semibold text-gray-800">{t('ahorro.sinMetas')}</p>
                     <p className="text-sm text-gray-500">
                         Crea tu primera meta para empezar a ahorrar.
                     </p>
@@ -596,7 +596,7 @@ function Ahorro() {
                                 disabled={procesando}
                                 className="rounded-lg bg-green-600 px-5 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
                             >
-                                {procesando ? 'Registrando...' : 'Registrar aporte'}
+                                {procesando ? t('common.cargando') : t('ahorro.registrarAporte')}
                             </button>
                         </div>
                     </form>
