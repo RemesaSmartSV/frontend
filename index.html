@@ -7,6 +7,18 @@
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>RemesaSmartSV</title>
+    <script>
+      // Anti-parpadeo: aplica el tema antes del primer render de React.
+      (function() {
+        try {
+          var u = JSON.parse(localStorage.getItem('usuario') || 'null');
+          var t = (u && u.temaPreferido) || localStorage.getItem('tema') || 'claro';
+          if (t === 'oscuro' || (t === 'sistema' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

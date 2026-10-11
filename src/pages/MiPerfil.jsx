@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { hogaresApi, usuariosApi } from '../services/api'
+import { useTheme } from '../context/ThemeContext.jsx'
 import Loading from '../components/Loading'
 import Notification from '../components/Notification'
 
@@ -8,6 +9,7 @@ import Notification from '../components/Notification'
 // Rol, IdHogar y Correo no se editan aquí: no hay endpoints de auto-servicio
 // para ellos y no deben escalarse desde el frontend.
 export default function MiPerfil() {
+    const { cambiarTema } = useTheme()
     const [usuario, setUsuario] = useState(null)
     const [nombreHogar, setNombreHogar] = useState('')
 
@@ -279,7 +281,7 @@ export default function MiPerfil() {
                             <button
                                 key={opcion.valor}
                                 type="button"
-                                onClick={() => setTema(opcion.valor)}
+                                onClick={() => { setTema(opcion.valor); cambiarTema(opcion.valor) }}
                                 aria-pressed={tema === opcion.valor}
                                 className={`flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition ${
                                     tema === opcion.valor

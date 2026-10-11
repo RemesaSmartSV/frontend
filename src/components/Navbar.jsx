@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, Sun, Moon } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext.jsx'
 
 export default function Navbar({
     usuario,
@@ -81,6 +82,9 @@ export default function Navbar({
             </div>
 
             <div className="absolute right-4 top-0 flex h-full items-center gap-2 sm:right-6">
+
+                {/* Toggle tema claro/oscuro */}
+                <ThemeToggle />
 
                 <div className="relative" ref={alertasRef}>
                     <button
@@ -284,5 +288,20 @@ export default function Navbar({
             </div>
 
         </header>
+    )
+}
+
+function ThemeToggle() {
+    const { tema, cambiarTema } = useTheme()
+
+    return (
+        <button
+            type="button"
+            onClick={() => cambiarTema(tema === 'oscuro' ? 'claro' : 'oscuro')}
+            aria-label={tema === 'oscuro' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
+            {tema === 'oscuro' ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
     )
 }
