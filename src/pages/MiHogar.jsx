@@ -36,10 +36,11 @@ export default function MiHogar() {
 
     // El token guardado por authApi.login trae el rol; un Admin puede invitar.
     let esAdmin = false
+    let usuarioDatos = null
 
     try {
-        const datos = JSON.parse(localStorage.getItem('usuario') || 'null')
-        esAdmin = datos?.rol === 'Admin'
+        usuarioDatos = JSON.parse(localStorage.getItem('usuario') || 'null')
+        esAdmin = usuarioDatos?.rol === 'Admin'
     } catch {
         esAdmin = false
     }
@@ -154,15 +155,56 @@ export default function MiHogar() {
                                     </p>
                                 </div>
 
-                                <span
-                                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                                        miembro.rol === 'Admin'
-                                            ? 'bg-blue-100 text-blue-700'
-                                            : 'bg-gray-100 text-gray-600'
-                                    }`}
-                                >
-                                    {miembro.rol === 'Admin' ? 'Administrador' : miembro.rol || 'Miembro'}
-                                </span>
+                                <div className="flex shrink-0 items-center gap-2">
+                                    {esAdmin && miembro.idUsuario !== usuarioDatos?.idUsuario ? (
+                                        <>
+                                            <select
+                                                value={miembro.rol || 'Miembro'}
+                                                onChange={async (e) => {
+                                                    try {
+                                                        await usuariosApi.actualizarMiembro(miembro.idUsuario, { rol: e.target.value })
+                                                        setMensaje(`Rol de ${miembro.nombre} actualizado.`)
+                                                        await cargarDatos()
+                                                    } catch (err) {
+                                                        setError(err.message || 'No se pudo cambiar el rol.')
+                                                    }
+                                                }}
+                                                aria-label={`Rol de ${miembro.nombre}`}
+                                                className="rounded-lg border border-gray-200 px-2 py-1 text-xs"
+                                            >
+                                                <option value="Admin">Admin</option>
+                                                <option value="Miembro">Miembro</option>
+                                            </select>
+
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    if (!window.confirm(`¿Retirar a ${miembro.nombre} de la familia?`)) return
+                                                    try {
+                                                        await usuariosApi.eliminarMiembro(miembro.idUsuario)
+                                                        setMensaje(`${miembro.nombre} fue retirado de la familia.`)
+                                                        await cargarDatos()
+                                                    } catch (err) {
+                                                        setError(err.message || 'No se pudo retirar al miembro.')
+                                                    }
+                                                }}
+                                                className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
+                                            >
+                                                Retirar
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <span
+                                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                                miembro.rol === 'Admin'
+                                                    ? 'bg-blue-100 text-blue-700'
+                                                    : 'bg-gray-100 text-gray-600'
+                                            }`}
+                                        >
+                                            {miembro.rol === 'Admin' ? 'Administrador' : miembro.rol || 'Miembro'}
+                                        </span>
+                                    )}
+                                </div>
                             </li>
                         ))}
                     </ul>
@@ -228,17 +270,56 @@ export default function MiHogar() {
                                                 </p>
                                             </div>
 
-                                            <span
-                                                className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                                                    inv.estado === 'Aceptada'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : inv.estado === 'Rechazada'
-                                                            ? 'bg-red-100 text-red-700'
-                                                            : 'bg-yellow-100 text-yellow-700'
-                                                }`}
-                                            >
-                                                {inv.estado}
-                                            </span>
+                                            <div className="flex shrink-0 items-center gap-2">
+                                                <span
+                                                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                                        inv.estado === 'Aceptada'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : inv.estado === 'Rechazada' || inv.estado === 'Cancelada'
+                                                                ? 'bg-red-100 text-red-700'
+                                                                : 'bg-yellow-100 text-yellow-700'
+                                                    }`}
+                                                >
+                                                    {inv.estado}
+                                                </span>
+
+                                                {inv.estado === 'Pendiente' && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await invitacionesApi.reenviar(inv.idInvitacion)
+                                                                    setMensaje('Invitación reenviada.')
+                                                                    setEnviadas(await invitacionesApi.enviadas())
+                                                                } catch (err) {
+                                                                    setError(err.message || 'No se pudo reenviar.')
+                                                                }
+                                                            }}
+                                                            className="rounded-lg bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                                                        >
+                                                            Reenviar
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                if (!window.confirm('¿Cancelar esta invitación?')) return
+                                                                try {
+                                                                    await invitacionesApi.cancelar(inv.idInvitacion)
+                                                                    setMensaje('Invitación cancelada.')
+                                                                    setEnviadas(await invitacionesApi.enviadas())
+                                                                } catch (err) {
+                                                                    setError(err.message || 'No se pudo cancelar.')
+                                                                }
+                                                            }}
+                                                            className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
+                                                        >
+                                                            Cancelar
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>

@@ -202,6 +202,16 @@ export const usuariosApi = {
 
         return manejarRespuesta(res)
     },
+
+    // DELETE /api/Usuarios/{id}: solo Admin; retira un miembro del hogar.
+    async eliminarMiembro(id) {
+        const res = await fetch(`${API_URL}/Usuarios/${id}`, {
+            method: 'DELETE',
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
 }
 
 export const invitacionesApi = {
@@ -251,6 +261,30 @@ export const invitacionesApi = {
     async rechazar(id) {
         const res = await fetch(
             `${API_URL}/Invitaciones/${id}/rechazar`,
+            {
+                method: 'POST',
+                headers: obtenerHeaders(),
+            }
+        )
+
+        return manejarRespuesta(res)
+    },
+
+    async cancelar(id) {
+        const res = await fetch(
+            `${API_URL}/Invitaciones/${id}/cancelar`,
+            {
+                method: 'POST',
+                headers: obtenerHeaders(),
+            }
+        )
+
+        return manejarRespuesta(res)
+    },
+
+    async reenviar(id) {
+        const res = await fetch(
+            `${API_URL}/Invitaciones/${id}/reenviar`,
             {
                 method: 'POST',
                 headers: obtenerHeaders(),
