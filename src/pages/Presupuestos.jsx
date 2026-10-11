@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
     categoriasApi,
     presupuestosApi,
@@ -11,6 +12,7 @@ import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 
 function Presupuestos() {
+    const { t } = useTranslation()
     const [presupuestos, setPresupuestos] = useState([])
     const [categorias, setCategorias] = useState([])
     const [movimientos, setMovimientos] = useState([])
@@ -506,7 +508,7 @@ function Presupuestos() {
 
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">
-                        Presupuestos
+                        {t('nav.presupuestos')}
                     </h1>
 
                     <p className="text-gray-500">

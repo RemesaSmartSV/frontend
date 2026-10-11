@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { categoriasApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import ConfirmModal from '../components/ConfirmModal'
 
 export default function Categorias() {
+    const { t } = useTranslation()
     const [categorias, setCategorias] = useState([])
     const [nombre, setNombre] = useState('')
     const [tipo, setTipo] = useState('Gasto')
@@ -159,7 +161,7 @@ export default function Categorias() {
             <div className="mb-6 sm:mb-8">
 
                 <h1 className="text-2xl font-bold text-gray-800">
-                    Categorías
+                    {t('nav.categorias')}
                 </h1>
 
                 <p className="text-gray-500">

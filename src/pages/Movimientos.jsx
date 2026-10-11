@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
@@ -8,6 +9,7 @@ import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
 import { Download } from 'lucide-react'
 
 export default function Movimientos() {
+    const { t } = useTranslation()
     const [movimientos, setMovimientos] = useState([])
     const [categorias, setCategorias] = useState([])
 
@@ -498,7 +500,7 @@ export default function Movimientos() {
             <div className="mb-6 sm:mb-8">
 
                 <h1 className="text-2xl font-bold text-gray-800">
-                    Movimientos financieros
+                    {t('nav.movimientos')}
                 </h1>
 
                 <p className="text-gray-500">
@@ -513,8 +515,8 @@ export default function Movimientos() {
 
                 <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
-                        ? 'Editar movimiento'
-                        : 'Registrar movimiento'}
+                        ? t('common.editar')
+                        : t('common.crear')}
                 </h2>
 
                 <form onSubmit={guardarMovimiento}>
@@ -731,7 +733,7 @@ export default function Movimientos() {
                 <div className="mb-5">
 
                     <h2 className="text-xl font-semibold text-slate-900">
-                        Filtrar movimientos
+                        {t('nav.movimientos')} / {t('common.editar')}
                     </h2>
 
                     <div className="flex flex-col gap-2 sm:flex-row">

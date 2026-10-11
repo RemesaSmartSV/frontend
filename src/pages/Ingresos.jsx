@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
@@ -7,6 +8,7 @@ import Pagination from '../components/Pagination'
 import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
 
 function Ingresos() {
+    const { t } = useTranslation()
     const [ingresos, setIngresos] = useState([])
     const [categorias, setCategorias] = useState([])
 
@@ -426,7 +428,7 @@ function Ingresos() {
         <div className="space-y-6">
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">
-                    Ingresos
+                    {t('nav.ingresos')}
                 </h1>
 
                 <p className="text-gray-500">

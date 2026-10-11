@@ -18,7 +18,22 @@ vi.mock('react-i18next', () => ({
                 'dashboard.metas': 'Metas',
                 'dashboard.movimientosRecientes': 'Movimientos recientes',
                 'dashboard.todoHistorial': 'Todo el historial',
+                'nav.inicio': 'Inicio',
+                'nav.movimientos': 'Movimientos',
                 'nav.categorias': 'Categorías',
+                'nav.remesas': 'Remesas',
+                'nav.ingresos': 'Ingresos',
+                'nav.gastos': 'Gastos',
+                'nav.presupuestos': 'Presupuestos',
+                'nav.ahorro': 'Ahorro',
+                'nav.educacion': 'Educación Financiera',
+                'nav.familia': 'Mi Familia',
+                'nav.perfil': 'Mi perfil',
+                'common.editar': 'Editar',
+                'common.crear': 'Crear',
+                'common.guardar': 'Guardar',
+                'common.cancelar': 'Cancelar',
+                'common.cargando': 'Cargando...',
             }
             return map[key] || key
         },
@@ -62,7 +77,7 @@ function tokenDePrueba() {
 
 const RUTAS = [
     { ruta: '/', titulo: /Resumen financiero/i },
-    { ruta: '/movimientos', titulo: /Movimientos financieros/i },
+    { ruta: '/movimientos', titulo: /Movimientos/i },
     { ruta: '/categorias', titulo: /^Categor/i },
     { ruta: '/remesas', titulo: /^Remesas$/i },
     { ruta: '/ingresos', titulo: /^Ingresos$/i },

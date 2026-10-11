@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
@@ -7,6 +8,7 @@ import Pagination from '../components/Pagination'
 import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
 
 export default function Gastos() {
+    const { t } = useTranslation()
     const [gastos, setGastos] = useState([])
     const [categorias, setCategorias] = useState([])
 
@@ -450,7 +452,7 @@ export default function Gastos() {
                 <div className="min-w-0">
 
                     <h1 className="text-2xl font-bold text-gray-800">
-                        Gastos
+                    {t('nav.gastos')}
                     </h1>
 
                     <p className="text-gray-500">
