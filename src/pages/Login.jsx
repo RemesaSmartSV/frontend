@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { authApi } from '../services/api'
 import Notification from '../components/Notification'
 
 export default function Login({ onLogin, irRegistro }) {
+    const { t } = useTranslation()
     const [correo, setCorreo] = useState('')
     const [contrasena, setContrasena] = useState('')
 
@@ -64,13 +66,13 @@ export default function Login({ onLogin, irRegistro }) {
             <section className="w-full max-w-[430px] overflow-hidden rounded-2xl bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] sm:p-8 md:p-10">
 
                 {/* NOMBRE DE LA APLICACIÓN */}
-                <h1 className="text-center text-2xl font-extrabold tracking-tight text-blue-600 sm:text-[1.8rem]">
-                    RemesaSmartSV
-                </h1>
+                    <h1 className="text-center text-2xl font-extrabold tracking-tight text-blue-600 sm:text-[1.8rem]">
+                        {t('app.name')}
+                    </h1>
 
                 {/* TÍTULO */}
                 <h2 className="mb-2 mt-6 text-center text-2xl font-normal text-gray-800 sm:mt-7 sm:text-[1.5rem]">
-                    Iniciar sesión
+                    {t('auth.login')}
                 </h2>
 
                 {/* DESCRIPCIÓN */}
@@ -91,8 +93,8 @@ export default function Login({ onLogin, irRegistro }) {
                             htmlFor="correo"
                             className="text-sm font-semibold text-gray-700 sm:text-base"
                         >
-                            Correo
-                        </label>
+                    {t('auth.correo')}
+                </label>
 
                         <input
                             id="correo"
@@ -119,7 +121,7 @@ export default function Login({ onLogin, irRegistro }) {
                             htmlFor="contrasena"
                             className="text-sm font-semibold text-gray-700 sm:text-base"
                         >
-                            Contraseña
+                            {t('auth.contrasena')}
                         </label>
 
                         <input
@@ -158,7 +160,7 @@ export default function Login({ onLogin, irRegistro }) {
                             }}
                             className="text-sm font-medium text-blue-600 hover:text-blue-800"
                         >
-                            ¿Olvidaste tu contraseña?
+                            {t('auth.olvidaste')}
                         </button>
                     </div>
 
@@ -184,8 +186,8 @@ export default function Login({ onLogin, irRegistro }) {
                         )}
 
                         {cargando
-                            ? 'Iniciando sesión...'
-                            : 'Iniciar sesión'}
+                            ? t('common.cargando')
+                            : t('auth.entrar')}
                     </button>
 
                 </form>
@@ -242,7 +244,7 @@ export default function Login({ onLogin, irRegistro }) {
                 <div className="mt-6 border-t border-gray-200 pt-5 text-center sm:mt-7 sm:pt-6">
 
                     <p className="mb-3 text-sm text-gray-500">
-                        ¿No tienes una cuenta?
+                        {t('auth.noCuenta')}
                     </p>
 
                     <button
@@ -251,7 +253,7 @@ export default function Login({ onLogin, irRegistro }) {
                         disabled={cargando}
                         className="text-[0.95rem] font-bold text-blue-600 transition hover:text-blue-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        Crear cuenta
+                        {t('auth.register')}
                     </button>
 
                 </div>

@@ -1,8 +1,31 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Navbar from './components/Navbar'
+
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => {
+            const map = {
+                'auth.login': 'Iniciar sesión',
+                'auth.correo': 'Correo',
+                'auth.contrasena': 'Contraseña',
+                'auth.confirmarContrasena': 'Confirmar contraseña',
+                'auth.nombre': 'Nombre completo',
+                'auth.olvidaste': '¿Olvidaste tu contraseña?',
+                'auth.noCuenta': '¿No tienes una cuenta?',
+                'auth.siCuenta': '¿Ya tienes cuenta?',
+                'auth.entrar': 'Iniciar sesión',
+                'auth.register': 'Crear cuenta',
+                'app.name': 'RemesaSmartSV',
+                'common.cargando': 'Cargando...',
+            }
+            return map[key] || key
+        },
+        i18n: { changeLanguage: () => {} },
+    }),
+}))
 
 afterEach(() => cleanup())
 

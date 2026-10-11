@@ -1,6 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 
+vi.mock('react-i18next', () => ({
+    useTranslation: () => ({
+        t: (key) => {
+            const map = {
+                'auth.login': 'Iniciar sesión',
+                'auth.correo': 'Correo',
+                'auth.contrasena': 'Contraseña',
+                'auth.entrar': 'Iniciar sesión',
+                'auth.register': 'Crear cuenta',
+                'app.name': 'RemesaSmartSV',
+                'common.cargando': 'Cargando...',
+            }
+            return map[key] || key
+        },
+        i18n: { changeLanguage: () => {} },
+    }),
+}))
+
 import Presentacion from './pages/Presentacion'
 import App from './App'
 
