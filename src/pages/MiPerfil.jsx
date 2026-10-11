@@ -343,6 +343,131 @@ export default function MiPerfil() {
                     </button>
                 </div>
             </form>
+
+            {/* SECCIÓN 5: SEGURIDAD — Cambiar contraseña */}
+            <CambiarContrasena />
         </div>
+    )
+}
+
+function CambiarContrasena() {
+    const [actual, setActual] = useState('')
+    const [nueva, setNueva] = useState('')
+    const [confirmar, setConfirmar] = useState('')
+    const [guardando, setGuardando] = useState(false)
+    const [exito, setExito] = useState('')
+    const [error, setError] = useState('')
+
+    async function handleSubmit(e) {
+        e.preventDefault()
+        setError('')
+        setExito('')
+
+        if (nueva !== confirmar) {
+            setError('Las contraseñas nuevas no coinciden.')
+            return
+        }
+        if (nueva.length < 6) {
+            setError('La nueva contraseña debe tener al menos 6 caracteres.')
+            return
+        }
+
+        try {
+            setGuardando(true)
+            const res = await fetch('/api/Usuarios/cambiar-contrasena', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                },
+                body: JSON.stringify({
+                    contrasenaActual: actual,
+                    nuevaContrasena: nueva,
+                    confirmarNueva: confirmar,
+                }),
+            })
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}))
+                throw new Error(data.message || 'No se pudo cambiar la contraseña.')
+            }
+
+            setExito('Contraseña actualizada correctamente.')
+            setActual('')
+            setNueva('')
+            setConfirmar('')
+        } catch (err) {
+            setError(err.message)
+        } finally {
+            setGuardando(false)
+        }
+    }
+
+    return (
+        <section className="rounded-xl bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-800">Seguridad</h2>
+
+            {exito && <Notification tipo="success" mensaje={exito} onClose={() => setExito('')} />}
+            {error && <Notification tipo="error" mensaje={error} onClose={() => setError('')} />}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label htmlFor="contrasenaActual" className="mb-1 block text-sm font-medium text-gray-700">
+                        Contraseña actual
+                    </label>
+                    <input
+                        id="contrasenaActual"
+                        type="password"
+                        value={actual}
+                        onChange={(e) => setActual(e.target.value)}
+                        required
+                        autoComplete="current-password"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label htmlFor="nuevaContrasena" className="mb-1 block text-sm font-medium text-gray-700">
+                            Nueva contraseña
+                        </label>
+                        <input
+                            id="nuevaContrasena"
+                            type="password"
+                            value={nueva}
+                            onChange={(e) => setNueva(e.target.value)}
+                            required
+                            minLength={6}
+                            autoComplete="new-password"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label htmlFor="confirmarNueva" className="mb-1 block text-sm font-medium text-gray-700">
+                            Confirmar nueva contraseña
+                        </label>
+                        <input
+                            id="confirmarNueva"
+                            type="password"
+                            value={confirmar}
+                            onChange={(e) => setConfirmar(e.target.value)}
+                            required
+                            minLength={6}
+                            autoComplete="new-password"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                        />
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={guardando}
+                    className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                >
+                    {guardando ? 'Cambiando...' : 'Cambiar contraseña'}
+                </button>
+            </form>
+        </section>
     )
 }

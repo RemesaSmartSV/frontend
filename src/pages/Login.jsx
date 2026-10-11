@@ -140,6 +140,28 @@ export default function Login({ onLogin, irRegistro }) {
 
                     </div>
 
+                    {/* ¿Olvidaste tu contraseña? */}
+                    <div className="flex justify-end">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const correo = window.prompt('Ingresa tu correo electrónico para restablecer tu contraseña:')
+                                if (correo) {
+                                    fetch('/api/Auth/solicitar-reset', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ correo }),
+                                    })
+                                        .then(() => window.alert('Si el correo existe, recibirás un enlace para restablecer tu contraseña.'))
+                                        .catch(() => window.alert('No se pudo procesar la solicitud. Inténtalo de nuevo.'))
+                                }
+                            }}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+
                     {/* ERROR DE VALIDACIÓN ASOCIADO A LOS CAMPOS */}
                     {errorCampo && (
                         <p
