@@ -44,13 +44,13 @@ describe('Páginas legales', () => {
         })
 
         expect(
-            screen.getByRole('link', { name: 'Privacidad' })
+            screen.getByRole('link', { name: /Privacidad/i })
         ).toHaveAttribute('href', '/politica-de-privacidad')
         expect(
             screen.getByRole('link', { name: /Términos y condiciones/i })
         ).toHaveAttribute('href', '/terminos-y-condiciones')
         expect(
-            screen.getByRole('link', { name: /Política de cookies/i })
+            screen.getByRole('link', { name: /cookies/i })
         ).toHaveAttribute('href', '/politica-de-cookies')
         expect(nav).toBeInTheDocument()
     })

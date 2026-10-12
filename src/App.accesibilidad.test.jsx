@@ -61,7 +61,7 @@ describe('Accesibilidad de los formularios', () => {
         await screen.findByRole('alert')
 
         fireEvent.change(screen.getByLabelText('Correo'), {
-            target: { value: 'a@b.com' },
+            target: { value: 'a@gmail.com' },
         })
 
         expect(
@@ -77,7 +77,7 @@ describe('Accesibilidad de los formularios', () => {
             target: { value: 'Ana' },
         })
         fireEvent.change(screen.getByLabelText('Correo'), {
-            target: { value: 'ana@demo.com' },
+            target: { value: 'ana@gmail.com' },
         })
         fireEvent.change(screen.getByLabelText('Contraseña'), {
             target: { value: '123' },
@@ -118,7 +118,7 @@ describe('Accesibilidad de los formularios', () => {
             target: { value: 'Ana' },
         })
         fireEvent.change(screen.getByLabelText('Correo'), {
-            target: { value: 'ana@demo.com' },
+            target: { value: 'ana@gmail.com' },
         })
         fireEvent.change(screen.getByLabelText('Contraseña'), {
             target: { value: 'secreta123' },

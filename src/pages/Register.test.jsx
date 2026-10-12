@@ -36,7 +36,7 @@ describe('Registro sin campo de familia', () => {
             target: { value: 'Ana' },
         })
         fireEvent.change(screen.getByLabelText('Correo'), {
-            target: { value: 'ana@demo.com' },
+            target: { value: 'ana@gmail.com' },
         })
         fireEvent.change(screen.getByLabelText('Contraseña'), {
             target: { value: 'claveSegura1' },
