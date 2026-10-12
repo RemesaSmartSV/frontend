@@ -69,6 +69,12 @@ export default function Register({ volverLogin }) {
             return
         }
 
+        // Política: solo se permiten cuentas @gmail.com.
+        if (!formulario.correo.trim().toLowerCase().endsWith('@gmail.com')) {
+            marcarError('Solo se permiten cuentas con direcciones de correo @gmail.com.', ['correo'])
+            return
+        }
+
         if (formulario.contrasena.length < 6) {
             marcarError(
                 'La contraseña debe tener al menos 6 caracteres.',
