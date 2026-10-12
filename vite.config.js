@@ -1,30 +1,42 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { resolve } from 'node:path'
+import { loadEnv } from 'vite'
 
 // Proxy en desarrollo: /api se reenvia al backend .NET local
 
-export default defineConfig({
-    plugins: [
-        react(),
-        tailwindcss(),
-    ],
-    server: {
-        port: 5173,
-        watch: {
-            ignored: ['**/.vs/**'],
+export default defineConfig(({ mode }) => {
+    // In dev, reuse only the public Google Client ID from backend/.env.
+    // No SMTP/JWT values are exposed to the browser bundle.
+    const backendEnv = loadEnv(mode, resolve(process.cwd(), '../backend'), '')
+    const googleClientId = process.env.VITE_GOOGLE_CLIENT_ID || backendEnv.GOOGLE_CLIENT_ID || ''
+
+    return {
+        define: {
+            'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(googleClientId),
         },
-        proxy: {
-            '/api': {
-                target: 'http://localhost:5203',
-                changeOrigin: true,
+        plugins: [
+            react(),
+            tailwindcss(),
+        ],
+        server: {
+            port: 5173,
+            watch: {
+                ignored: ['**/.vs/**'],
+            },
+            proxy: {
+                '/api': {
+                    target: 'http://localhost:5203',
+                    changeOrigin: true,
+                },
             },
         },
-    },
-    test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: './src/test-setup.js',
-    },
+        test: {
+            globals: true,
+            environment: 'jsdom',
+            setupFiles: './src/test-setup.js',
+        },
+    }
 })
 

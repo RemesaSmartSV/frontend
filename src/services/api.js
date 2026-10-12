@@ -130,6 +130,21 @@ export const authApi = {
         return data
     },
 
+    async loginConGoogle(idToken, nonce) {
+        const res = await fetch(`${API_URL}/Auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken, nonce }),
+        })
+
+        const data = await manejarRespuesta(res)
+        if (data.token) {
+            localStorage.setItem('token', data.token)
+            localStorage.setItem('usuario', JSON.stringify(data))
+        }
+        return data
+    },
+
     async register(datos) {
         const res = await fetch(`${API_URL}/Auth/register`, {
             method: 'POST',
