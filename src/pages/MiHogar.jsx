@@ -38,6 +38,11 @@ export default function MiHogar() {
         esAdmin = false
     }
 
+    // Si la lista ya cargó y solo queda una persona, abandonar elimina la
+    // familia entera (el backend la borra en cascada). Se exige !cargando
+    // para no mostrar la advertencia destructiva mientras miembros sigue [].
+    const esUltimoMiembro = !cargando && miembros.length === 1
+
     const cargarDatos = useCallback(async () => {
         try {
             setCargando(true)
@@ -455,28 +460,28 @@ export default function MiHogar() {
 
             {/* ABANDONAR FAMILIA */}
             <div className="rounded-xl border border-red-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-2 text-lg font-semibold text-red-700">Zona de riesgo</h2>
+                <h2 className="mb-2 text-lg font-semibold text-red-700">{t('family.riskZone')}</h2>
                 <p className="mb-4 text-sm text-gray-500">
-                    Si abandonas la familia, perderás acceso a sus movimientos, presupuestos y metas compartidas.
-                    Tus datos personales no se eliminarán.
+                    {esUltimoMiembro ? t('family.leaveWarningLast') : t('family.leaveWarning')}
                 </p>
 
                 <button
                     type="button"
                     onClick={async () => {
-                        if (!window.confirm('¿Estás seguro de que deseas abandonar esta familia? Perderás acceso a sus movimientos, presupuestos y metas compartidas. Tus datos personales no se eliminarán.')) return
+                        const aviso = esUltimoMiembro ? t('family.leaveConfirmLast') : t('family.leaveConfirm')
+                        if (!window.confirm(aviso)) return
                         try {
                             const datosUsuario = await usuariosApi.abandonarFamilia()
                             localStorage.setItem('token', datosUsuario.token)
                             localStorage.setItem('usuario', JSON.stringify(datosUsuario))
                             window.location.reload()
                         } catch (err) {
-                            setError(err.message || 'No se pudo abandonar la familia.')
+                            setError(err.message || t('family.leaveError'))
                         }
                     }}
                     className="rounded-lg border border-red-300 bg-white px-5 py-2.5 font-medium text-red-700 transition hover:bg-red-50"
                 >
-                    Abandonar familia
+                    {t('family.leave')}
                 </button>
             </div>
         </div>
