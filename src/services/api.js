@@ -145,6 +145,19 @@ export const authApi = {
         return data
     },
 
+    async refrescarSesion() {
+        const res = await fetch(`${API_URL}/Auth/refrescar-sesion`, {
+            method: 'POST',
+            headers: obtenerHeaders(),
+        })
+        const data = await manejarRespuesta(res)
+        if (data.token) {
+            localStorage.setItem('token', data.token)
+            localStorage.setItem('usuario', JSON.stringify(data))
+        }
+        return data
+    },
+
     async register(datos) {
         const res = await fetch(`${API_URL}/Auth/register`, {
             method: 'POST',
@@ -202,6 +215,26 @@ export const usuariosApi = {
             method: 'PUT',
             headers: obtenerHeaders(true),
             body: JSON.stringify(datos),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    async buscarPorCodigo(codigoPublico) {
+        const params = new URLSearchParams({ codigo: codigoPublico })
+        const res = await fetch(`${API_URL}/Hogares/buscar?${params}`, {
+            headers: obtenerHeaders(),
+        })
+        return manejarRespuesta(res)
+    },
+
+    // PUT /api/Usuarios/idioma: saves only the language preference without
+    // overwriting other personal profile fields.
+    async actualizarIdioma(idiomaPreferido) {
+        const res = await fetch(`${API_URL}/Usuarios/idioma`, {
+            method: 'PUT',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify({ idiomaPreferido }),
         })
 
         return manejarRespuesta(res)
@@ -316,6 +349,55 @@ export const invitacionesApi = {
             }
         )
 
+        return manejarRespuesta(res)
+    },
+}
+
+export const solicitudesUnionApi = {
+    async crear(codigoPublico) {
+        const res = await fetch(`${API_URL}/SolicitudesUnion`, {
+            method: 'POST',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify({ codigoPublico }),
+        })
+        return manejarRespuesta(res)
+    },
+
+    async mias() {
+        const res = await fetch(`${API_URL}/SolicitudesUnion/mias`, {
+            headers: obtenerHeaders(),
+        })
+        return manejarRespuesta(res)
+    },
+
+    async recibidas() {
+        const res = await fetch(`${API_URL}/SolicitudesUnion/recibidas`, {
+            headers: obtenerHeaders(),
+        })
+        return manejarRespuesta(res)
+    },
+
+    async aceptar(id) {
+        const res = await fetch(`${API_URL}/SolicitudesUnion/${id}/aceptar`, {
+            method: 'POST',
+            headers: obtenerHeaders(),
+        })
+        return manejarRespuesta(res)
+    },
+
+    async rechazar(id) {
+        const res = await fetch(`${API_URL}/SolicitudesUnion/${id}/rechazar`, {
+            method: 'POST',
+            headers: obtenerHeaders(),
+        })
+        return manejarRespuesta(res)
+    },
+
+    async cancelar(id) {
+        const res = await fetch(`${API_URL}/SolicitudesUnion/${id}/cancelar`, {
+            method: 'POST',
+            headers: obtenerHeaders(),
+        })
         return manejarRespuesta(res)
     },
 }

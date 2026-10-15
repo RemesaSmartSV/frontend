@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 /** Renders the official GIS button. This callback/ID-token flow has no OAuth redirect URI. */
 export default function GoogleSignInButton({ onCredential, onError, disabled = false }) {
+    const { t } = useTranslation()
     const hostRef = useRef(null)
     const handlersRef = useRef({ onCredential, onError })
     const [message, setMessage] = useState('')
@@ -11,7 +13,7 @@ export default function GoogleSignInButton({ onCredential, onError, disabled = f
     useEffect(() => {
         const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim()
         if (!clientId) {
-            const error = 'Google Sign-In no está configurado (VITE_GOOGLE_CLIENT_ID).'
+            const error = t('google.clientMissing')
             setMessage(error)
             return undefined
         }
@@ -24,11 +26,11 @@ export default function GoogleSignInButton({ onCredential, onError, disabled = f
                 const nonceResponse = await fetch('/api/Auth/google-nonce', { cache: 'no-store' })
                 const nonceData = await nonceResponse.json()
                 if (!nonceResponse.ok || !nonceData.nonce)
-                    throw new Error(nonceData.message || 'No se pudo iniciar la verificación de Google.')
+                    throw new Error(nonceData.message || t('google.verificationError'))
 
                 const gis = window.google?.accounts?.id
                 if (!gis)
-                    throw new Error('No se pudo cargar Google Sign-In. Comprueba conexión y CSP.')
+                    throw new Error(t('google.scriptError'))
                 if (disposed || !hostRef.current) return
 
                 gis.initialize({
@@ -38,13 +40,13 @@ export default function GoogleSignInButton({ onCredential, onError, disabled = f
                     context: 'signin',
                     callback: async (response) => {
                         if (!response?.credential) {
-                            handlersRef.current.onError?.('Google no devolvió una credencial válida.')
+                            handlersRef.current.onError?.(t('google.credentialError'))
                             return
                         }
                         try {
                             await handlersRef.current.onCredential?.(response.credential, nonceData.nonce)
                         } catch (error) {
-                            handlersRef.current.onError?.(error.message || 'No se pudo iniciar sesión con Google.')
+                            handlersRef.current.onError?.(error.message || t('auth.googleLoginError'))
                         }
                     },
                 })
@@ -61,7 +63,7 @@ export default function GoogleSignInButton({ onCredential, onError, disabled = f
                 setMessage('')
             } catch (error) {
                 if (disposed) return
-                const message = error.message || 'Google Sign-In no está disponible.'
+                const message = error.message || t('google.unavailable')
                 setMessage(message)
             }
         }
@@ -71,7 +73,7 @@ export default function GoogleSignInButton({ onCredential, onError, disabled = f
             disposed = true
             if (hostRef.current) hostRef.current.replaceChildren()
         }
-    }, [])
+    }, [t])
 
     return (
         <div className={`w-full ${disabled ? 'pointer-events-none opacity-60' : ''}`} aria-busy={disabled}>

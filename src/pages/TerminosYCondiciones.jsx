@@ -1,120 +1,99 @@
 import PoliticaLayout from '../components/PoliticaLayout'
+import { useTranslation } from 'react-i18next'
 
 export default function TerminosYCondiciones() {
+    const { t } = useTranslation()
     return (
         <PoliticaLayout
-            titulo="Términos y condiciones"
-            actualizado="30 de septiembre de 2026"
+            titulo={t('legal.terms.title')}
+            actualizado="2026-09-30"
         >
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    1. Aceptación
+                    {t('legal.terms.s1')}
                 </h2>
                 <p>
-                    Al crear una cuenta o usar RemesaSmart SV aceptas estos
-                    términos. Si no estás de acuerdo, no uses la aplicación.
+                    {t('legal.terms.p1')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    2. Qué es y qué no es esta aplicación
+                    {t('legal.terms.s2')}
                 </h2>
                 <p>
-                    RemesaSmart SV es una herramienta de organización
-                    financiera familiar: permite registrar movimientos,
-                    definir presupuestos, guardar metas de ahorro y consultar
-                    resúmenes.
+                    {t('legal.terms.p2')}
                 </p>
                 <p>
-                    <strong>No es un servicio financiero.</strong> No procesa
-                    pagos, no transfiere dinero, no administra cuentas
-                    bancarias y no ofrece asesoría financiera, fiscal ni de
-                    inversión. Los cálculos que muestra son informativos y se
-                    basan únicamente en los datos que tú registras.
+                    <strong>{t('legal.terms.notFinancialService')}</strong> {t('legal.terms.p3')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    3. Tu cuenta
+                    {t('legal.terms.s3')}
                 </h2>
                 <ul className="list-disc space-y-1 pl-6">
                     <li>
-                        Eres responsable de mantener la confidencialidad de tu
-                        contraseña.
+                        {t('legal.terms.account1')}
                     </li>
                     <li>
-                        Debes proporcionar información veraz y mantenerla
-                        actualizada.
+                        {t('legal.terms.account2')}
                     </li>
                     <li>
-                        La cuenta es personal: compartirla puede exponer la
-                        información financiera de tu hogar.
+                        {t('legal.terms.account3')}
                     </li>
                 </ul>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    4. Uso aceptable
+                    {t('legal.terms.s4')}
                 </h2>
-                <p>No está permitido:</p>
+                <p>{t('legal.terms.notAllowed')}</p>
                 <ul className="list-disc space-y-1 pl-6">
-                    <li>Intentar acceder a los datos de otro hogar.</li>
-                    <li>Interferir con el funcionamiento de la aplicación.</li>
-                    <li>Usarla con fines ilícitos o para suplantar a otros.</li>
-                    <li>Revertir medidas de seguridad o automatizar abusos.</li>
+                    <li>{t('legal.terms.prohibited1')}</li>
+                    <li>{t('legal.terms.prohibited2')}</li>
+                    <li>{t('legal.terms.prohibited3')}</li>
+                    <li>{t('legal.terms.prohibited4')}</li>
                 </ul>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    5. Disponibilidad
+                    {t('legal.terms.s5')}
                 </h2>
                 <p>
-                    La aplicación se ofrece tal cual. Puede haber interrupciones
-                    por mantenimiento, errores o causas fuera de nuestro
-                    control. Trabajamos para mantenerla estable, pero no
-                    garantizamos disponibilidad continua ni ausencia total de
-                    errores.
+                    {t('legal.terms.p5')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    6. Responsabilidad
+                    {t('legal.terms.s6')}
                 </h2>
                 <p>
-                    Las decisiones financieras que tomes a partir de la
-                    información registrada son tuyas. En la medida en que lo
-                    permita la legislación aplicable, el equipo responsable no
-                    responde por daños derivados del uso o la imposibilidad de
-                    usar la aplicación.
+                    {t('legal.terms.p6')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    7. Terminación
+                    {t('legal.terms.s7')}
                 </h2>
                 <p>
-                    Puedes dejar de usar la aplicación en cualquier momento y
-                    solicitar la eliminación de tu cuenta y de los datos de tu
-                    hogar. Podemos suspender cuentas que violen estos términos.
+                    {t('legal.terms.p7')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    8. Cambios y contacto
+                    {t('legal.terms.s8')}
                 </h2>
                 <p>
-                    Estos términos pueden actualizarse; la fecha de la última
-                    modificación aparece al principio del documento.{' '}
+                    {t('legal.terms.p8')}{' '}
                     <strong>
-                        Pendiente de completar por el equipo: canal de contacto
-                        del responsable.
+                        {t('legal.terms.pendingContact')}
                     </strong>
                 </p>
             </section>

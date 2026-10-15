@@ -8,7 +8,8 @@ import {
     Wallet,
 } from 'lucide-react'
 
-import { formatearMoneda } from '../utils/formato'
+import { formatearMoneda, obtenerLocale } from '../utils/formato'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Réplica estática de la pantalla "Resumen financiero" del dashboard real.
@@ -30,10 +31,10 @@ const OPCIONES_MENU = [
 ]
 
 const TARJETAS = [
-    { etiqueta: 'Ingresos', monto: 1850, tono: 'verde' },
-    { etiqueta: 'Remesas', monto: 800, tono: 'violeta' },
-    { etiqueta: 'Gastos', monto: 610, tono: 'rojo' },
-    { etiqueta: 'Balance', monto: 1240, tono: 'azul' },
+    { etiqueta: 'dashboard.ingresos', monto: 1850, tono: 'verde' },
+    { etiqueta: 'dashboard.remesas', monto: 800, tono: 'violeta' },
+    { etiqueta: 'dashboard.gastos', monto: 610, tono: 'rojo' },
+    { etiqueta: 'dashboard.balance', monto: 1240, tono: 'azul' },
 ]
 
 const TONOS = {
@@ -45,10 +46,10 @@ const TONOS = {
 
 // Alturas relativas (no son montos): solo dan forma a la gráfica ilustrativa.
 const SERIE_MENSUAL = [
-    { mes: 'Jun', ingresos: 58, gastos: 41 },
-    { mes: 'Jul', ingresos: 76, gastos: 53 },
-    { mes: 'Ago', ingresos: 52, gastos: 64 },
-    { mes: 'Sep', ingresos: 88, gastos: 46 },
+    { mes: 6, ingresos: 58, gastos: 41 },
+    { mes: 7, ingresos: 76, gastos: 53 },
+    { mes: 8, ingresos: 52, gastos: 64 },
+    { mes: 9, ingresos: 88, gastos: 46 },
 ]
 
 const REPARTO_CATEGORIAS = [
@@ -58,7 +59,7 @@ const REPARTO_CATEGORIAS = [
     { color: '#dc2626', porcentaje: 15 },
 ]
 
-function GraficaBarras() {
+function GraficaBarras({ locale }) {
     return (
         <div className="flex h-28 items-end justify-between gap-2 sm:gap-4">
             {SERIE_MENSUAL.map((dato) => (
@@ -77,7 +78,7 @@ function GraficaBarras() {
                         />
                     </div>
                     <span className="text-[10px] font-medium text-slate-500">
-                        {dato.mes}
+                        {new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(2026, dato.mes - 1, 1))}
                     </span>
                 </div>
             ))}
@@ -129,10 +130,12 @@ function GraficaCircular() {
 }
 
 export default function DashboardPreview() {
+    const { t, i18n } = useTranslation()
+    const locale = obtenerLocale(i18n.language)
     return (
         <div
             role="img"
-            aria-label="Vista ilustrativa del dashboard de RemesaSmart SV: tarjetas de ingresos, remesas, gastos y balance, gráfica de ingresos contra gastos y gráfica de gastos por categoría."
+            aria-label={t('preview.aria')}
             className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)]"
         >
             <div aria-hidden="true">
@@ -169,15 +172,15 @@ export default function DashboardPreview() {
                         <div className="mb-4 flex items-center justify-between gap-3">
                             <div>
                                 <p className="text-sm font-bold text-slate-800">
-                                    Resumen financiero
+                                    {t('dashboard.titulo')}
                                 </p>
                                 <p className="text-[11px] text-slate-500">
-                                    Estado actual de las finanzas del hogar.
+                                    {t('preview.dashboardSubtitle')}
                                 </p>
                             </div>
 
                             <span className="rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white">
-                                Actualizar
+                                {t('preview.update')}
                             </span>
                         </div>
 
@@ -189,7 +192,7 @@ export default function DashboardPreview() {
                                     className={`rounded-xl border p-3 shadow-sm ${TONOS[tarjeta.tono]}`}
                                 >
                                     <p className="text-[11px] font-medium">
-                                        {tarjeta.etiqueta}
+                                        {t(tarjeta.etiqueta)}
                                     </p>
                                     <p className="mt-1 text-base font-bold">
                                         {formatearMoneda(tarjeta.monto)}
@@ -202,25 +205,25 @@ export default function DashboardPreview() {
                         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                             <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
                                 <p className="mb-3 text-xs font-bold text-slate-800">
-                                    Ingresos vs. gastos
+                                    {t('preview.incomeExpenses')}
                                 </p>
-                                <GraficaBarras />
+                                <GraficaBarras locale={locale} />
 
                                 <div className="mt-3 flex items-center gap-4">
                                     <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
                                         <span className="h-2 w-2 rounded-full bg-[#16a34a]" />
-                                        Ingresos
+                                        {t('dashboard.ingresos')}
                                     </span>
                                     <span className="flex items-center gap-1.5 text-[10px] text-slate-500">
                                         <span className="h-2 w-2 rounded-full bg-[#dc2626]" />
-                                        Gastos
+                                        {t('dashboard.gastos')}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
                                 <p className="mb-3 text-xs font-bold text-slate-800">
-                                    Gastos por categoría
+                                    {t('preview.categoryExpenses')}
                                 </p>
                                 <GraficaCircular />
                             </div>

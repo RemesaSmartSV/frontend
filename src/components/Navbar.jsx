@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell, Sun, Moon } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { useTranslation } from 'react-i18next'
 
 export default function Navbar({
     usuario,
@@ -17,6 +18,7 @@ export default function Navbar({
     onResponderInvitacion,
     onMarcarLeida
 }) {
+    const { t } = useTranslation()
     const nombreHogar =
         nombreFamiliar ||
         usuario?.familia ||
@@ -54,8 +56,8 @@ export default function Navbar({
                     className="mr-3 rounded-lg p-2 text-2xl text-[#123B8F] hover:bg-blue-50 lg:hidden"
                     aria-label={
                         menuAbierto
-                            ? 'Cerrar menú'
-                            : 'Abrir menú'
+                            ? t('shell.closeMenu')
+                            : t('shell.openMenu')
                     }
                     aria-expanded={menuAbierto}
                     aria-controls="menu-lateral"
@@ -65,13 +67,13 @@ export default function Navbar({
 
                 {/* NOMBRE EN CELULAR */}
                 <p className="text-base font-bold text-[#123B8F] lg:hidden">
-                    Familia {nombreHogar}
+                    {t('shell.familyPrefix', { name: nombreHogar })}
                 </p>
 
                 {/* INFORMACIÓN DEL HOGAR EN COMPUTADORA */}
                 <div className="hidden lg:block">
                     <p className="text-xs font-medium tracking-wider text-gray-500">
-                        HOGAR ACTIVO
+                        {t('shell.activeHome')}
                     </p>
 
                     <p className="text-base font-bold text-gray-800">
@@ -91,7 +93,7 @@ export default function Navbar({
                         type="button"
                         onClick={() => setAlertasAbiertas(!alertasAbiertas)}
                         className="relative rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
-                        aria-label="Ver alertas"
+                        aria-label={t('shell.alerts')}
                         aria-expanded={alertasAbiertas}
                         aria-controls="panel-alertas"
                     >
@@ -114,7 +116,7 @@ export default function Navbar({
                             {invitaciones.length > 0 && (
                                 <div className="mb-4">
                                     <h2 className="mb-2 font-semibold text-gray-800">
-                                        Invitaciones de familia
+                                        {t('shell.familyInvitations')}
                                     </h2>
 
                                     {errorInvitacion && (
@@ -130,7 +132,7 @@ export default function Navbar({
                                                 className="rounded-lg border border-blue-200 bg-blue-50 p-3"
                                             >
                                                 <p className="text-sm text-gray-700">
-                                                    Te invitaron a unirte a una familia en RemesaSmart SV.
+                                        {t('shell.invitationMessage')}
                                                 </p>
 
                                                 <div className="mt-2 flex gap-2">
@@ -140,7 +142,7 @@ export default function Navbar({
                                                         onClick={() => onResponderInvitacion?.(inv.idInvitacion, 'aceptar')}
                                                         className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
                                                     >
-                                                        Aceptar
+                                                        {t('common.aceptar')}
                                                     </button>
 
                                                     <button
@@ -149,7 +151,7 @@ export default function Navbar({
                                                         onClick={() => onResponderInvitacion?.(inv.idInvitacion, 'rechazar')}
                                                         className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                                                     >
-                                                        Rechazar
+                                                        {t('common.rechazar')}
                                                     </button>
                                                 </div>
                                             </li>
@@ -162,11 +164,11 @@ export default function Navbar({
                                 <div className="mb-4">
                                     <div className="mb-2 flex items-center justify-between gap-3">
                                         <h2 className="font-semibold text-gray-800">
-                                            Notificaciones
+                                            {t('shell.notifications')}
                                         </h2>
 
                                         <span className="text-xs text-gray-500">
-                                            {notificaciones.filter((n) => !n.leida).length} sin leer
+                                            {t('shell.unread', { count: notificaciones.filter((n) => !n.leida).length })}
                                         </span>
                                     </div>
 
@@ -184,7 +186,7 @@ export default function Navbar({
                                                         onClick={() => onMarcarLeida?.(notif.idNotificacion)}
                                                         className="mt-1 text-xs font-medium text-blue-600 hover:text-blue-800"
                                                     >
-                                                        Marcar leída
+                                                        {t('shell.markRead')}
                                                     </button>
                                                 )}
                                             </li>
@@ -195,31 +197,31 @@ export default function Navbar({
 
                             <div className="mb-3 flex items-center justify-between gap-3">
                                 <h2 className="font-semibold text-gray-800">
-                                    Alertas de presupuesto
+                                    {t('shell.budgetAlerts')}
                                 </h2>
 
                                 {alertas.length > 0 && (
                                     <span className="text-xs text-gray-500">
-                                        {alertas.length} activa{alertas.length === 1 ? '' : 's'}
+                                        {t('shell.activeCount', { count: alertas.length })}
                                     </span>
                                 )}
                             </div>
 
                             {cargandoAlertas && (
                                 <p className="text-sm text-gray-500">
-                                    Consultando alertas...
+                                    {t('shell.checkingAlerts')}
                                 </p>
                             )}
 
                             {!cargandoAlertas && errorAlertas && (
                                 <p className="text-sm text-red-600">
-                                    No se pudieron cargar las alertas.
+                                    {t('shell.alertsLoadFailed')}
                                 </p>
                             )}
 
                             {!cargandoAlertas && !errorAlertas && alertas.length === 0 && (
                                 <p className="text-sm text-gray-500">
-                                    No hay alertas para el mes actual.
+                                    {t('shell.noCurrentAlerts')}
                                 </p>
                             )}
 
@@ -238,7 +240,7 @@ export default function Navbar({
                                             >
                                                 <div className="mb-1 flex items-center justify-between gap-2">
                                                     <strong className={`text-xs uppercase ${esCritica ? 'text-red-700' : 'text-amber-700'}`}>
-                                                        {alerta.tipoAlerta}
+                                                        {alerta.tipoAlerta === 'Crítico' ? t('shell.critical') : t('shell.warning')}
                                                     </strong>
                                                     <span className="text-xs font-semibold text-gray-600">
                                                         {alerta.porcentajeUsado}%
@@ -259,15 +261,15 @@ export default function Navbar({
 
                 <div className="hidden text-right sm:block">
                     <p className="text-xs text-gray-400">
-                        Hola
+                        {t('shell.hello')}
                     </p>
 
                     <p className="font-semibold text-gray-700">
-                        {usuario?.nombre || 'Usuario'}
+                        {usuario?.nombre || t('shell.unknownUser')}
                     </p>
 
                     <p className="text-xs text-gray-400">
-                        {usuario?.rol || 'Miembro'}
+                        {usuario?.rol === 'Admin' ? t('family.admin') : t('family.member')}
                     </p>
                 </div>
 
@@ -276,8 +278,8 @@ export default function Navbar({
                     renderizando fuera de un Router en los tests. */}
                 <a
                     href="/perfil"
-                    aria-label="Mi perfil"
-                    title="Mi perfil"
+                    aria-label={t('shell.profile')}
+                    title={t('shell.profile')}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 transition hover:ring-2 hover:ring-blue-300 sm:h-10 sm:w-10 sm:text-base"
                 >
                     {(usuario?.nombre || 'U')
@@ -293,12 +295,13 @@ export default function Navbar({
 
 function ThemeToggle() {
     const { tema, cambiarTema } = useTheme()
+    const { t } = useTranslation()
 
     return (
         <button
             type="button"
             onClick={() => cambiarTema(tema === 'oscuro' ? 'claro' : 'oscuro')}
-            aria-label={tema === 'oscuro' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-label={tema === 'oscuro' ? t('shell.lightMode') : t('shell.darkMode')}
             className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
         >
             {tema === 'oscuro' ? <Sun size={20} /> : <Moon size={20} />}

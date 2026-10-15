@@ -3,12 +3,14 @@ import {
     ChevronLeft,
     ChevronRight
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const Pagination = memo(function Pagination({
     paginaActual,
     totalPaginas,
     cambiarPagina
 }) {
+    const { t } = useTranslation()
     if (totalPaginas <= 1) {
         return null
     }
@@ -25,11 +27,12 @@ const Pagination = memo(function Pagination({
             <button
                 type="button"
                 onClick={() => cambiarPagina(paginaActual - 1)}
+                aria-label={t('common.paginaAnterior')}
                 disabled={paginaActual === 1}
                 className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
             >
                 <ChevronLeft size={18} />
-                <span>Anterior</span>
+                <span>{t('common.anterior')}</span>
             </button>
 
             <div className="flex max-w-full flex-wrap justify-center gap-1">
@@ -38,6 +41,7 @@ const Pagination = memo(function Pagination({
                         key={pagina}
                         type="button"
                         onClick={() => cambiarPagina(pagina)}
+                        aria-label={t('common.pageNumber', { page: pagina })}
                         className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-sm font-semibold transition ${pagina === paginaActual
                                 ? 'bg-blue-600 text-white shadow-sm'
                                 : 'bg-white text-gray-700 hover:bg-gray-100'
@@ -51,10 +55,11 @@ const Pagination = memo(function Pagination({
             <button
                 type="button"
                 onClick={() => cambiarPagina(paginaActual + 1)}
+                aria-label={t('common.paginaSiguiente')}
                 disabled={paginaActual === totalPaginas}
                 className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
             >
-                <span>Siguiente</span>
+                <span>{t('common.siguiente')}</span>
                 <ChevronRight size={18} />
             </button>
 

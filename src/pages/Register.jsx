@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { authApi } from '../services/api'
 import Notification from '../components/Notification'
+import { useTranslation } from 'react-i18next'
+import LanguageSelector from '../components/LanguageSelector'
 
 export default function Register({ volverLogin }) {
+    const { t } = useTranslation()
     const [formulario, setFormulario] = useState({
         nombre: '',
         correo: '',
@@ -60,7 +63,7 @@ export default function Register({ volverLogin }) {
             !formulario.contrasena.trim() ||
             !formulario.confirmarContrasena.trim()
         ) {
-            marcarError('Completa todos los campos.', [
+            marcarError(t('auth.completeFields'), [
                 'nombre',
                 'correo',
                 'contrasena',
@@ -71,13 +74,13 @@ export default function Register({ volverLogin }) {
 
         // Política: solo se permiten cuentas @gmail.com.
         if (!formulario.correo.trim().toLowerCase().endsWith('@gmail.com')) {
-            marcarError('Solo se permiten cuentas con direcciones de correo @gmail.com.', ['correo'])
+            marcarError(t('auth.gmailOnly'), ['correo'])
             return
         }
 
         if (formulario.contrasena.length < 6) {
             marcarError(
-                'La contraseña debe tener al menos 6 caracteres.',
+                t('auth.passwordTooShort'),
                 ['contrasena']
             )
             return
@@ -86,7 +89,7 @@ export default function Register({ volverLogin }) {
         // La comprobación local evita un viaje al servidor cuando las claves
         // difieren; el backend (400) sigue cubriendo el resto de los casos.
         if (formulario.contrasena !== formulario.confirmarContrasena) {
-            marcarError('Las contraseñas no coinciden.', [
+            marcarError(t('auth.passwordMismatch'), [
                 'confirmarContrasena',
             ])
             return
@@ -108,7 +111,7 @@ export default function Register({ volverLogin }) {
                 await authApi.register(datosRegistro)
 
             setMensaje(
-                `Cuenta creada correctamente. Bienvenido, ${respuesta.nombre}`
+                t('auth.registerSuccess', { name: respuesta.nombre })
             )
 
             setFormulario({
@@ -120,7 +123,7 @@ export default function Register({ volverLogin }) {
         } catch (err) {
             setError(
                 err.message ||
-                'No se pudo crear la cuenta. Inténtalo nuevamente.'
+                t('auth.registerError')
             )
         } finally {
             setCargando(false)
@@ -145,6 +148,9 @@ export default function Register({ volverLogin }) {
             />
 
             <section className="w-full max-w-[450px] overflow-hidden rounded-2xl bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.1)] sm:p-8 md:p-10">
+                <div className="mb-4 flex justify-end">
+                    <LanguageSelector />
+                </div>
 
                 {/* ENCABEZADO */}
                 <div className="mb-7 text-center sm:mb-8">
@@ -154,12 +160,11 @@ export default function Register({ volverLogin }) {
                     </h1>
 
                     <h2 className="mb-2 text-2xl font-normal text-gray-900 sm:text-[1.6rem]">
-                        Crear cuenta
+                        {t('auth.registerTitle')}
                     </h2>
 
                     <p className="text-sm leading-relaxed text-gray-500 sm:text-base">
-                        Regístrate para comenzar a administrar
-                        las finanzas de tu hogar.
+                        {t('auth.registerDescription')}
                     </p>
 
                 </div>
@@ -177,7 +182,7 @@ export default function Register({ volverLogin }) {
                             htmlFor="nombre"
                             className="text-sm font-semibold text-gray-700 sm:text-base"
                         >
-                            Nombre
+                            {t('auth.name')}
                         </label>
 
                         <input
@@ -186,7 +191,7 @@ export default function Register({ volverLogin }) {
                             name="nombre"
                             value={formulario.nombre}
                             onChange={manejarCambio}
-                            placeholder="Ingresa tu nombre"
+                            placeholder={t('auth.enterName')}
                             autoComplete="name"
                             required
                             disabled={cargando}
@@ -203,7 +208,7 @@ export default function Register({ volverLogin }) {
                             htmlFor="correo"
                             className="text-sm font-semibold text-gray-700 sm:text-base"
                         >
-                            Correo
+                            {t('auth.email')}
                         </label>
 
                         <input
@@ -212,7 +217,7 @@ export default function Register({ volverLogin }) {
                             name="correo"
                             value={formulario.correo}
                             onChange={manejarCambio}
-                            placeholder="correo@ejemplo.com"
+                            placeholder={t('auth.emailExample')}
                             autoComplete="email"
                             required
                             disabled={cargando}
@@ -229,7 +234,7 @@ export default function Register({ volverLogin }) {
                             htmlFor="contrasena"
                             className="text-sm font-semibold text-gray-700 sm:text-base"
                         >
-                            Contraseña
+                            {t('auth.password')}
                         </label>
 
                         <input
@@ -238,7 +243,7 @@ export default function Register({ volverLogin }) {
                             name="contrasena"
                             value={formulario.contrasena}
                             onChange={manejarCambio}
-                            placeholder="Mínimo 6 caracteres"
+                            placeholder={t('auth.passwordMin')}
                             autoComplete="new-password"
                             minLength={6}
                             required
@@ -256,7 +261,7 @@ export default function Register({ volverLogin }) {
                             htmlFor="confirmarContrasena"
                             className="text-sm font-semibold text-gray-700 sm:text-base"
                         >
-                            Confirmar contraseña
+                            {t('auth.confirmPassword')}
                         </label>
 
                         <input
@@ -265,7 +270,7 @@ export default function Register({ volverLogin }) {
                             name="confirmarContrasena"
                             value={formulario.confirmarContrasena}
                             onChange={manejarCambio}
-                            placeholder="Repite tu contraseña"
+                            placeholder={t('auth.repeatPassword')}
                             autoComplete="new-password"
                             required
                             disabled={cargando}
@@ -298,8 +303,8 @@ export default function Register({ volverLogin }) {
                         )}
 
                         {cargando
-                            ? 'Registrando...'
-                            : 'Crear cuenta'}
+                            ? t('auth.registering')
+                            : t('auth.registerTitle')}
 
                     </button>
 
@@ -309,7 +314,7 @@ export default function Register({ volverLogin }) {
                 <div className="mt-6 border-t border-gray-200 pt-5 text-center sm:mt-7 sm:pt-6">
 
                     <p className="mb-2.5 text-sm text-gray-500 sm:text-base">
-                        ¿Ya tienes una cuenta?
+                        {t('auth.hasAccount')}
                     </p>
 
                     <button
@@ -318,7 +323,7 @@ export default function Register({ volverLogin }) {
                         disabled={cargando}
                         className="bg-transparent text-base font-semibold text-blue-600 transition hover:text-blue-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        Iniciar sesión
+                        {t('auth.login')}
                     </button>
 
                 </div>

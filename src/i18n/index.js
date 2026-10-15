@@ -3,13 +3,41 @@ import { initReactI18next } from 'react-i18next'
 import es from './es.json'
 import en from './en.json'
 
-// Idioma inicial: preferencia del perfil > localStorage > navegador > 'es'
+export const IDIOMAS_SOPORTADOS = ['es', 'en']
+
+export function normalizarIdioma(idioma) {
+    const normalizado = String(idioma || '').toLowerCase().split(/[-_]/)[0]
+    return IDIOMAS_SOPORTADOS.includes(normalizado) ? normalizado : null
+}
+
+// Preference order: signed-in profile > local choice > supported browser language > Spanish.
 function idiomaInicial() {
     try {
-        const usuario = JSON.parse(localStorage.getItem('usuario') || 'null')
-        if (usuario?.idiomaPreferido) return usuario.idiomaPreferido
-    } catch { /* corrupto */ }
-    return localStorage.getItem('idioma') || navigator.language?.slice(0, 2) || 'es'
+        const token = localStorage.getItem('token')
+        const usuarioGuardado = localStorage.getItem('usuario')
+        if (token && usuarioGuardado) {
+            const tokenPayload = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/')
+            if (tokenPayload) {
+                const payload = JSON.parse(atob(tokenPayload))
+                if (Number(payload.exp) * 1000 > Date.now()) {
+                    const usuario = JSON.parse(usuarioGuardado)
+                    const perfil = normalizarIdioma(usuario?.idiomaPreferido)
+                    if (perfil) return perfil
+                }
+            }
+        }
+    } catch { /* Corrupt token, storage, or cached profile. */ }
+
+    try {
+        const guardado = normalizarIdioma(localStorage.getItem('idioma'))
+        if (guardado) return guardado
+    } catch { /* Storage is unavailable. */ }
+
+    try {
+        const navegador = normalizarIdioma(navigator.language)
+        if (navegador) return navegador
+    } catch { /* Browser language unavailable. */ }
+    return 'es'
 }
 
 i18n.use(initReactI18next).init({
@@ -23,3 +51,13 @@ i18n.use(initReactI18next).init({
 })
 
 export default i18n
+
+i18n.on('languageChanged', (idioma) => {
+    const idiomaValido = normalizarIdioma(idioma) || 'es'
+    document.documentElement.lang = idiomaValido
+    try {
+        localStorage.setItem('idioma', idiomaValido)
+    } catch { /* Language change still applies for this session. */ }
+})
+
+document.documentElement.lang = normalizarIdioma(i18n.resolvedLanguage) || 'es'

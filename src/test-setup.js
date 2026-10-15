@@ -1,2 +1,7 @@
 import '@testing-library/jest-dom'
-import './i18n/index.js'
+import { beforeEach } from 'vitest'
+import i18n from './i18n/index.js'
+
+beforeEach(async () => {
+    await i18n.changeLanguage('es')
+})

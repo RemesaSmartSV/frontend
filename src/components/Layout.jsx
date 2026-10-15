@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
 import { alertasApi, notificacionesApi, invitacionesApi } from '../services/api'
+import { useTranslation } from 'react-i18next'
 
 export default function Layout({
     usuario,
@@ -10,6 +11,7 @@ export default function Layout({
     cerrarSesion,
     onSesionActualizada
 }) {
+    const { t } = useTranslation()
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [alertas, setAlertas] = useState([])
     const [cargandoAlertas, setCargandoAlertas] = useState(true)
@@ -162,26 +164,26 @@ export default function Layout({
 
                 <footer className="mt-10 border-t border-gray-200 pt-4 pb-2 text-xs text-gray-500">
                     <nav
-                        aria-label="Enlaces legales"
+                        aria-label={t('shell.legalLinks')}
                         className="flex flex-wrap gap-x-4 gap-y-1"
                     >
                         <a
                             href="/politica-de-privacidad"
                             className="transition hover:text-blue-600 hover:underline"
                         >
-                            Política de privacidad
+                            {t('shell.privacy')}
                         </a>
                         <a
                             href="/terminos-y-condiciones"
                             className="transition hover:text-blue-600 hover:underline"
                         >
-                            Términos y condiciones
+                            {t('shell.terms')}
                         </a>
                         <a
                             href="/politica-de-cookies"
                             className="transition hover:text-blue-600 hover:underline"
                         >
-                            Política de cookies
+                            {t('shell.cookies')}
                         </a>
                     </nav>
                 </footer>

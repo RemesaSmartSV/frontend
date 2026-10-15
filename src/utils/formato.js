@@ -1,9 +1,29 @@
+import i18n from '../i18n/index.js'
+
+export function obtenerLocale(idioma = i18n.resolvedLanguage) {
+    return String(idioma || 'es').toLowerCase().startsWith('en') ? 'en-US' : 'es-SV'
+}
+
 export function formatearMoneda(monto) {
     const numero = Number(monto) || 0
-    return `$${numero.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`
+    return new Intl.NumberFormat(obtenerLocale(), {
+        style: 'currency',
+        currency: 'USD',
+    }).format(numero)
+}
+
+export function formatearFecha(fecha, opciones = { day: '2-digit', month: '2-digit', year: 'numeric' }) {
+    const valor = fecha instanceof Date ? fecha : parsearFechaLocal(fecha)
+    if (!valor || Number.isNaN(valor.getTime())) return '-'
+    return new Intl.DateTimeFormat(obtenerLocale(), opciones).format(valor)
+}
+
+export function formatearNumero(numero, opciones = {}) {
+    return new Intl.NumberFormat(obtenerLocale(), opciones).format(Number(numero) || 0)
+}
+
+export function formatearMes(fecha, opciones = { month: 'long', year: 'numeric' }) {
+    return formatearFecha(fecha, opciones)
 }
 
 export function obtenerFechaHoy() {

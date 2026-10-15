@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function ConfirmModal({
     abierto,
-    titulo = 'Confirmar',
+    titulo,
     mensaje,
     onConfirmar,
     onCancelar,
-    textoConfirmar = 'Eliminar',
-    textoCancelar = 'Cancelar',
+    textoConfirmar,
+    textoCancelar,
 }) {
+    const { t } = useTranslation()
     const botonCancelarRef = useRef(null)
 
     useEffect(() => {
@@ -51,7 +53,7 @@ export default function ConfirmModal({
                     id="confirm-modal-title"
                     className="mt-4 text-lg font-bold text-gray-900"
                 >
-                    {titulo}
+                    {titulo || t('common.confirmar')}
                 </h3>
 
                 <p
@@ -67,14 +69,14 @@ export default function ConfirmModal({
                         onClick={onCancelar}
                         className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 sm:w-auto"
                     >
-                        {textoCancelar}
+                        {textoCancelar || t('common.cancelar')}
                     </button>
 
                     <button
                         onClick={onConfirmar}
                         className="w-full rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 sm:w-auto"
                     >
-                        {textoConfirmar}
+                        {textoConfirmar || t('common.eliminar')}
                     </button>
                 </div>
             </div>

@@ -5,7 +5,7 @@ import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
-import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
+import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 
 export default function Gastos() {
     const { t } = useTranslation()
@@ -70,12 +70,12 @@ export default function Gastos() {
         } catch (err) {
             setError(
                 err.message ||
-                'No se pudieron cargar los gastos.'
+                t('expense.loadError')
             )
         } finally {
             setCargando(false)
         }
-    }, [])
+    }, [t])
 
     useEffect(() => {
         cargarDatos()
@@ -121,17 +121,17 @@ export default function Gastos() {
         e.preventDefault()
 
         if (!formulario.idCategoria) {
-            setError('Selecciona una categoría.')
+            setError(t('expense.categoryRequired'))
             return
         }
 
         if (!formulario.monto || Number(formulario.monto) <= 0) {
-            setError('El monto debe ser mayor que 0.')
+            setError(t('expense.amountPositive'))
             return
         }
 
         if (!formulario.fecha) {
-            setError('Selecciona una fecha.')
+            setError(t('expense.dateRequired'))
             return
         }
 
@@ -156,13 +156,13 @@ export default function Gastos() {
                 )
 
                 setMensaje(
-                    'Gasto actualizado correctamente.'
+                    t('expense.updated')
                 )
             } else {
                 await movimientosApi.crear(movimiento)
 
                 setMensaje(
-                    'Gasto registrado correctamente.'
+                    t('expense.saved')
                 )
             }
 
@@ -175,7 +175,7 @@ export default function Gastos() {
         } catch (err) {
             setError(
                 err.message ||
-                'No se pudo guardar el gasto.'
+                t('expense.saveError')
             )
         } finally {
             setProcesando(false)
@@ -205,8 +205,8 @@ export default function Gastos() {
         setConfirmModal({
             abierto: true,
             id,
-            titulo: 'Eliminar gasto',
-            mensaje: '¿Seguro que deseas eliminar este gasto? Esta acción no se puede deshacer.',
+            titulo: t('expense.deleteTitle'),
+            mensaje: t('expense.deleteMessage'),
         })
     }
 
@@ -221,11 +221,11 @@ export default function Gastos() {
 
             await movimientosApi.eliminar(id)
 
-            setMensaje('Gasto eliminado correctamente.')
+            setMensaje(t('expense.deleted'))
 
             await cargarDatos()
         } catch (err) {
-            setError(err.message || 'No se pudo eliminar el gasto.')
+            setError(err.message || t('errors.generico'))
         } finally {
             setProcesando(false)
         }
@@ -247,7 +247,7 @@ export default function Gastos() {
             (c) => c.idCategoria === idCategoria
         )
 
-        return categoria?.nombre || 'Sin categoría'
+        return categoria?.nombre || t('common.sinCategoria')
     }
 
     // =========================================================
@@ -323,15 +323,15 @@ export default function Gastos() {
 
     function exportarGastos() {
         if (gastosFiltrados.length === 0) {
-            setError('No hay gastos para exportar.')
+            setError(t('expense.exportEmpty'))
             return
         }
 
         const encabezados = [
-            'Fecha',
-            'Categoría',
-            'Monto',
-            'Descripción',
+            t('common.fecha'),
+            t('common.categoria'),
+            t('common.monto'),
+            t('common.descripcion'),
         ]
 
         const filas = gastosFiltrados.map((gasto) => {
@@ -398,9 +398,7 @@ export default function Gastos() {
 
         URL.revokeObjectURL(url)
 
-        setMensaje(
-            `${gastosFiltrados.length} gasto(s) exportado(s) correctamente.`
-        )
+        setMensaje(t('expense.exported', { count: gastosFiltrados.length }))
     }
 
     // =========================================================
@@ -456,7 +454,7 @@ export default function Gastos() {
                     </h1>
 
                     <p className="text-gray-500">
-                        Registra y administra los gastos realizados por tu hogar.
+                        {t('expense.description')}
                     </p>
 
                 </div>
@@ -466,9 +464,7 @@ export default function Gastos() {
                     disabled={cargando || procesando}
                     className="w-full rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                 >
-                    {cargando
-                        ? 'Cargando...'
-                        : 'Actualizar'}
+                    {cargando ? t('common.cargando') : t('common.actualizar')}
                 </button>
 
             </div>
@@ -478,8 +474,8 @@ export default function Gastos() {
 
                 <h2 className="mb-5 text-lg font-semibold text-slate-900 sm:text-xl">
                     {editandoId
-                        ? 'Editar gasto'
-                        : 'Registrar gasto'}
+                        ? t('expense.edit')
+                        : t('expense.create')}
                 </h2>
 
                 <form onSubmit={guardarGasto}>
@@ -490,7 +486,7 @@ export default function Gastos() {
                         <div className="flex flex-col gap-2">
 
                             <label className="text-sm font-semibold text-gray-700 sm:text-base">
-                                Categoría
+                                {t('common.categoria')}
                             </label>
 
                             <select
@@ -501,7 +497,7 @@ export default function Gastos() {
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 disabled:bg-gray-100"
                             >
                                 <option value="">
-                                    Selecciona una categoría
+                                    {t('common.seleccionaCategoria')}
                                 </option>
 
                                 {categorias
@@ -525,7 +521,7 @@ export default function Gastos() {
                         <div className="flex flex-col gap-2">
 
                             <label className="text-sm font-semibold text-gray-700 sm:text-base">
-                                Monto
+                                {t('common.monto')}
                             </label>
 
                             <input
@@ -546,7 +542,7 @@ export default function Gastos() {
                         <div className="flex flex-col gap-2">
 
                             <label className="text-sm font-semibold text-gray-700 sm:text-base">
-                                Fecha
+                                {t('common.fecha')}
                             </label>
 
                             <input
@@ -564,7 +560,7 @@ export default function Gastos() {
                         <div className="flex flex-col gap-2 md:col-span-2">
 
                             <label className="text-sm font-semibold text-gray-700 sm:text-base">
-                                Descripción
+                                {t('common.descripcion')}
                             </label>
 
                             <input
@@ -572,7 +568,7 @@ export default function Gastos() {
                                 name="descripcion"
                                 value={formulario.descripcion}
                                 onChange={manejarCambio}
-                                placeholder="Ej. Compra de alimentos"
+                                placeholder={t('expense.searchPlaceholder')}
                                 disabled={procesando}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
@@ -590,10 +586,10 @@ export default function Gastos() {
                             className="w-full rounded-lg bg-red-600 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                         >
                             {procesando
-                                ? 'Guardando...'
+                                ? t('common.guardando')
                                 : editandoId
-                                    ? 'Actualizar gasto'
-                                    : 'Guardar gasto'}
+                                    ? t('expense.update')
+                                    : t('expense.save')}
                         </button>
 
                         {editandoId && (
@@ -603,7 +599,7 @@ export default function Gastos() {
                                 onClick={limpiarFormulario}
                                 disabled={procesando}
                             >
-                                Cancelar
+                                {t('common.cancelar')}
                             </button>
                         )}
 
@@ -620,11 +616,11 @@ export default function Gastos() {
 
                     <div>
                         <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                            Filtrar gastos
+                            {t('expense.filterTitle')}
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            Filtra los gastos por fecha, categoría o monto.
+                            {t('expense.filterDescription')}
                         </p>
                     </div>
 
@@ -633,21 +629,21 @@ export default function Gastos() {
                         onClick={limpiarFiltros}
                         className="w-full rounded-lg bg-gray-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-600 sm:w-auto sm:py-2.5"
                     >
-                        Limpiar filtros
+                        {t('common.limpiarFiltros')}
                     </button>
 
                 </div>
 
                 <div className="mb-4 flex flex-col gap-2">
                     <label className="text-sm font-semibold text-gray-700">
-                        Buscar por descripción
+                        {t('common.buscarDescripcion')}
                     </label>
                     <input
                         type="text"
                         name="busqueda"
                         value={filtros.busqueda}
                         onChange={manejarCambioFiltro}
-                        placeholder="Ej. Supermercado, transporte..."
+                        placeholder={t('expense.searchPlaceholder')}
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400"
                     />
                 </div>
@@ -658,7 +654,7 @@ export default function Gastos() {
                     <div className="flex flex-col gap-2">
 
                         <label className="text-sm font-semibold text-gray-700">
-                            Fecha desde
+                            {t('common.fechaDesde')}
                         </label>
 
                         <input
@@ -675,7 +671,7 @@ export default function Gastos() {
                     <div className="flex flex-col gap-2">
 
                         <label className="text-sm font-semibold text-gray-700">
-                            Fecha hasta
+                            {t('common.fechaHasta')}
                         </label>
 
                         <input
@@ -692,7 +688,7 @@ export default function Gastos() {
                     <div className="flex flex-col gap-2">
 
                         <label className="text-sm font-semibold text-gray-700">
-                            Categoría
+                            {t('common.categoria')}
                         </label>
 
                         <select
@@ -702,7 +698,7 @@ export default function Gastos() {
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
                         >
                             <option value="">
-                                Todas las categorías
+                                {t('common.todasCategorias')}
                             </option>
 
                             {categorias
@@ -726,7 +722,7 @@ export default function Gastos() {
                     <div className="flex flex-col gap-2">
 
                         <label className="text-sm font-semibold text-gray-700">
-                            Monto mínimo
+                            {t('common.montoMinimo')}
                         </label>
 
                         <input
@@ -746,7 +742,7 @@ export default function Gastos() {
                     <div className="flex flex-col gap-2">
 
                         <label className="text-sm font-semibold text-gray-700">
-                            Monto máximo
+                            {t('common.montoMaximo')}
                         </label>
 
                         <input
@@ -768,15 +764,7 @@ export default function Gastos() {
                 <div className="mt-5 rounded-lg bg-gray-50 px-4 py-3">
 
                     <p className="text-sm font-medium text-gray-600">
-                        Mostrando{' '}
-                        <span className="font-bold text-slate-900">
-                            {gastosFiltrados.length}
-                        </span>{' '}
-                        de{' '}
-                        <span className="font-bold text-slate-900">
-                            {gastos.length}
-                        </span>{' '}
-                        gastos
+                        {t('expense.count', { filtered: gastosFiltrados.length, total: gastos.length })}
                     </p>
 
                 </div>
@@ -791,14 +779,11 @@ export default function Gastos() {
                     <div>
 
                         <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                            Gastos registrados
+                            {t('expense.registered')}
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            {gastosFiltrados.length} gasto
-                            {gastosFiltrados.length !== 1 ? 's' : ''}{' '}
-                            encontrado
-                            {gastosFiltrados.length !== 1 ? 's' : ''}
+                            {t(gastosFiltrados.length === 1 ? 'expense.found_one' : 'expense.found_other', { count: gastosFiltrados.length })}
                         </p>
 
                     </div>
@@ -816,7 +801,7 @@ export default function Gastos() {
                             }
                             className="w-full rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                         >
-                            Exportar
+                            {t('expense.export')}
                         </button>
 
                         {/* ACTUALIZAR */}
@@ -825,9 +810,7 @@ export default function Gastos() {
                             disabled={cargando || procesando}
                             className="w-full rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                         >
-                            {cargando
-                                ? 'Cargando...'
-                                : 'Actualizar'}
+                            {cargando ? t('common.cargando') : t('common.actualizar')}
                         </button>
 
                     </div>
@@ -837,7 +820,7 @@ export default function Gastos() {
                 {cargando ? (
 
                     <div className="px-5 pb-6 sm:px-6">
-                        <Loading mensaje="Cargando gastos..." />
+                        <Loading mensaje={t('common.cargando')} />
                     </div>
 
                 ) : gastosFiltrados.length === 0 ? (
@@ -849,11 +832,11 @@ export default function Gastos() {
                         </div>
 
                         <p className="mt-4 font-medium text-gray-700">
-                            No hay gastos que coincidan con los filtros.
+                            {t('expense.empty')}
                         </p>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            Intenta cambiar o limpiar los filtros.
+                            {t('expense.emptyHint')}
                         </p>
 
                     </div>
@@ -871,23 +854,23 @@ export default function Gastos() {
                                     <tr>
 
                                         <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
-                                            Fecha
+                                            {t('common.fecha')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
-                                            Categoría
+                                            {t('common.categoria')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
-                                            Monto
+                                            {t('common.monto')}
                                         </th>
 
                                         <th className="bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
-                                            Descripción
+                                            {t('common.descripcion')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
-                                            Acciones
+                                            {t('common.acciones')}
                                         </th>
 
                                     </tr>
@@ -904,9 +887,7 @@ export default function Gastos() {
                                         >
 
                                             <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                                {new Date(
-                                                    gasto.fecha
-                                                ).toLocaleDateString()}
+                                                {formatearFecha(gasto.fecha)}
                                             </td>
 
                                             <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
@@ -934,7 +915,7 @@ export default function Gastos() {
                                                         disabled={procesando}
                                                         className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
-                                                        Editar
+                                                        {t('common.editar')}
                                                     </button>
 
                                                     <button
@@ -947,8 +928,8 @@ export default function Gastos() {
                                                         className="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
                                                         {procesando
-                                                            ? 'Procesando...'
-                                                            : 'Eliminar'}
+                                                            ? t('common.procesando')
+                                                            : t('common.eliminar')}
                                                     </button>
 
                                                 </div>

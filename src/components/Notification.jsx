@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function Notification({ tipo = 'success', mensaje, onClose }) {
+    const { t } = useTranslation()
     const estilos = {
         success: 'border-green-500 bg-green-100 text-green-800',
         error: 'border-red-500 bg-red-100 text-red-800',
@@ -41,7 +43,7 @@ export default function Notification({ tipo = 'success', mensaje, onClose }) {
 
             <button
                 onClick={onClose}
-                aria-label="Cerrar notificación"
+                aria-label={t('common.cerrarNotificacion')}
                 className="text-lg font-bold opacity-60 hover:opacity-100"
             >
                 ×

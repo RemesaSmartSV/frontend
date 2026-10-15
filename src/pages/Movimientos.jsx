@@ -5,7 +5,7 @@ import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import ConfirmModal from '../components/ConfirmModal'
-import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
+import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 import { Download } from 'lucide-react'
 
 export default function Movimientos() {
@@ -102,17 +102,17 @@ export default function Movimientos() {
         e.preventDefault()
 
         if (!formulario.idCategoria) {
-            setError('Selecciona una categoría.')
+            setError(t('common.seleccionaCategoria'))
             return
         }
 
         if (!formulario.monto || Number(formulario.monto) <= 0) {
-            setError('El monto debe ser mayor que 0.')
+            setError(t('expense.amountPositive'))
             return
         }
 
         if (!formulario.fecha) {
-            setError('Selecciona una fecha.')
+            setError(t('expense.dateRequired'))
             return
         }
 
@@ -137,13 +137,13 @@ export default function Movimientos() {
                 )
 
                 setMensaje(
-                    'Movimiento actualizado correctamente.'
+                    t('transactions.updated')
                 )
             } else {
                 await movimientosApi.crear(movimiento)
 
                 setMensaje(
-                    'Movimiento registrado correctamente.'
+                    t('transactions.saved')
                 )
             }
 
@@ -181,9 +181,9 @@ export default function Movimientos() {
         setConfirmModal({
             abierto: true,
             id,
-            titulo: 'Eliminar movimiento',
+            titulo: t('transactions.deleteTitle'),
             mensaje:
-                '¿Seguro que deseas eliminar este movimiento? Esta acción no se puede deshacer.',
+                t('transactions.deleteMessage'),
         })
     }
 
@@ -205,7 +205,7 @@ export default function Movimientos() {
             await movimientosApi.eliminar(id)
 
             setMensaje(
-                'Movimiento eliminado correctamente.'
+                t('transactions.deleted')
             )
 
             await cargarDatos()
@@ -345,17 +345,17 @@ export default function Movimientos() {
 
     function exportarMovimientosCSV() {
         if (movimientosFiltrados.length === 0) {
-            setError('No hay movimientos para exportar.')
+            setError(t('transactions.exportEmpty'))
             return
         }
 
         const encabezados = [
-            'Fecha',
-            'Tipo',
-            'Categoría',
-            'Monto',
-            'Descripción',
-            'Origen',
+            t('common.fecha'),
+            t('common.tipo'),
+            t('common.categoria'),
+            t('common.monto'),
+            t('common.descripcion'),
+            t('common.origen'),
         ]
 
         const filas = movimientosFiltrados.map(
@@ -374,7 +374,7 @@ export default function Movimientos() {
 
                 const nombreCategoria =
                     categoria?.nombre ||
-                    'Sin categoría'
+                    t('common.sinCategoria')
 
                 const monto =
                     Number(movimiento.monto).toFixed(2)
@@ -443,9 +443,7 @@ export default function Movimientos() {
 
         URL.revokeObjectURL(url)
 
-        setMensaje(
-            `${movimientosFiltrados.length} movimiento(s) exportado(s) correctamente.`
-        )
+        setMensaje(t('transactions.exported', { count: movimientosFiltrados.length }))
     }
 
     // =========================
@@ -504,7 +502,7 @@ export default function Movimientos() {
                 </h1>
 
                 <p className="text-gray-500">
-                    Registra tus ingresos, remesas y gastos familiares.
+                    {t('transactions.description')}
                 </p>
 
             </div>
@@ -531,7 +529,7 @@ export default function Movimientos() {
                                 htmlFor="tipo"
                                 className="font-semibold text-gray-700"
                             >
-                                Tipo
+                                {t('transactions.selectType')}
                             </label>
 
                             <select
@@ -543,11 +541,11 @@ export default function Movimientos() {
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             >
                                 <option value="Ingreso">
-                                    Ingreso / Remesa
+                                    {t('transactions.incomeOrRemittance')}
                                 </option>
 
                                 <option value="Gasto">
-                                    Gasto
+                                    {t('nav.gastos')}
                                 </option>
                             </select>
 
@@ -561,7 +559,7 @@ export default function Movimientos() {
                                 htmlFor="idCategoria"
                                 className="font-semibold text-gray-700"
                             >
-                                Categoría
+                                {t('common.categoria')}
                             </label>
 
                             <select
@@ -573,7 +571,7 @@ export default function Movimientos() {
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             >
                                 <option value="">
-                                    Selecciona una categoría
+                                    {t('common.seleccionaCategoria')}
                                 </option>
 
                                 {categorias
@@ -602,7 +600,7 @@ export default function Movimientos() {
                                 htmlFor="monto"
                                 className="font-semibold text-gray-700"
                             >
-                                Monto
+                                {t('common.monto')}
                             </label>
 
                             <input
@@ -628,7 +626,7 @@ export default function Movimientos() {
                                 htmlFor="fecha"
                                 className="font-semibold text-gray-700"
                             >
-                                Fecha
+                                {t('common.fecha')}
                             </label>
 
                             <input
@@ -651,7 +649,7 @@ export default function Movimientos() {
                                 htmlFor="origenEmisora"
                                 className="font-semibold text-gray-700"
                             >
-                                Origen / Emisora
+                                {t('transactions.source')}
                             </label>
 
                             <input
@@ -660,7 +658,7 @@ export default function Movimientos() {
                                 name="origenEmisora"
                                 value={formulario.origenEmisora}
                                 onChange={manejarCambio}
-                                placeholder="Ej. Estados Unidos"
+                                placeholder={t('transactions.sourceExample')}
                                 disabled={procesando}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
@@ -675,7 +673,7 @@ export default function Movimientos() {
                                 htmlFor="descripcion"
                                 className="font-semibold text-gray-700"
                             >
-                                Descripción
+                                {t('common.descripcion')}
                             </label>
 
                             <input
@@ -684,7 +682,7 @@ export default function Movimientos() {
                                 name="descripcion"
                                 value={formulario.descripcion}
                                 onChange={manejarCambio}
-                                placeholder="Descripción del movimiento"
+                                placeholder={t('transactions.descriptionPlaceholder')}
                                 disabled={procesando}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
@@ -703,10 +701,10 @@ export default function Movimientos() {
                             className="w-full rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             {procesando
-                                ? 'Guardando...'
+                                ? t('common.guardando')
                                 : editandoId
-                                    ? 'Actualizar'
-                                    : 'Guardar'}
+                                    ? t('common.actualizar')
+                                    : t('transactions.save')}
                         </button>
 
                         {editandoId && (
@@ -716,7 +714,7 @@ export default function Movimientos() {
                                 disabled={procesando}
                                 className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                             >
-                                Cancelar
+                                {t('common.cancelar')}
                             </button>
                         )}
 
@@ -748,7 +746,7 @@ export default function Movimientos() {
                             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-green-200 px-4 py-2.5 font-semibold text-green-700 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             <Download size={17} aria-hidden="true" />
-                            CSV filtrado
+                            {t('transactions.csvFiltered')}
                         </button>
                         <button
                             onClick={() => exportarMovimientosRemotos('csv')}
@@ -784,7 +782,7 @@ export default function Movimientos() {
                                 Filtros
                             </h3>
                             <p className="text-sm text-gray-500">
-                                Filtra los movimientos por fecha, categoría, monto y descripción.
+                            {t('transactions.filterDescription')}
                             </p>
                         </div>
                         <button
@@ -792,7 +790,7 @@ export default function Movimientos() {
                             onClick={limpiarFiltros}
                             className="w-full rounded-lg bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-600 sm:w-auto"
                         >
-                            Limpiar filtros
+                            {t('common.limpiarFiltros')}
                         </button>
                     </div>
 
@@ -801,7 +799,7 @@ export default function Movimientos() {
                             htmlFor="busquedaMovimientos"
                             className="text-sm font-semibold text-gray-700"
                         >
-                            Buscar por descripción
+                            {t('common.buscarDescripcion')}
                         </label>
                         <input
                             id="busquedaMovimientos"
@@ -809,7 +807,7 @@ export default function Movimientos() {
                             name="busqueda"
                             value={filtros.busqueda}
                             onChange={manejarCambioFiltro}
-                            placeholder="Ej. Supermercado, transporte..."
+                            placeholder={t('income.searchPlaceholder')}
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
                         />
                     </div>
@@ -817,7 +815,7 @@ export default function Movimientos() {
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
                         <div className="flex min-w-0 flex-col gap-2">
                             <label htmlFor="fechaDesde" className="text-sm font-semibold text-gray-700">
-                                Fecha desde
+                                {t('common.fechaDesde')}
                             </label>
                             <input
                                 id="fechaDesde"
@@ -831,7 +829,7 @@ export default function Movimientos() {
 
                         <div className="flex min-w-0 flex-col gap-2">
                             <label htmlFor="fechaHasta" className="text-sm font-semibold text-gray-700">
-                                Fecha hasta
+                                {t('common.fechaHasta')}
                             </label>
                             <input
                                 id="fechaHasta"
@@ -845,7 +843,7 @@ export default function Movimientos() {
 
                         <div className="flex min-w-0 flex-col gap-2">
                             <label htmlFor="filtroCategoriaMovimientos" className="text-sm font-semibold text-gray-700">
-                                Categoría
+                                {t('common.categoria')}
                             </label>
                             <select
                                 id="filtroCategoriaMovimientos"
@@ -865,7 +863,7 @@ export default function Movimientos() {
 
                         <div className="flex min-w-0 flex-col gap-2">
                             <label htmlFor="montoMinimo" className="text-sm font-semibold text-gray-700">
-                                Monto mínimo
+                                {t('common.montoMinimo')}
                             </label>
                             <input
                                 id="montoMinimo"
@@ -882,7 +880,7 @@ export default function Movimientos() {
 
                         <div className="flex min-w-0 flex-col gap-2">
                             <label htmlFor="montoMaximo" className="text-sm font-semibold text-gray-700">
-                                Monto máximo
+                                {t('common.montoMaximo')}
                             </label>
                             <input
                                 id="montoMaximo"
@@ -901,7 +899,7 @@ export default function Movimientos() {
 
                 {cargando ? (
 
-                    <Loading mensaje="Cargando movimientos..." />
+                    <Loading mensaje={t('common.cargando')} />
 
                 ) : movimientos.length === 0 ? (
 
@@ -912,11 +910,11 @@ export default function Movimientos() {
                         </div>
 
                         <p className="mt-4 font-medium text-gray-700">
-                            No hay movimientos registrados.
+                            {t('transactions.empty')}
                         </p>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            Usa el formulario de arriba para registrar tu primer movimiento.
+                            {t('transactions.emptyHint')}
                         </p>
 
                     </div>
@@ -926,7 +924,7 @@ export default function Movimientos() {
                     <div className="rounded-lg bg-gray-50 p-6 text-center sm:p-8">
 
                         <p className="text-sm font-medium text-gray-600 sm:text-base">
-                            No hay movimientos que coincidan con los filtros.
+                            {t('transactions.emptyFiltered')}
                         </p>
 
                         <button
@@ -934,7 +932,7 @@ export default function Movimientos() {
                             onClick={limpiarFiltros}
                             className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
                         >
-                            Limpiar filtros
+                            {t('common.limpiarFiltros')}
                         </button>
 
                     </div>
@@ -951,31 +949,31 @@ export default function Movimientos() {
                                     <tr>
 
                                         <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                            Fecha
+                                            {t('common.fecha')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                            Tipo
+                                            {t('common.tipo')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                            Categoría
+                                            {t('common.categoria')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                            Monto
+                                            {t('common.monto')}
                                         </th>
 
                                         <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                            Descripción
+                                            {t('common.descripcion')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                            Origen
+                                            {t('common.origen')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                            Acciones
+                                            {t('common.acciones')}
                                         </th>
 
                                     </tr>
@@ -1001,9 +999,7 @@ export default function Movimientos() {
                                             >
 
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                                    {new Date(
-                                                        movimiento.fecha
-                                                    ).toLocaleDateString()}
+                                                    {formatearFecha(movimiento.fecha)}
                                                 </td>
 
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
@@ -1023,7 +1019,7 @@ export default function Movimientos() {
 
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
                                                     {categoria?.nombre ||
-                                                        'Sin categoría'}
+                                                        t('common.sinCategoria')}
                                                 </td>
 
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm font-semibold sm:px-3.5">
@@ -1055,7 +1051,7 @@ export default function Movimientos() {
                                                             disabled={procesando}
                                                             className="w-full rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                                                         >
-                                                            Editar
+                                                            {t('common.editar')}
                                                         </button>
 
                                                         <button
@@ -1068,8 +1064,8 @@ export default function Movimientos() {
                                                             className="w-full rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                                                         >
                                                             {procesando
-                                                                ? 'Procesando...'
-                                                                : 'Eliminar'}
+                                                                ? t('common.procesando')
+                                                                : t('common.eliminar')}
                                                         </button>
 
                                                     </div>

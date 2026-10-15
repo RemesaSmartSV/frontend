@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { categoriasApi, movimientosApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import ConfirmModal from '../components/ConfirmModal'
-import { obtenerFechaHoy } from '../utils/formato'
+import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 
 export default function Remesas() {
+    const { t } = useTranslation()
     const [remesas, setRemesas] = useState([])
     const [categorias, setCategorias] = useState([])
 
@@ -70,12 +72,12 @@ export default function Remesas() {
         } catch (err) {
             setError(
                 err.message ||
-                'No se pudieron cargar las remesas.'
+                t('remittance.loadError')
             )
         } finally {
             setCargando(false)
         }
-    }, [])
+    }, [t])
 
     useEffect(() => {
         cargarDatos()
@@ -182,22 +184,22 @@ export default function Remesas() {
         e.preventDefault()
 
         if (!formulario.idCategoria) {
-            setError('Selecciona una categoría.')
+            setError(t('common.seleccionaCategoria'))
             return
         }
 
         if (!formulario.monto || Number(formulario.monto) <= 0) {
-            setError('El monto debe ser mayor que 0.')
+            setError(t('expense.amountPositive'))
             return
         }
 
         if (!formulario.fecha) {
-            setError('Selecciona una fecha.')
+            setError(t('expense.dateRequired'))
             return
         }
 
         if (!formulario.origenEmisora.trim()) {
-            setError('Indica el origen o emisora de la remesa.')
+            setError(t('remittance.sourceRequired'))
             return
         }
 
@@ -222,13 +224,13 @@ export default function Remesas() {
                 )
 
                 setMensaje(
-                    'Remesa actualizada correctamente.'
+                    t('remittance.updated')
                 )
             } else {
                 await movimientosApi.crear(movimiento)
 
                 setMensaje(
-                    'Remesa registrada correctamente.'
+                    t('remittance.saved')
                 )
             }
 
@@ -237,7 +239,7 @@ export default function Remesas() {
         } catch (err) {
             setError(
                 err.message ||
-                'No se pudo guardar la remesa.'
+                t('remittance.saveError')
             )
         } finally {
             setProcesando(false)
@@ -268,8 +270,8 @@ export default function Remesas() {
         setConfirmModal({
             abierto: true,
             id,
-            titulo: 'Eliminar remesa',
-            mensaje: '¿Seguro que deseas eliminar esta remesa? Esta acción no se puede deshacer.',
+            titulo: t('remittance.deleteTitle'),
+            mensaje: t('remittance.deleteMessage'),
         })
     }
 
@@ -284,11 +286,11 @@ export default function Remesas() {
 
             await movimientosApi.eliminar(id)
 
-            setMensaje('Remesa eliminada correctamente.')
+            setMensaje(t('remittance.deleted'))
 
             await cargarDatos()
         } catch (err) {
-            setError(err.message || 'No se pudo eliminar la remesa.')
+            setError(err.message || t('errors.generico'))
         } finally {
             setProcesando(false)
         }
@@ -311,22 +313,22 @@ export default function Remesas() {
             (c) => c.idCategoria === idCategoria
         )
 
-        return categoria?.nombre || 'Sin categoría'
+        return categoria?.nombre || t('common.sinCategoria')
     }
 
     // EXPORTAR REMESAS A CSV
     function exportarRemesas() {
         if (remesasFiltradas.length === 0) {
-            setError('No hay remesas para exportar.')
+            setError(t('remittance.exportEmpty'))
             return
         }
 
         const encabezados = [
-            'Fecha',
-            'Origen',
-            'Categoría',
-            'Monto',
-            'Descripción',
+            t('common.fecha'),
+            t('common.origen'),
+            t('common.categoria'),
+            t('common.monto'),
+            t('common.descripcion'),
         ]
 
         const filas = remesasFiltradas.map((remesa) => {
@@ -400,9 +402,7 @@ export default function Remesas() {
 
         URL.revokeObjectURL(url)
 
-        setMensaje(
-            `${remesasFiltradas.length} remesa(s) exportada(s) correctamente.`
-        )
+        setMensaje(t('remittance.exported', { count: remesasFiltradas.length }))
     }
 
     // PAGINACIÓN DE RESULTADOS FILTRADOS
@@ -448,12 +448,11 @@ export default function Remesas() {
 
                 <div className="min-w-0">
                     <h1 className="text-2xl font-bold text-gray-800">
-                        Remesas
+                        {t('remittance.title')}
                     </h1>
 
                     <p className="text-gray-500">
-                        Registra y administra las remesas
-                        recibidas por tu hogar.
+                        {t('remittance.description')}
                     </p>
                 </div>
 
@@ -462,9 +461,7 @@ export default function Remesas() {
                     disabled={cargando || procesando}
                     className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
-                    {cargando
-                        ? 'Cargando...'
-                        : 'Actualizar'}
+                    {cargando ? t('common.cargando') : t('common.actualizar')}
                 </button>
 
             </div>
@@ -474,8 +471,8 @@ export default function Remesas() {
 
                 <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
-                        ? 'Editar remesa'
-                        : 'Registrar remesa'}
+                        ? t('remittance.edit')
+                        : t('remittance.create')}
                 </h2>
 
                 <form onSubmit={guardarRemesa}>
@@ -489,7 +486,7 @@ export default function Remesas() {
                                 htmlFor="idCategoria"
                                 className="font-semibold text-gray-700"
                             >
-                                Categoría
+                                {t('common.categoria')}
                             </label>
 
                             <select
@@ -501,7 +498,7 @@ export default function Remesas() {
                                 className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 disabled:bg-gray-100"
                             >
                                 <option value="">
-                                    Selecciona una categoría
+                                    {t('common.seleccionaCategoria')}
                                 </option>
 
                                 {categorias
@@ -533,7 +530,7 @@ export default function Remesas() {
                                 htmlFor="monto"
                                 className="font-semibold text-gray-700"
                             >
-                                Monto
+                                {t('common.monto')}
                             </label>
 
                             <input
@@ -558,7 +555,7 @@ export default function Remesas() {
                                 htmlFor="fecha"
                                 className="font-semibold text-gray-700"
                             >
-                                Fecha
+                                {t('common.fecha')}
                             </label>
 
                             <input
@@ -580,7 +577,7 @@ export default function Remesas() {
                                 htmlFor="origenEmisora"
                                 className="font-semibold text-gray-700"
                             >
-                                Origen / Emisora
+                                {t('transactions.source')}
                             </label>
 
                             <input
@@ -589,7 +586,7 @@ export default function Remesas() {
                                 name="origenEmisora"
                                 value={formulario.origenEmisora}
                                 onChange={manejarCambio}
-                                placeholder="Ej. Estados Unidos"
+                                placeholder={t('transactions.sourceExample')}
                                 disabled={procesando}
                                 className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
@@ -603,7 +600,7 @@ export default function Remesas() {
                                 htmlFor="descripcion"
                                 className="font-semibold text-gray-700"
                             >
-                                Descripción
+                                {t('common.descripcion')}
                             </label>
 
                             <input
@@ -612,7 +609,7 @@ export default function Remesas() {
                                 name="descripcion"
                                 value={formulario.descripcion}
                                 onChange={manejarCambio}
-                                placeholder="Descripción de la remesa"
+                                placeholder={t('transactions.descriptionPlaceholder')}
                                 disabled={procesando}
                                 className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
@@ -630,10 +627,10 @@ export default function Remesas() {
                             className="w-full rounded-lg bg-violet-600 px-5 py-2.5 font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             {procesando
-                                ? 'Guardando...'
+                                ? t('common.guardando')
                                 : editandoId
-                                    ? 'Actualizar remesa'
-                                    : 'Guardar remesa'}
+                                    ? t('remittance.update')
+                                    : t('remittance.save')}
                         </button>
 
                         {editandoId && (
@@ -643,7 +640,7 @@ export default function Remesas() {
                                 disabled={procesando}
                                 className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                             >
-                                Cancelar
+                                {t('common.cancelar')}
                             </button>
                         )}
 
@@ -660,11 +657,11 @@ export default function Remesas() {
 
                     <div className="min-w-0">
                         <h2 className="text-xl font-semibold text-slate-900">
-                            Remesas registradas
+                            {t('remittance.registered')}
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            Consulta y administra las remesas recibidas.
+                            {t('remittance.listDescription')}
                         </p>
                     </div>
 
@@ -681,7 +678,7 @@ export default function Remesas() {
                             }
                             className="w-full rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
-                            Exportar
+                            {t('common.exportar')}
                         </button>
 
                         {/* BOTÓN ACTUALIZAR */}
@@ -690,9 +687,7 @@ export default function Remesas() {
                             disabled={cargando || procesando}
                             className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
-                            {cargando
-                                ? 'Cargando...'
-                                : 'Actualizar'}
+                            {cargando ? t('common.cargando') : t('common.actualizar')}
                         </button>
 
                     </div>
@@ -706,11 +701,11 @@ export default function Remesas() {
 
                         <div>
                             <h3 className="text-lg font-semibold text-slate-900">
-                                Filtros
+                                {t('common.filtros')}
                             </h3>
 
                             <p className="text-sm text-gray-500">
-                                Filtra las remesas por fecha, categoría o monto.
+                                {t('remittance.filterDescription')}
                             </p>
                         </div>
 
@@ -719,21 +714,21 @@ export default function Remesas() {
                             onClick={limpiarFiltros}
                             className="w-full rounded-lg bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-600 sm:w-auto"
                         >
-                            Limpiar filtros
+                            {t('common.limpiarFiltros')}
                         </button>
 
                     </div>
 
                     <div className="mb-4">
                         <label className="text-sm font-semibold text-gray-700">
-                            Buscar por descripción u origen
+                            {t('remittance.search')}
                         </label>
                         <input
                             type="text"
                             name="busqueda"
                             value={filtros.busqueda}
                             onChange={manejarCambioFiltro}
-                            placeholder="Ej. Estados Unidos, Western Union..."
+                            placeholder={t('remittance.searchPlaceholder')}
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400"
                         />
                     </div>
@@ -747,7 +742,7 @@ export default function Remesas() {
                                 htmlFor="fechaDesde"
                                 className="text-sm font-semibold text-gray-700"
                             >
-                                Fecha desde
+                                {t('common.fechaDesde')}
                             </label>
 
                             <input
@@ -768,7 +763,7 @@ export default function Remesas() {
                                 htmlFor="fechaHasta"
                                 className="text-sm font-semibold text-gray-700"
                             >
-                                Fecha hasta
+                                {t('common.fechaHasta')}
                             </label>
 
                             <input
@@ -789,7 +784,7 @@ export default function Remesas() {
                                 htmlFor="filtroCategoria"
                                 className="text-sm font-semibold text-gray-700"
                             >
-                                Categoría
+                                {t('common.categoria')}
                             </label>
 
                             <select
@@ -800,7 +795,7 @@ export default function Remesas() {
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10"
                             >
                                 <option value="">
-                                    Todas
+                                    {t('income.all')}
                                 </option>
 
                                 {categorias
@@ -832,7 +827,7 @@ export default function Remesas() {
                                 htmlFor="montoMinimo"
                                 className="text-sm font-semibold text-gray-700"
                             >
-                                Monto mínimo
+                                {t('common.montoMinimo')}
                             </label>
 
                             <input
@@ -856,7 +851,7 @@ export default function Remesas() {
                                 htmlFor="montoMaximo"
                                 className="text-sm font-semibold text-gray-700"
                             >
-                                Monto máximo
+                                {t('common.montoMaximo')}
                             </label>
 
                             <input
@@ -877,28 +872,20 @@ export default function Remesas() {
 
                     {/* RESULTADOS */}
                     <p className="mt-4 text-sm text-gray-600">
-                        Mostrando{' '}
-                        <span className="font-semibold">
-                            {remesasFiltradas.length}
-                        </span>{' '}
-                        de{' '}
-                        <span className="font-semibold">
-                            {remesas.length}
-                        </span>{' '}
-                        remesas.
+                        {t('remittance.count', { filtered: remesasFiltradas.length, total: remesas.length })}
                     </p>
 
                 </div>
 
                 {cargando ? (
-                    <Loading mensaje="Cargando remesas..." />
+                    <Loading mensaje={t('common.cargando')} />
 
                 ) : remesasFiltradas.length === 0 ? (
 
                     <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
                         {remesas.length === 0
-                            ? 'No hay remesas registradas.'
-                            : 'No hay remesas que coincidan con los filtros.'}
+                            ? t('remittance.empty')
+                            : t('remittance.emptyFiltered')}
                     </div>
 
                 ) : (
@@ -913,27 +900,27 @@ export default function Remesas() {
                                     <tr>
 
                                         <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            Fecha
+                                            {t('common.fecha')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            Origen
+                                            {t('common.origen')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            Categoría
+                                            {t('common.categoria')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            Monto
+                                            {t('common.monto')}
                                         </th>
 
                                         <th className="bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            Descripción
+                                            {t('common.descripcion')}
                                         </th>
 
                                         <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            Acciones
+                                            {t('common.acciones')}
                                         </th>
 
                                     </tr>
@@ -950,9 +937,7 @@ export default function Remesas() {
                                         >
 
                                             <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                                {new Date(
-                                                    remesa.fecha
-                                                ).toLocaleDateString()}
+                                                {formatearFecha(remesa.fecha)}
                                             </td>
 
                                             <td className="max-w-[180px] break-words border-b border-gray-200 px-3.5 py-3.5 text-sm">
@@ -966,10 +951,7 @@ export default function Remesas() {
                                             </td>
 
                                             <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold text-violet-600">
-                                                +$
-                                                {Number(
-                                                    remesa.monto
-                                                ).toFixed(2)}
+                                                +{formatearMoneda(remesa.monto)}
                                             </td>
 
                                             <td className="max-w-[250px] break-words border-b border-gray-200 px-3.5 py-3.5 text-sm">
@@ -990,7 +972,7 @@ export default function Remesas() {
                                                         disabled={procesando}
                                                         className="w-full rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                                                     >
-                                                        Editar
+                                                        {t('common.editar')}
                                                     </button>
 
                                                     <button
@@ -1003,8 +985,8 @@ export default function Remesas() {
                                                         className="w-full rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                                                     >
                                                         {procesando
-                                                            ? 'Procesando...'
-                                                            : 'Eliminar'}
+                                                            ? t('common.procesando')
+                                                            : t('common.eliminar')}
                                                     </button>
 
                                                 </div>

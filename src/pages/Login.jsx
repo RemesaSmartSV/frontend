@@ -4,6 +4,7 @@ import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
 import { authApi } from '../services/api'
 import Notification from '../components/Notification'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import LanguageSelector from '../components/LanguageSelector'
 
 export default function Login({ onLogin, irRegistro }) {
     const { t } = useTranslation()
@@ -20,11 +21,11 @@ export default function Login({ onLogin, irRegistro }) {
         setErrorCampo('')
 
         if (!correo.trim() || !contrasena.trim()) {
-            setErrorCampo('Completa todos los campos.')
+            setErrorCampo(t('auth.completeFields'))
             return
         }
         if (!correo.trim().toLowerCase().endsWith('@gmail.com')) {
-            setError('Solo se permiten cuentas con direcciones de correo @gmail.com.')
+            setError(t('auth.gmailOnly'))
             return
         }
 
@@ -33,7 +34,7 @@ export default function Login({ onLogin, irRegistro }) {
             const datos = await authApi.login(correo.trim(), contrasena)
             onLogin(datos)
         } catch (err) {
-            setError(err.message || 'No se pudo iniciar sesión. Verifica tus datos.')
+            setError(err.message || t('auth.loginError'))
         } finally {
             setCargando(false)
         }
@@ -46,7 +47,7 @@ export default function Login({ onLogin, irRegistro }) {
             const datos = await authApi.loginConGoogle(idToken, nonce)
             onLogin(datos)
         } catch (err) {
-            setError(err.message || 'No se pudo iniciar sesión con Google.')
+            setError(err.message || t('auth.googleLoginError'))
         } finally {
             setCargando(false)
         }
@@ -58,15 +59,15 @@ export default function Login({ onLogin, irRegistro }) {
             <div className="hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:bg-[#123B8F] lg:p-12 lg:text-white">
                 <div>
                     <h1 className="text-3xl font-extrabold tracking-tight">RemesaSmart SV</h1>
-                    <p className="mt-2 text-lg text-blue-100">Tu familia, sus finanzas, un solo lugar.</p>
+                    <p className="mt-2 text-lg text-blue-100">{t('auth.tagline')}</p>
                 </div>
 
                 <div className="space-y-6">
                     {[
-                        { icono: '💰', texto: 'Controla ingresos y gastos familiares' },
-                        { icono: '🐷', texto: 'Crea metas de ahorro y sigue tu progreso' },
-                        { icono: '👨‍👩‍👧', texto: 'Administra las finanzas de tu familia' },
-                        { icono: '📊', texto: 'Visualiza tu situación financiera con gráficas' },
+                        { icono: '💰', texto: t('auth.benefitTransactions') },
+                        { icono: '🐷', texto: t('auth.benefitSavings') },
+                        { icono: '👨‍👩‍👧', texto: t('auth.benefitFamily') },
+                        { icono: '📊', texto: t('auth.benefitCharts') },
                     ].map((item, i) => (
                         <div key={i} className="flex items-center gap-4">
                             <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl">{item.icono}</span>
@@ -75,20 +76,23 @@ export default function Login({ onLogin, irRegistro }) {
                     ))}
                 </div>
 
-                <p className="text-sm text-blue-200">© 2026 RemesaSmart SV. Todos los derechos reservados.</p>
+                <p className="text-sm text-blue-200">{t('auth.copyright')}</p>
             </div>
 
             {/* COLUMNA DERECHA — Formulario */}
             <div className="flex w-full flex-col items-center justify-center bg-gray-50 px-4 py-12 dark:bg-slate-900 lg:w-1/2">
                 <div className="w-full max-w-md">
+                    <div className="mb-4 flex justify-end">
+                        <LanguageSelector />
+                    </div>
                     {/* Logo móvil */}
                     <div className="mb-8 text-center lg:hidden">
                         <h1 className="text-2xl font-extrabold tracking-tight text-[#123B8F] dark:text-blue-400">RemesaSmart SV</h1>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Tu familia, sus finanzas, un solo lugar.</p>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('auth.tagline')}</p>
                     </div>
 
                     <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-gray-100">{t('auth.login')}</h2>
-                    <p className="mb-8 text-gray-500 dark:text-gray-400">{t('auth.login')}</p>
+                    <p className="mb-8 text-gray-500 dark:text-gray-400">{t('auth.loginSubtitle')}</p>
 
                     {error && <Notification tipo="error" mensaje={error} onClose={() => setError('')} />}
 
@@ -137,7 +141,7 @@ export default function Login({ onLogin, irRegistro }) {
                                 <button
                                     type="button"
                                     onClick={() => setVerContrasena(!verContrasena)}
-                                    aria-label={verContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                    aria-label={verContrasena ? t('auth.hidePassword') : t('auth.showPassword')}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                 >
                                     {verContrasena ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -190,7 +194,7 @@ export default function Login({ onLogin, irRegistro }) {
                     {/* Separador */}
                     <div className="my-6 flex items-center">
                         <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
-                        <span className="px-3 text-sm text-gray-400">o</span>
+                        <span className="px-3 text-sm text-gray-400">{t('auth.or')}</span>
                         <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
                     </div>
 
@@ -217,15 +221,15 @@ export default function Login({ onLogin, irRegistro }) {
                     {/* Enlace presentación */}
                     <p className="mt-4 text-center">
                         <a href="/presentacion" className="text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500">
-                            Conocer más sobre RemesaSmart SV
+                            {t('auth.learnMore')}
                         </a>
                     </p>
 
                     {/* Enlaces legales */}
-                    <nav aria-label="Enlaces legales" className="mt-6 flex justify-center gap-x-4 text-xs text-gray-400 dark:text-gray-500">
-                        <a href="/politica-de-privacidad" className="hover:text-gray-600">Política de privacidad</a>
-                        <a href="/terminos-y-condiciones" className="hover:text-gray-600">Términos y condiciones</a>
-                        <a href="/politica-de-cookies" className="hover:text-gray-600">Política de cookies</a>
+                    <nav aria-label={t('shell.legalLinks')} className="mt-6 flex justify-center gap-x-4 text-xs text-gray-400 dark:text-gray-500">
+                        <a href="/politica-de-privacidad" className="hover:text-gray-600">{t('shell.privacy')}</a>
+                        <a href="/terminos-y-condiciones" className="hover:text-gray-600">{t('shell.terms')}</a>
+                        <a href="/politica-de-cookies" className="hover:text-gray-600">{t('shell.cookies')}</a>
                     </nav>
                 </div>
             </div>

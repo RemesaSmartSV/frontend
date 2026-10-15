@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { educacionApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 
 export default function EducacionFinanciera() {
+    const { t } = useTranslation()
     const [tips, setTips] = useState([])
     const [cargando, setCargando] = useState(true)
     const [procesando, setProcesando] = useState(false)
@@ -22,12 +24,12 @@ export default function EducacionFinanciera() {
         } catch (err) {
             setError(
                 err.message ||
-                'No se pudieron cargar los consejos financieros.'
+                t('education.loadError')
             )
         } finally {
             setCargando(false)
         }
-    }, [])
+    }, [t])
 
     useEffect(() => {
         cargarTips()
@@ -42,12 +44,12 @@ export default function EducacionFinanciera() {
             await cargarTips()
 
             setMensaje(
-                'Consejos financieros actualizados correctamente.'
+                t('education.updated')
             )
         } catch (err) {
             setError(
                 err.message ||
-                'No se pudieron actualizar los consejos financieros.'
+                t('education.updateError')
             )
         } finally {
             setProcesando(false)
@@ -80,12 +82,11 @@ export default function EducacionFinanciera() {
                     </div>
 
                     <h1 className="text-2xl font-bold sm:text-3xl md:text-4xl">
-                        Educación Financiera
+                        {t('education.title')}
                     </h1>
 
                     <p className="mt-3 text-sm leading-relaxed text-emerald-50 sm:text-base md:text-lg">
-                        Aprende a administrar mejor tu dinero con consejos
-                        prácticos para mejorar tus hábitos financieros.
+                        {t('education.description')}
                     </p>
 
                 </div>
@@ -104,14 +105,11 @@ export default function EducacionFinanciera() {
                     <div className="min-w-0">
 
                         <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
-                            Aprende y toma mejores decisiones
+                            {t('education.introTitle')}
                         </h2>
 
                         <p className="mt-2 text-sm leading-relaxed text-gray-600 sm:text-base">
-                            La educación financiera te ayuda a comprender cómo
-                            administrar tus ingresos, controlar tus gastos,
-                            ahorrar y tomar decisiones responsables con tu
-                            dinero.
+                            {t('education.introText')}
                         </p>
 
                     </div>
@@ -126,11 +124,11 @@ export default function EducacionFinanciera() {
                 <div className="min-w-0">
 
                     <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
-                        Consejos financieros
+                        {t('education.tips')}
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-500 sm:text-base">
-                        Recomendaciones para mejorar tus finanzas personales.
+                        {t('education.recommendations')}
                     </p>
 
                 </div>
@@ -141,15 +139,15 @@ export default function EducacionFinanciera() {
                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
                 >
                     {procesando
-                        ? 'Actualizando...'
-                        : 'Actualizar'}
+                        ? t('common.procesando')
+                        : t('common.actualizar')}
                 </button>
 
             </div>
 
             {/* CARGANDO */}
             {cargando && (
-                <Loading mensaje="Cargando consejos financieros..." />
+                <Loading mensaje={t('education.loading')} />
             )}
 
             {/* ERROR */}
@@ -165,7 +163,7 @@ export default function EducacionFinanciera() {
                         <div className="min-w-0 flex-1">
 
                             <h3 className="font-bold text-red-800">
-                                No se pudieron cargar los consejos
+                                {t('education.loadError')}
                             </h3>
 
                             <p className="mt-1 break-words text-sm text-red-700">
@@ -178,8 +176,8 @@ export default function EducacionFinanciera() {
                                 className="mt-4 w-full rounded-lg bg-red-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
                             >
                                 {procesando
-                                    ? 'Intentando...'
-                                    : 'Intentar nuevamente'}
+                                    ? t('education.trying')
+                                    : t('education.retry')}
                             </button>
 
                         </div>
@@ -198,12 +196,11 @@ export default function EducacionFinanciera() {
                     </div>
 
                     <h3 className="mt-4 text-lg font-bold text-gray-800 sm:text-xl">
-                        Aún no hay consejos
+                        {t('education.emptyTitle')}
                     </h3>
 
                     <p className="mx-auto mt-2 max-w-md text-sm text-gray-500 sm:text-base">
-                        Actualmente no hay contenido de educación financiera
-                        disponible.
+                        {t('education.empty')}
                     </p>
 
                 </div>
@@ -232,7 +229,7 @@ export default function EducacionFinanciera() {
                                     </div>
 
                                     <span className="whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                        Consejo
+                                        {t('education.tip')}
                                     </span>
 
                                 </div>
@@ -251,7 +248,7 @@ export default function EducacionFinanciera() {
                                 <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
 
                                     <span className="text-sm text-gray-400">
-                                        Categoría
+                                        {t('education.category')}
                                     </span>
 
                                     <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
@@ -277,12 +274,11 @@ export default function EducacionFinanciera() {
                         <div className="min-w-0">
 
                             <h3 className="text-base font-bold sm:text-lg">
-                                💚 Pequeños hábitos, grandes cambios
+                                💚 {t('education.footerTitle')}
                             </h3>
 
                             <p className="mt-1 text-sm leading-relaxed text-gray-300">
-                                Una buena administración de tus finanzas
-                                comienza con pequeñas decisiones diarias.
+                                {t('education.footerText')}
                             </p>
 
                         </div>

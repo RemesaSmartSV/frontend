@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { normalizarIdioma } from '../i18n/index.js'
 import { hogaresApi, usuariosApi } from '../services/api'
 import { useTheme } from '../context/ThemeContext.jsx'
 import Loading from '../components/Loading'
@@ -33,6 +34,14 @@ export default function MiPerfil() {
     const [error, setError] = useState('')
 
     useEffect(() => {
+        const sincronizarIdioma = (idiomaNuevo) => {
+            setIdioma(normalizarIdioma(idiomaNuevo) || 'es')
+        }
+        i18n.on('languageChanged', sincronizarIdioma)
+        return () => i18n.off('languageChanged', sincronizarIdioma)
+    }, [i18n])
+
+    useEffect(() => {
         let vigente = true
 
         async function cargarPerfil() {
@@ -54,7 +63,7 @@ export default function MiPerfil() {
                 setNombreVisible(datos.nombreVisible || '')
                 setFotoPerfil(datos.fotoPerfil || '')
                 setTelefono(datos.telefono || '')
-                setIdioma(datos.idiomaPreferido || 'es')
+                setIdioma(normalizarIdioma(datos.idiomaPreferido) || normalizarIdioma(i18n.resolvedLanguage) || 'es')
                 setTema(datos.temaPreferido || 'claro')
             }
 
@@ -80,7 +89,7 @@ export default function MiPerfil() {
         setExito('')
 
         if (!nombre.trim()) {
-            setError('El nombre es obligatorio.')
+            setError(t('profile.nameRequired'))
             return
         }
 
@@ -111,9 +120,9 @@ export default function MiPerfil() {
             localStorage.setItem('usuario', JSON.stringify(actualizado))
             setUsuario(actualizado)
 
-            setExito('Perfil actualizado correctamente.')
+            setExito(t('profile.saveSuccess'))
         } catch (err) {
-            setError(err.message || 'No se pudo guardar el perfil. Inténtalo de nuevo.')
+            setError(err.message || t('profile.saveError'))
         } finally {
             setGuardando(false)
         }
@@ -126,7 +135,9 @@ export default function MiPerfil() {
         setNombreVisible(usuario.nombreVisible || '')
         setFotoPerfil(usuario.fotoPerfil || '')
         setTelefono(usuario.telefono || '')
-        setIdioma(usuario.idiomaPreferido || 'es')
+        const idiomaGuardado = normalizarIdioma(usuario.idiomaPreferido) || 'es'
+        setIdioma(idiomaGuardado)
+        i18n.changeLanguage(idiomaGuardado)
         setTema(usuario.temaPreferido || 'claro')
         setError('')
         setExito('')
@@ -146,8 +157,8 @@ export default function MiPerfil() {
         <div className="space-y-6">
             {/* ENCABEZADO */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-800">Mi perfil</h1>
-                <p className="text-gray-500">Gestiona tu información personal y preferencias.</p>
+                <h1 className="text-2xl font-bold text-gray-800">{t('profile.title')}</h1>
+                <p className="text-gray-500">{t('profile.subtitle')}</p>
             </div>
 
             {exito && <Notification tipo="success" mensaje={exito} onClose={() => setExito('')} />}
@@ -156,13 +167,13 @@ export default function MiPerfil() {
             <form onSubmit={guardarPerfil} className="space-y-6">
                 {/* SECCIÓN 1: INFORMACIÓN PERSONAL */}
                 <section className="rounded-xl bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">Información personal</h2>
+                    <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.personal')}</h2>
 
                     {/* AVATAR */}
                     <div className="mb-6 flex items-center gap-4">
                         <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-2xl font-bold text-blue-700">
                             {fotoPerfil ? (
-                                <img src={fotoPerfil} alt="Foto de perfil" className="h-full w-full object-cover" />
+                                <img src={fotoPerfil} alt={t('profile.photoAlt')} className="h-full w-full object-cover" />
                             ) : (
                                 iniciales
                             )}
@@ -170,24 +181,24 @@ export default function MiPerfil() {
 
                         <div>
                             <label htmlFor="fotoPerfil" className="mb-1 block text-sm font-medium text-gray-700">
-                                URL de foto de perfil
+                                {t('profile.photoUrl')}
                             </label>
                             <input
                                 id="fotoPerfil"
                                 type="url"
                                 value={fotoPerfil}
                                 onChange={(e) => setFotoPerfil(e.target.value)}
-                                placeholder="https://ejemplo.com/foto.jpg"
+                                placeholder="https://example.com/photo.jpg"
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
                             />
-                            <p className="mt-1 text-xs text-gray-400">Pega la URL de tu imagen. Deja vacío para usar iniciales.</p>
+                            <p className="mt-1 text-xs text-gray-400">{t('profile.photoHint')}</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <label htmlFor="nombre" className="mb-1 block text-sm font-medium text-gray-700">
-                                Nombre *
+                                {t('profile.name')} *
                             </label>
                             <input
                                 id="nombre"
@@ -202,7 +213,7 @@ export default function MiPerfil() {
 
                         <div>
                             <label htmlFor="apellido" className="mb-1 block text-sm font-medium text-gray-700">
-                                Apellido
+                                {t('profile.lastName')}
                             </label>
                             <input
                                 id="apellido"
@@ -216,7 +227,7 @@ export default function MiPerfil() {
 
                         <div>
                             <label htmlFor="nombreVisible" className="mb-1 block text-sm font-medium text-gray-700">
-                                Nombre visible
+                                {t('profile.displayName')}
                             </label>
                             <input
                                 id="nombreVisible"
@@ -224,14 +235,14 @@ export default function MiPerfil() {
                                 value={nombreVisible}
                                 onChange={(e) => setNombreVisible(e.target.value)}
                                 maxLength={100}
-                                placeholder="Cómo te ven los demás"
+                                placeholder={t('profile.displayPlaceholder')}
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                             />
                         </div>
 
                         <div>
                             <label htmlFor="telefono" className="mb-1 block text-sm font-medium text-gray-700">
-                                Teléfono
+                                {t('profile.phone')}
                             </label>
                             <input
                                 id="telefono"
@@ -239,7 +250,7 @@ export default function MiPerfil() {
                                 value={telefono}
                                 onChange={(e) => setTelefono(e.target.value)}
                                 maxLength={20}
-                                placeholder="Opcional"
+                                placeholder={t('profile.optional')}
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                             />
                         </div>
@@ -248,37 +259,37 @@ export default function MiPerfil() {
 
                 {/* SECCIÓN 2: CUENTA (solo lectura) */}
                 <section className="rounded-xl bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">Cuenta</h2>
+                    <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.account')}</h2>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div>
-                            <span className="block text-sm text-gray-500">Correo electrónico</span>
+                            <span className="block text-sm text-gray-500">{t('profile.email')}</span>
                             <span className="font-medium text-gray-800">{usuario?.correo || '-'}</span>
                         </div>
                         <div>
-                            <span className="block text-sm text-gray-500">Rol</span>
-                            <span className="font-medium text-gray-800">{usuario?.rol || 'Sin asignar'}</span>
+                            <span className="block text-sm text-gray-500">{t('profile.role')}</span>
+                            <span className="font-medium text-gray-800">{usuario?.rol === 'Admin' ? t('family.admin') : usuario?.rol === 'Miembro' ? t('family.member') : t('profile.unassigned')}</span>
                         </div>
                         <div>
-                            <span className="block text-sm text-gray-500">Familia</span>
-                            <span className="font-medium text-gray-800">{nombreHogar || 'Sin hogar'}</span>
+                            <span className="block text-sm text-gray-500">{t('profile.family')}</span>
+                            <span className="font-medium text-gray-800">{nombreHogar || t('profile.noHome')}</span>
                         </div>
                     </div>
 
                     <p className="mt-3 text-xs text-gray-400">
-                        El correo, el rol y la familia se gestionan desde sus secciones correspondientes.
+                        {t('profile.readonlyHint')}
                     </p>
                 </section>
 
                 {/* SECCIÓN 3: APARIENCIA */}
                 <section className="rounded-xl bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">Apariencia</h2>
+                    <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.appearance')}</h2>
 
                     <div className="flex gap-3">
                         {[
-                            { valor: 'claro', etiqueta: 'Claro', icono: '☀️' },
-                            { valor: 'oscuro', etiqueta: 'Oscuro', icono: '🌙' },
-                            { valor: 'sistema', etiqueta: 'Sistema', icono: '💻' },
+                            { valor: 'claro', etiqueta: t('profile.light'), icono: '☀️' },
+                            { valor: 'oscuro', etiqueta: t('profile.dark'), icono: '🌙' },
+                            { valor: 'sistema', etiqueta: t('profile.system'), icono: '💻' },
                         ].map((opcion) => (
                             <button
                                 key={opcion.valor}
@@ -299,7 +310,7 @@ export default function MiPerfil() {
 
                 {/* SECCIÓN 4: IDIOMA */}
                 <section className="rounded-xl bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">Idioma</h2>
+                    <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.language')}</h2>
 
                     <div className="flex gap-3">
                         {[
@@ -309,7 +320,7 @@ export default function MiPerfil() {
                             <button
                                 key={opcion.valor}
                                 type="button"
-                                onClick={() => { setIdioma(opcion.valor); i18n.changeLanguage(opcion.valor); localStorage.setItem('idioma', opcion.valor) }}
+                                onClick={() => { setIdioma(opcion.valor); i18n.changeLanguage(opcion.valor) }}
                                 aria-pressed={idioma === opcion.valor}
                                 className={`rounded-lg border px-4 py-3 text-sm font-medium transition ${
                                     idioma === opcion.valor
@@ -330,7 +341,7 @@ export default function MiPerfil() {
                         disabled={guardando}
                         className="rounded-lg bg-blue-600 px-6 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                     >
-                        {guardando ? 'Guardando...' : 'Guardar cambios'}
+                        {guardando ? t('common.guardando') : t('common.guardar')}
                     </button>
 
                     <button
@@ -339,7 +350,7 @@ export default function MiPerfil() {
                         disabled={guardando}
                         className="rounded-lg border border-gray-300 px-6 py-2.5 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                     >
-                        Cancelar
+                        {t('common.cancelar')}
                     </button>
                 </div>
             </form>
@@ -354,6 +365,7 @@ export default function MiPerfil() {
 }
 
 function CambiarContrasena() {
+    const { t } = useTranslation()
     const [actual, setActual] = useState('')
     const [nueva, setNueva] = useState('')
     const [confirmar, setConfirmar] = useState('')
@@ -367,11 +379,11 @@ function CambiarContrasena() {
         setExito('')
 
         if (nueva !== confirmar) {
-            setError('Las contraseñas nuevas no coinciden.')
+            setError(t('security.mismatch'))
             return
         }
         if (nueva.length < 6) {
-            setError('La nueva contraseña debe tener al menos 6 caracteres.')
+            setError(t('security.tooShort'))
             return
         }
 
@@ -392,10 +404,10 @@ function CambiarContrasena() {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}))
-                throw new Error(data.message || 'No se pudo cambiar la contraseña.')
+                throw new Error(data.message || t('security.changeError'))
             }
 
-            setExito('Contraseña actualizada correctamente.')
+            setExito(t('security.changeSuccess'))
             setActual('')
             setNueva('')
             setConfirmar('')
@@ -408,7 +420,7 @@ function CambiarContrasena() {
 
     return (
         <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-800">Seguridad</h2>
+            <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('security.title')}</h2>
 
             {exito && <Notification tipo="success" mensaje={exito} onClose={() => setExito('')} />}
             {error && <Notification tipo="error" mensaje={error} onClose={() => setError('')} />}
@@ -416,7 +428,7 @@ function CambiarContrasena() {
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="contrasenaActual" className="mb-1 block text-sm font-medium text-gray-700">
-                        Contraseña actual
+                        {t('security.currentPassword')}
                     </label>
                     <input
                         id="contrasenaActual"
@@ -432,7 +444,7 @@ function CambiarContrasena() {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label htmlFor="nuevaContrasena" className="mb-1 block text-sm font-medium text-gray-700">
-                            Nueva contraseña
+                            {t('security.newPassword')}
                         </label>
                         <input
                             id="nuevaContrasena"
@@ -448,7 +460,7 @@ function CambiarContrasena() {
 
                     <div>
                         <label htmlFor="confirmarNueva" className="mb-1 block text-sm font-medium text-gray-700">
-                            Confirmar nueva contraseña
+                            {t('security.confirmNewPassword')}
                         </label>
                         <input
                             id="confirmarNueva"
@@ -468,7 +480,7 @@ function CambiarContrasena() {
                     disabled={guardando}
                     className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                    {guardando ? 'Cambiando...' : 'Cambiar contraseña'}
+                    {guardando ? t('security.changing') : t('security.change')}
                 </button>
             </form>
         </section>
@@ -476,6 +488,7 @@ function CambiarContrasena() {
 }
 
 function PreferenciasNotificaciones() {
+    const { t } = useTranslation()
     const [prefs, setPrefs] = useState(() => {
         try {
             return JSON.parse(localStorage.getItem('notifPrefs') || '{}')
@@ -483,9 +496,9 @@ function PreferenciasNotificaciones() {
     })
 
     const opciones = [
-        { key: 'invitaciones', label: 'Invitaciones familiares', desc: 'Recibir correo al ser invitado a una familia.' },
-        { key: 'alertasPresupuesto', label: 'Alertas de presupuesto', desc: 'Avisos cuando un presupuesto alcanza el 80% o supera el límite.' },
-        { key: 'seguridad', label: 'Notificaciones de seguridad', desc: 'Cambios de contraseña y actividad sospechosa.' },
+        { key: 'invitaciones', label: t('emailPreferences.invitations'), desc: t('emailPreferences.invitationsDescription') },
+        { key: 'alertasPresupuesto', label: t('emailPreferences.budgetAlerts'), desc: t('emailPreferences.budgetAlertsDescription') },
+        { key: 'seguridad', label: t('emailPreferences.security'), desc: t('emailPreferences.securityDescription') },
     ]
 
     function toggle(key) {
@@ -496,9 +509,9 @@ function PreferenciasNotificaciones() {
 
     return (
         <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-800">Notificaciones por correo</h2>
+            <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('emailPreferences.title')}</h2>
             <p className="mb-4 text-sm text-gray-500">
-                Elige qué correos quieres recibir. Las invitaciones siempre se muestran en la aplicación.
+                {t('emailPreferences.description')}
             </p>
 
             <div className="space-y-4">

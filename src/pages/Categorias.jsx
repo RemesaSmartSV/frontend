@@ -48,7 +48,7 @@ export default function Categorias() {
         e.preventDefault()
 
         if (!nombre.trim()) {
-            setError('Escribe el nombre de la categoría.')
+            setError(t('categories.nameRequired'))
             return
         }
 
@@ -70,13 +70,13 @@ export default function Categorias() {
                 )
 
                 setMensaje(
-                    'Categoría actualizada correctamente.'
+                    t('categories.updated')
                 )
             } else {
                 await categoriasApi.crear(categoria)
 
                 setMensaje(
-                    'Categoría creada correctamente.'
+                    t('categories.saved')
                 )
             }
 
@@ -108,8 +108,8 @@ export default function Categorias() {
         setConfirmModal({
             abierto: true,
             id,
-            titulo: 'Eliminar categoría',
-            mensaje: '¿Seguro que deseas eliminar esta categoría? Esta acción no se puede deshacer.',
+            titulo: t('categories.deleteTitle'),
+            mensaje: t('categories.deleteMessage'),
         })
     }
 
@@ -124,7 +124,7 @@ export default function Categorias() {
 
             await categoriasApi.eliminar(id)
 
-            setMensaje('Categoría eliminada correctamente.')
+            setMensaje(t('categories.deleted'))
 
             await cargarCategorias()
         } catch (err) {
@@ -165,7 +165,7 @@ export default function Categorias() {
                 </h1>
 
                 <p className="text-gray-500">
-                    Administra las categorías de tus ingresos y gastos.
+                    {t('categories.description')}
                 </p>
 
             </div>
@@ -175,8 +175,8 @@ export default function Categorias() {
 
                 <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
-                        ? 'Editar categoría'
-                        : 'Crear categoría'}
+                        ? t('categories.edit')
+                        : t('categories.create')}
                 </h2>
 
                 <form onSubmit={guardarCategoria}>
@@ -187,7 +187,7 @@ export default function Categorias() {
                         <div className="flex min-w-0 flex-col gap-2">
 
                             <label className="font-semibold text-gray-700">
-                                Nombre
+                                {t('categories.name')}
                             </label>
 
                             <input
@@ -196,7 +196,7 @@ export default function Categorias() {
                                 onChange={(e) =>
                                     setNombre(e.target.value)
                                 }
-                                placeholder="Ej. Alimentación"
+                                placeholder={t('categories.namePlaceholder')}
                                 disabled={procesando}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
@@ -207,7 +207,7 @@ export default function Categorias() {
                         <div className="flex min-w-0 flex-col gap-2">
 
                             <label className="font-semibold text-gray-700">
-                                Tipo
+                                {t('categories.type')}
                             </label>
 
                             <select
@@ -219,11 +219,11 @@ export default function Categorias() {
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             >
                                 <option value="Gasto">
-                                    Gasto
+                                    {t('nav.gastos')}
                                 </option>
 
                                 <option value="Ingreso">
-                                    Ingreso
+                                    {t('nav.ingresos')}
                                 </option>
                             </select>
 
@@ -233,7 +233,7 @@ export default function Categorias() {
                         <div className="flex min-w-0 flex-col gap-2 md:col-span-2">
 
                             <label className="font-semibold text-gray-700">
-                                Ícono
+                                {t('categories.icon')}
                             </label>
 
                             <input
@@ -242,7 +242,7 @@ export default function Categorias() {
                                 onChange={(e) =>
                                     setIcono(e.target.value)
                                 }
-                                placeholder="Ej. comida"
+                                placeholder={t('categories.iconPlaceholder')}
                                 disabled={procesando}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
@@ -260,10 +260,10 @@ export default function Categorias() {
                             className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             {procesando
-                                ? 'Guardando...'
+                                ? t('categories.saving')
                                 : editandoId
-                                    ? 'Actualizar'
-                                    : 'Crear categoría'}
+                                    ? t('common.actualizar')
+                                    : t('categories.create')}
                         </button>
 
                         {editandoId && (
@@ -273,7 +273,7 @@ export default function Categorias() {
                                 disabled={procesando}
                                 className="w-full rounded-lg bg-gray-500 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                             >
-                                Cancelar
+                                {t('common.cancelar')}
                             </button>
                         )}
 
@@ -290,11 +290,11 @@ export default function Categorias() {
 
                     <div>
                         <h2 className="text-xl font-semibold text-slate-900">
-                            Categorías registradas
+                            {t('categories.registered')}
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            Lista de categorías disponibles.
+                            {t('categories.available')}
                         </p>
                     </div>
 
@@ -305,14 +305,14 @@ export default function Categorias() {
                     >
                         {cargando
                             ? 'Cargando...'
-                            : 'Actualizar'}
+                            : t('common.actualizar')}
                     </button>
 
                 </div>
 
                 {cargando ? (
 
-                    <Loading mensaje="Cargando categorías..." />
+                    <Loading mensaje={t('common.cargando')} />
 
                 ) : categorias.length === 0 ? (
 
@@ -321,10 +321,10 @@ export default function Categorias() {
                             🏷️
                         </div>
                         <p className="mt-4 font-medium text-gray-700">
-                            No hay categorías registradas.
+                            {t('categories.empty')}
                         </p>
                         <p className="mt-1 text-sm text-gray-500">
-                            Crea tu primera categoría usando el formulario de arriba.
+                            {t('categories.emptyHint')}
                         </p>
                     </div>
 
@@ -338,19 +338,19 @@ export default function Categorias() {
                                 <tr>
 
                                     <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                        Nombre
+                                        {t('categories.name')}
                                     </th>
 
                                     <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                        Tipo
+                                        {t('categories.type')}
                                     </th>
 
                                     <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                        Ícono
+                                        {t('categories.icon')}
                                     </th>
 
                                     <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
-                                        Acciones
+                                        {t('common.acciones')}
                                     </th>
 
                                 </tr>
@@ -380,7 +380,7 @@ export default function Categorias() {
                                                         : 'inline-block whitespace-nowrap rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-600 sm:text-sm'
                                                 }
                                             >
-                                                {categoria.tipo}
+                                                {categoria.tipo === 'Ingreso' ? t('nav.ingresos') : t('nav.gastos')}
                                             </span>
 
                                         </td>
@@ -417,8 +417,8 @@ export default function Categorias() {
                                                     className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
                                                     {procesando
-                                                        ? 'Procesando...'
-                                                        : 'Eliminar'}
+                                                        ? t('common.procesando')
+                                                        : t('common.eliminar')}
                                                 </button>
 
                                             </div>

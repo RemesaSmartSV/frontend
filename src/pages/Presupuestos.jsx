@@ -10,6 +10,7 @@ import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import { formatearMoneda, formatearNumero, formatearFecha } from '../utils/formato'
 
 function Presupuestos() {
     const { t } = useTranslation()
@@ -72,7 +73,7 @@ function Presupuestos() {
 
             setPaginaActual(1)
         } catch (err) {
-            setError(err.message || 'No se pudieron cargar los datos.')
+            setError(err.message || t('errors.generico'))
         } finally {
             setCargando(false)
         }
@@ -112,22 +113,22 @@ function Presupuestos() {
         setMensaje('')
 
         if (!formulario.idCategoria) {
-            setError('Selecciona una categoría.')
+            setError(t('budget.categoryRequired'))
             return
         }
 
         if (!formulario.montoLimite) {
-            setError('Ingresa un monto límite.')
+            setError(t('budget.limitRequired'))
             return
         }
 
         if (Number(formulario.montoLimite) <= 0) {
-            setError('El monto límite debe ser mayor que 0.')
+            setError(t('budget.limitPositive'))
             return
         }
 
         if (!formulario.mesAnio) {
-            setError('Selecciona el mes del presupuesto.')
+            setError(t('budget.monthRequired'))
             return
         }
 
@@ -142,16 +143,16 @@ function Presupuestos() {
 
             if (editando) {
                 await presupuestosApi.actualizar(editando, datos)
-                setMensaje('Presupuesto actualizado correctamente.')
+                setMensaje(t('budget.updated'))
             } else {
                 await presupuestosApi.crear(datos)
-                setMensaje('Presupuesto creado correctamente.')
+                setMensaje(t('budget.saved'))
             }
 
             limpiarFormulario()
             await cargarDatos()
         } catch (err) {
-            setError(err.message || 'No se pudo guardar el presupuesto.')
+            setError(err.message || t('errors.generico'))
         } finally {
             setProcesando(false)
         }
@@ -186,7 +187,7 @@ function Presupuestos() {
         setConfirmModal({
             abierto: true,
             id,
-            mensaje: '¿Estás segura de que deseas eliminar este presupuesto?',
+            mensaje: t('budget.deleteMessage'),
         })
     }
 
@@ -197,18 +198,18 @@ function Presupuestos() {
 
             await presupuestosApi.eliminar(confirmModal.id)
 
-            setMensaje('Presupuesto eliminado correctamente.')
+            setMensaje(t('budget.deleted'))
 
             setConfirmModal({
                 abierto: false,
                 id: null,
-                titulo: 'Eliminar presupuesto',
+                titulo: t('budget.deleteTitle'),
                 mensaje: '',
             })
 
             await cargarDatos()
         } catch (err) {
-            setError(err.message || 'No se pudo eliminar el presupuesto.')
+            setError(err.message || t('errors.generico'))
         } finally {
             setProcesando(false)
         }
@@ -224,7 +225,7 @@ function Presupuestos() {
                 Number(item.idCategoria) === Number(idCategoria)
         )
 
-        return categoria?.nombre || 'Sin categoría'
+        return categoria?.nombre || t('common.sinCategoria')
     }
 
     // ==========================================
@@ -417,17 +418,17 @@ function Presupuestos() {
     const exportarCSV = () => {
         if (presupuestosFiltrados.length === 0) {
             setError(
-                'No hay presupuestos para exportar.'
+                t('budget.exportEmpty')
             )
             return
         }
 
         const encabezados = [
-            'Categoría',
-            'Mes',
-            'Monto límite',
-            'Gastado',
-            'Porcentaje',
+            t('common.categoria'),
+            t('budget.month'),
+            t('budget.limit'),
+            t('budget.spent'),
+            t('budget.percentage'),
         ]
 
         const filas =
@@ -512,7 +513,7 @@ function Presupuestos() {
                     </h1>
 
                     <p className="text-gray-500">
-                        Controla tus límites de gasto y revisa tu progreso.
+                        {t('budget.description')}
                     </p>
                 </div>
 
@@ -523,7 +524,7 @@ function Presupuestos() {
                         onClick={exportarCSV}
                         className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
                     >
-                        Exportar CSV
+                        {t('common.exportar')}
                     </button>
 
                     <button
@@ -531,7 +532,7 @@ function Presupuestos() {
                         onClick={cargarDatos}
                         className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
-                        Actualizar
+                        {t('common.actualizar')}
                     </button>
 
                 </div>
@@ -562,8 +563,8 @@ function Presupuestos() {
 
                 <h2 className="mb-4 text-lg font-semibold text-gray-800">
                     {editando
-                        ? 'Editar presupuesto'
-                        : 'Crear presupuesto'}
+                        ? t('budget.edit')
+                        : t('budget.create')}
                 </h2>
 
                 <form
@@ -573,7 +574,7 @@ function Presupuestos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Categoría
+                            {t('common.categoria')}
                         </label>
 
                         <select
@@ -583,7 +584,7 @@ function Presupuestos() {
                             className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                         >
                             <option value="">
-                                Selecciona una categoría
+                                {t('common.seleccionaCategoria')}
                             </option>
 
                             {categorias
@@ -610,7 +611,7 @@ function Presupuestos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Monto límite
+                            {t('budget.limit')}
                         </label>
 
                         <input
@@ -629,7 +630,7 @@ function Presupuestos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Mes
+                            {t('budget.month')}
                         </label>
 
                         <input
@@ -651,10 +652,10 @@ function Presupuestos() {
                             className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                         >
                             {procesando
-                                ? 'Guardando...'
+                                ? t('common.guardando')
                                 : editando
-                                    ? 'Actualizar'
-                                    : 'Crear presupuesto'}
+                                    ? t('common.actualizar')
+                                    : t('budget.create')}
                         </button>
 
                         {editando && (
@@ -665,7 +666,7 @@ function Presupuestos() {
                                 }
                                 className="rounded-lg border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50"
                             >
-                                Cancelar
+                                {t('common.cancelar')}
                             </button>
                         )}
 
@@ -682,7 +683,7 @@ function Presupuestos() {
                 <div className="mb-4 flex items-center justify-between">
 
                     <h2 className="text-lg font-semibold text-gray-800">
-                        Filtros
+                        {t('common.filtros')}
                     </h2>
 
                     <button
@@ -690,7 +691,7 @@ function Presupuestos() {
                         onClick={limpiarFiltros}
                         className="text-sm font-medium text-blue-600 hover:text-blue-800"
                     >
-                        Limpiar filtros
+                        {t('common.limpiarFiltros')}
                     </button>
 
                 </div>
@@ -699,7 +700,7 @@ function Presupuestos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Categoría
+                            {t('common.categoria')}
                         </label>
 
                         <select
@@ -713,7 +714,7 @@ function Presupuestos() {
                             className="w-full rounded-lg border border-gray-300 px-3 py-2"
                         >
                             <option value="">
-                                Todas
+                                {t('income.all')}
                             </option>
 
                             {categorias.map(
@@ -735,7 +736,7 @@ function Presupuestos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Mes
+                            {t('budget.month')}
                         </label>
 
                         <input
@@ -753,7 +754,7 @@ function Presupuestos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Monto mínimo
+                            {t('common.montoMinimo')}
                         </label>
 
                         <input
@@ -773,7 +774,7 @@ function Presupuestos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Monto máximo
+                            {t('common.montoMaximo')}
                         </label>
 
                         <input
@@ -793,7 +794,7 @@ function Presupuestos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">
-                            Buscar categoría
+                            {t('budget.filterSearch')}
                         </label>
 
                         <input
@@ -805,7 +806,7 @@ function Presupuestos() {
                             onChange={
                                 manejarCambioFiltro
                             }
-                            placeholder="Buscar..."
+                            placeholder={t('budget.searchPlaceholder')}
                             className="w-full rounded-lg border border-gray-300 px-3 py-2"
                         />
                     </div>
@@ -827,23 +828,23 @@ function Presupuestos() {
                             <tr>
 
                                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                                    Categoría
+                                    {t('common.categoria')}
                                 </th>
 
                                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                                    Mes
+                                    {t('budget.month')}
                                 </th>
 
                                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                                    Monto límite
+                                    {t('budget.limit')}
                                 </th>
 
                                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                                    Progreso
+                                    {t('budget.progress')}
                                 </th>
 
                                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
-                                    Acciones
+                                    {t('common.acciones')}
                                 </th>
 
                             </tr>
@@ -860,7 +861,7 @@ function Presupuestos() {
                                         colSpan="5"
                                         className="px-6 py-10 text-center text-gray-500"
                                     >
-                                        No tienes presupuestos registrados.
+                                        {t('budget.empty')}
                                     </td>
 
                                 </tr>
@@ -903,20 +904,14 @@ function Presupuestos() {
                                                 <td className="px-6 py-4 text-gray-600">
 
                                                     {presupuesto.mesAnio
-                                                        ? presupuesto.mesAnio.substring(
-                                                            0,
-                                                            7
-                                                        )
+                                                        ? formatearFecha(`${presupuesto.mesAnio.substring(0, 7)}-01`, { month: 'short', year: 'numeric' })
                                                         : '-'}
 
                                                 </td>
 
                                                 <td className="px-6 py-4 font-medium text-gray-800">
 
-                                                    $
-                                                    {Number(
-                                                        presupuesto.montoLimite
-                                                    ).toFixed(2)}
+                                                    {formatearMoneda(presupuesto.montoLimite)}
 
                                                 </td>
 
@@ -927,16 +922,11 @@ function Presupuestos() {
                                                         <div className="mb-1 flex justify-between text-xs">
 
                                                             <span className="text-gray-500">
-                                                                $
-                                                                {progreso.gastado.toFixed(
-                                                                    2
-                                                                )}
+                                                                {formatearMoneda(progreso.gastado)}
                                                             </span>
 
                                                             <span className="font-semibold text-gray-700">
-                                                                {progreso.porcentaje.toFixed(
-                                                                    0
-                                                                )}
+                                                                {formatearNumero(progreso.porcentaje, { maximumFractionDigits: 0 })}
                                                                 %
                                                             </span>
 
@@ -970,7 +960,7 @@ function Presupuestos() {
                                                             }
                                                             className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
                                                         >
-                                                            Editar
+                                                            {t('common.editar')}
                                                         </button>
 
                                                         <button
@@ -982,7 +972,7 @@ function Presupuestos() {
                                                             }
                                                             className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200"
                                                         >
-                                                            Eliminar
+                                                            {t('common.eliminar')}
                                                         </button>
 
                                                     </div>
@@ -1028,7 +1018,7 @@ function Presupuestos() {
                 abierto={
                     confirmModal.abierto
                 }
-                titulo="Eliminar presupuesto"
+                titulo={t('budget.deleteTitle')}
                 mensaje={
                     confirmModal.mensaje
                 }

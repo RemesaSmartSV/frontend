@@ -27,6 +27,8 @@ import {
 } from 'lucide-react'
 
 import DashboardPreview from '../components/DashboardPreview'
+import { useTranslation } from 'react-i18next'
+import LanguageSelector from '../components/LanguageSelector'
 import logoColor from '../assets/remesa-smart.png'
 import logoBlanco from '../assets/remesa-smart (blanco).png'
 
@@ -39,124 +41,91 @@ import logoBlanco from '../assets/remesa-smart (blanco).png'
  * "interfaz en desarrollo" en lugar de presentarse como terminada.
  */
 
-const SECCIONES = [
-    'Portada',
-    'Problema',
-    'Solución',
-    'Cómo funciona',
-    'Beneficios',
-    'Tecnología',
-]
+const SECCIONES = ['cover', 'problem', 'solution', 'how', 'benefits', 'technology']
 
 const PROBLEMAS = [
     {
         icono: Wallet,
-        titulo: 'Gastos sin control',
-        texto: 'El dinero se va sin saber exactamente en qué se gasta.',
+        key: 'presentation.problem.spending',
     },
     {
         icono: CircleDollarSign,
-        titulo: 'Saldo incierto',
-        texto: 'Es difícil saber cuánto queda realmente disponible.',
+        key: 'presentation.problem.balance',
     },
     {
         icono: PiggyBank,
-        titulo: 'Ahorro sin plan',
-        texto: 'No hay una meta clara ni un seguimiento del ahorro.',
+        key: 'presentation.problem.savings',
     },
     {
         icono: Files,
-        titulo: 'Información dispersa',
-        texto: 'Los números del hogar quedan en varios lugares.',
+        key: 'presentation.problem.dispersed',
     },
 ]
 
-const CAPACIDADES = [
-    'Registrar y controlar remesas.',
-    'Administrare ingresos y gastos.',
-    'Crear y controlar presupuestos.',
-    'Establecer metas de ahorro.',
-    'Visualizar el estado financiero del hogar.',
-]
+const CAPACIDADES = ['remittances', 'incomeExpense', 'budgets', 'savings', 'overview']
 
 const PANTALLAS = [
     {
         icono: LayoutDashboard,
-        nombre: 'Resumen financiero',
-        detalle: 'Tarjetas y gráficas del hogar.',
+        key: 'presentation.screens.dashboard',
     },
     {
         icono: Banknote,
-        nombre: 'Remesas',
-        detalle: 'Registro de remesas recibidas.',
+        key: 'presentation.screens.remittances',
     },
     {
         icono: TrendingUp,
-        nombre: 'Ingresos',
-        detalle: 'Entradas registradas del hogar.',
+        key: 'presentation.screens.income',
     },
     {
         icono: TrendingDown,
-        nombre: 'Gastos',
-        detalle: 'Salidas filtradas por categoría.',
+        key: 'presentation.screens.expenses',
     },
     {
         icono: Wallet,
-        nombre: 'Presupuestos',
-        detalle: 'Límites por categoría y periodo.',
+        key: 'presentation.screens.budgets',
     },
     {
         icono: BookOpen,
-        nombre: 'Educación financiera',
-        detalle: 'Tips para tomar mejores decisiones.',
+        key: 'presentation.screens.education',
     },
 ]
 
 const PASOS = [
     {
         icono: Banknote,
-        titulo: 'Recibe tu remesa',
-        texto: 'Llega el dinero al hogar.',
+        key: 'receive',
     },
     {
         icono: ClipboardList,
-        titulo: 'Registra ingresos y gastos',
-        texto: 'Organiza cada movimiento.',
+        key: 'record',
     },
     {
         icono: Wallet,
-        titulo: 'Define tu presupuesto',
-        texto: 'Fija límites y prioriza tus metas.',
-        nota: 'metas: interfaz en desarrollo',
+        key: 'budget',
     },
     {
         icono: LineChart,
-        titulo: 'Consulta tu progreso',
-        texto: 'Decide con información real.',
+        key: 'progress',
     },
 ]
 
 const BENEFICIOS = [
     {
         icono: BarChart3,
-        titulo: 'Mayor visibilidad',
-        texto: 'Las finanzas del hogar en una sola vista.',
+        key: 'visibility',
     },
     {
         icono: Wallet,
-        titulo: 'Mejor control',
-        texto: 'Ingresos y gastos siempre al día.',
+        key: 'control',
     },
     {
         icono: Target,
-        titulo: 'Metas de ahorro',
-        texto: 'Seguimiento de tus objetivos de ahorro.',
-        nota: 'Interfaz en desarrollo',
+        key: 'goals',
     },
     {
         icono: Tags,
-        titulo: 'Organización del hogar',
-        texto: 'Decisiones financieras más ordenadas.',
+        key: 'organization',
     },
 ]
 
@@ -172,6 +141,7 @@ const CHIP_EN_DESARROLLO =
     'inline-flex shrink-0 items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700'
 
 export default function Presentacion() {
+    const { t } = useTranslation()
     const contenedorRef = useRef(null)
     const seccionesRef = useRef([])
 
@@ -185,7 +155,7 @@ export default function Presentacion() {
     --------------------------------------------------------------- */
     useEffect(() => {
         const tituloAnterior = document.title
-        document.title = 'RemesaSmart SV — Presentación'
+        document.title = `${t('app.name')} — ${t('presentation.sections.cover')}`
 
         const overflowAnterior = document.body.style.overflow
         document.body.style.overflow = 'hidden'
@@ -194,7 +164,7 @@ export default function Presentacion() {
             document.title = tituloAnterior
             document.body.style.overflow = overflowAnterior
         }
-    }, [])
+    }, [t])
 
     /* ---------------------------------------------------------------
        Sección activa según la posición del scroll.
@@ -359,7 +329,7 @@ export default function Presentacion() {
                 ref={(elemento) => {
                     seccionesRef.current[indice] = elemento
                 }}
-                aria-label={`${indice + 1} de ${SECCIONES.length}: ${SECCIONES[indice]}`}
+                aria-label={`${indice + 1} / ${SECCIONES.length}: ${t(`presentation.sections.${SECCIONES[indice]}`)}`}
                 data-indice={indice}
                 className={`h-full snap-start overflow-y-auto ${clases}`}
             >
@@ -372,6 +342,9 @@ export default function Presentacion() {
 
     return (
         <div className="font-sans">
+            <div className="fixed right-4 top-4 z-[60]">
+                <LanguageSelector />
+            </div>
             {/* BARRA DE PROGRESO */}
             <div className="fixed inset-x-0 top-0 z-50 h-1 bg-slate-900/10">
                 <div
@@ -410,16 +383,13 @@ export default function Presentacion() {
                                 <p
                                     className={`mt-4 text-lg font-semibold text-blue-700 sm:text-2xl ${animacion(0)}`}
                                 >
-                                    Convierte tus remesas en mejores
-                                    decisiones financieras.
+                                    {t('presentation.coverLead')}
                                 </p>
 
                                 <p
                                     className={`mt-4 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg ${animacion(0)}`}
                                 >
-                                    Una solución digital para administrar
-                                    remesas, organizar los gastos del hogar y
-                                    alcanzar metas de ahorro.
+                                    {t('presentation.coverDescription')}
                                 </p>
 
                                 <div
@@ -430,13 +400,13 @@ export default function Presentacion() {
                                         onClick={() => irA(1)}
                                         className="inline-flex items-center gap-2 rounded-[9px] bg-blue-600 px-6 py-3.5 text-base font-bold text-white shadow-[0_10px_25px_rgba(37,99,235,0.25)] transition hover:-translate-y-px hover:bg-blue-700 active:scale-[0.99]"
                                     >
-                                        Conoce cómo funciona
+                                        {t('presentation.coverButton')}
                                         <ArrowRight size={18} strokeWidth={2.2} />
                                     </button>
 
                                     <span className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2.5 text-xs font-semibold text-slate-500 lg:inline-flex">
                                         <MousePointerClick size={15} />
-                                        Usa ← → para navegar
+                                        {t('presentation.keyboardHint')}
                                     </span>
                                 </div>
                             </div>
@@ -459,14 +429,13 @@ export default function Presentacion() {
                             <p
                                 className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 ${animacion(1)}`}
                             >
-                                El problema
+                                {t('presentation.problemEyebrow')}
                             </p>
 
                             <h2
                                 className={`mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl ${animacion(1)}`}
                             >
-                                Recibir dinero no siempre significa saber cómo
-                                administrarlo.
+                                {t('presentation.problemHeading')}
                             </h2>
 
                             <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -475,7 +444,7 @@ export default function Presentacion() {
 
                                     return (
                                         <article
-                                            key={problema.titulo}
+                                            key={problema.key}
                                             className={`rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-[0_10px_30px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.03)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(0,0,0,0.10)] ${animacion(1)}`}
                                         >
                                             <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
@@ -483,11 +452,11 @@ export default function Presentacion() {
                                             </span>
 
                                             <h3 className="text-base font-bold text-slate-900">
-                                                {problema.titulo}
+                                                {t(`${problema.key}.title`)}
                                             </h3>
 
                                             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                                                {problema.texto}
+                                                {t(`${problema.key}.text`)}
                                             </p>
                                         </article>
                                     )
@@ -509,14 +478,13 @@ export default function Presentacion() {
                                 <p
                                     className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 ${animacion(2)}`}
                                 >
-                                    La solución
+                                    {t('presentation.solutionEyebrow')}
                                 </p>
 
                                 <h2
                                     className={`mt-4 text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl ${animacion(2)}`}
                                 >
-                                    Todo el control financiero del hogar, en un
-                                    solo lugar.
+                                    {t('presentation.solutionHeading')}
                                 </h2>
 
                                 <ul className="mt-7 flex flex-col gap-3.5">
@@ -530,10 +498,10 @@ export default function Presentacion() {
                                             </span>
 
                                             <span className="leading-snug">
-                                                {capacidad.replace('.', '')}
+                                                {t(`presentation.capabilities.${capacidad}`).replace(/\.$/, '')}
                                                 {indice === 3 && (
                                                     <span className={`${CHIP_EN_DESARROLLO} ml-2 align-middle`}>
-                                                        Interfaz en desarrollo
+                                                        {t('presentation.inDevelopment')}
                                                     </span>
                                                 )}
                                             </span>
@@ -548,7 +516,7 @@ export default function Presentacion() {
 
                                     return (
                                         <article
-                                            key={pantalla.nombre}
+                                            key={pantalla.key}
                                             className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.03)] transition duration-300 hover:-translate-y-1 hover:border-blue-200 ${animacion(2)}`}
                                         >
                                             <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
@@ -556,11 +524,11 @@ export default function Presentacion() {
                                             </span>
 
                                             <h3 className="text-sm font-bold text-slate-900">
-                                                {pantalla.nombre}
+                                                {t(`${pantalla.key}.name`)}
                                             </h3>
 
                                             <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                                                {pantalla.detalle}
+                                                {t(`${pantalla.key}.detail`)}
                                             </p>
                                         </article>
                                     )
@@ -582,13 +550,13 @@ export default function Presentacion() {
                                 <p
                                     className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 ${animacion(3)}`}
                                 >
-                                    ¿Cómo funciona?
+                                    {t('presentation.howEyebrow')}
                                 </p>
 
                                 <h2
                                     className={`mx-auto mt-4 max-w-2xl text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl ${animacion(3)}`}
                                 >
-                                    Un flujo simple, paso a paso.
+                                    {t('presentation.howHeading')}
                                 </h2>
                             </div>
 
@@ -598,7 +566,7 @@ export default function Presentacion() {
 
                                     return (
                                         <article
-                                            key={paso.titulo}
+                                            key={paso.key}
                                             className={`relative rounded-2xl border border-slate-200 bg-slate-50 p-6 ${animacion(3)}`}
                                         >
                                             <div className="mb-5 flex items-center gap-3">
@@ -618,16 +586,16 @@ export default function Presentacion() {
                                             />
 
                                             <h3 className="mt-4 text-base font-bold leading-snug text-slate-900">
-                                                {paso.titulo}
+                                                {t(`presentation.steps.${paso.key}.title`)}
                                             </h3>
 
                                             <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
-                                                {paso.texto}
+                                                {t(`presentation.steps.${paso.key}.text`)}
                                             </p>
 
-                                            {paso.nota && (
+                                            {paso.key === 'budget' && (
                                                 <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-                                                    {paso.nota}
+                                                    {t(`presentation.steps.${paso.key}.note`)}
                                                 </p>
                                             )}
                                         </article>
@@ -650,14 +618,13 @@ export default function Presentacion() {
                                 <p
                                     className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 ${animacion(4)}`}
                                 >
-                                    Beneficios
+                                    {t('presentation.sections.benefits')}
                                 </p>
 
                                 <h2
                                     className={`mx-auto mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl ${animacion(4)}`}
                                 >
-                                    Más control. Más organización. Más
-                                    tranquilidad.
+                                    {t('presentation.benefitsHeading')}
                                 </h2>
                             </div>
 
@@ -667,7 +634,7 @@ export default function Presentacion() {
 
                                     return (
                                         <article
-                                            key={beneficio.titulo}
+                                            key={beneficio.key}
                                             className={`rounded-2xl bg-white p-6 shadow-[0_10px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] transition duration-300 hover:-translate-y-1 ${animacion(4)}`}
                                         >
                                             <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
@@ -675,18 +642,18 @@ export default function Presentacion() {
                                             </span>
 
                                             <h3 className="text-base font-bold text-slate-900">
-                                                {beneficio.titulo}
+                                                {t(`presentation.benefit.${beneficio.key}.title`)}
                                             </h3>
 
                                             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                                                {beneficio.texto}
+                                                {t(`presentation.benefit.${beneficio.key}.text`)}
                                             </p>
 
-                                            {beneficio.nota && (
+                                            {beneficio.key === 'goals' && (
                                                 <span
                                                     className={`${CHIP_EN_DESARROLLO} mt-4`}
                                                 >
-                                                    {beneficio.nota}
+                                                    {t(`presentation.benefit.${beneficio.key}.note`)}
                                                 </span>
                                             )}
                                         </article>
@@ -708,7 +675,7 @@ export default function Presentacion() {
                             <p
                                 className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-200 ${animacion(5)}`}
                             >
-                                Tecnología
+                                {t('presentation.technology')}
                             </p>
 
                             <ul
@@ -746,9 +713,7 @@ export default function Presentacion() {
                             <p
                                 className={`mx-auto mt-4 max-w-2xl text-base leading-relaxed text-blue-100 sm:text-lg ${animacion(5)}`}
                             >
-                                Una herramienta creada para ayudar a los hogares
-                                salvadoreños a administrar mejor sus remesas y
-                                construir una mejor organización financiera.
+                                {t('presentation.closing')}
                             </p>
 
                             <div className={`mt-9 ${animacion(5)}`}>
@@ -756,7 +721,7 @@ export default function Presentacion() {
                                     href="/"
                                     className="inline-flex items-center gap-2 rounded-[9px] bg-white px-7 py-3.5 text-base font-bold text-[#123B8F] shadow-[0_10px_25px_rgba(0,0,0,0.20)] transition hover:-translate-y-px hover:bg-blue-50 active:scale-[0.99]"
                                 >
-                                    Conoce RemesaSmart SV
+                                    {t('presentation.closingButton')}
                                     <CircleArrowRight size={19} strokeWidth={2.2} />
                                 </a>
                             </div>
@@ -769,15 +734,15 @@ export default function Presentacion() {
                 NAVEGACIÓN
             ======================================================== */}
             <nav
-                aria-label="Navegación de la presentación"
+                aria-label={t('presentation.presentationNav')}
                 className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-slate-200/80 bg-white/90 py-2.5 pl-3 pr-4 shadow-[0_10px_30px_rgba(0,0,0,0.12)] backdrop-blur"
             >
                 <button
                     type="button"
                     onClick={() => irA(actual - 1)}
                     disabled={actual === 0}
-                    aria-label="Sección anterior"
-                    title="Sección anterior"
+                    aria-label={t('presentation.previousSection')}
+                    title={t('presentation.previousSection')}
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent"
                 >
                     <ArrowLeft size={18} strokeWidth={2.2} />
@@ -789,9 +754,9 @@ export default function Presentacion() {
                             key={nombre}
                             type="button"
                             onClick={() => irA(indice)}
-                            aria-label={`Ir a ${nombre}`}
+                            aria-label={t('presentation.goTo', { section: t(`presentation.sections.${nombre}`) })}
                             aria-current={indice === actual ? 'true' : undefined}
-                            title={nombre}
+                            title={t(`presentation.sections.${nombre}`)}
                             className={`h-2 rounded-full transition-all duration-300 ${
                                 indice === actual
                                     ? 'w-6 bg-blue-600'
@@ -803,15 +768,15 @@ export default function Presentacion() {
 
                 <span className="hidden min-w-[9.5rem] pl-1 text-xs font-bold uppercase tracking-wide text-slate-500 sm:block">
                     {String(actual + 1).padStart(2, '0')} ·{' '}
-                    {SECCIONES[actual]}
+                    {t(`presentation.sections.${SECCIONES[actual]}`)}
                 </span>
 
                 <button
                     type="button"
                     onClick={() => irA(actual + 1)}
                     disabled={actual === SECCIONES.length - 1}
-                    aria-label="Sección siguiente"
-                    title="Sección siguiente"
+                    aria-label={t('presentation.nextSection')}
+                    title={t('presentation.nextSection')}
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent"
                 >
                     <ArrowRight size={18} strokeWidth={2.2} />

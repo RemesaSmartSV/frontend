@@ -4,30 +4,21 @@ import {
     hogaresApi,
     usuariosApi,
     invitacionesApi,
+    solicitudesUnionApi,
 } from '../services/api'
+import { formatearFecha } from '../utils/formato'
 
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
-
-function formatearFecha(fecha) {
-    if (!fecha) return '-'
-
-    const valor = new Date(fecha)
-
-    if (Number.isNaN(valor.getTime())) return '-'
-
-    return valor.toLocaleDateString('es-SV', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-    })
-}
 
 export default function MiHogar() {
     const { t } = useTranslation()
     const [hogar, setHogar] = useState(null)
     const [miembros, setMiembros] = useState([])
     const [enviadas, setEnviadas] = useState([])
+    const [solicitudes, setSolicitudes] = useState([])
+    const [resolviendo, setResolviendo] = useState(null)
+    const [codigoCopiado, setCodigoCopiado] = useState(false)
     const [cargando, setCargando] = useState(true)
 
     const [correo, setCorreo] = useState('')
@@ -61,14 +52,21 @@ export default function MiHogar() {
             setMiembros(miembrosData || [])
 
             if (esAdmin) {
-                setEnviadas(await invitacionesApi.enviadas())
+                // Recibidas devuelve 403 a un no-Admin: por eso solo se
+                // pide cuando el rol guardado en localStorage es Admin.
+                const [enviadasData, solicitudesData] = await Promise.all([
+                    invitacionesApi.enviadas(),
+                    solicitudesUnionApi.recibidas(),
+                ])
+                setEnviadas(enviadasData || [])
+                setSolicitudes(solicitudesData || [])
             }
         } catch (err) {
-            setError(err.message || 'No se pudo cargar la información del hogar.')
+            setError(err.message || t('family.loadError'))
         } finally {
             setCargando(false)
         }
-    }, [esAdmin])
+    }, [esAdmin, t])
 
     useEffect(() => {
         cargarDatos()
@@ -80,7 +78,7 @@ export default function MiHogar() {
         setMensaje('')
 
         if (!correo.trim()) {
-            setError('Escribe el correo de la persona a invitar.')
+            setError(t('family.inviteEmailRequired'))
             return
         }
 
@@ -89,13 +87,54 @@ export default function MiHogar() {
 
             await invitacionesApi.invitar(correo.trim())
 
-            setMensaje('Invitación enviada.')
+            setMensaje(t('family.invitationSent'))
             setCorreo('')
             setEnviadas(await invitacionesApi.enviadas())
         } catch (err) {
-            setError(err.message || 'No se pudo enviar la invitación.')
+            setError(err.message || t('family.inviteError'))
         } finally {
             setEnviando(false)
+        }
+    }
+
+    async function copiarCodigo() {
+        const codigo = hogar?.codigoPublico
+
+        if (!codigo) return
+
+        try {
+            await navigator.clipboard.writeText(codigo)
+            setCodigoCopiado(true)
+            setTimeout(() => setCodigoCopiado(false), 2500)
+        } catch {
+            // Sin Clipboard API (contexto no seguro o navegador viejo):
+            // se informa para que se copie a mano.
+            setError(t('family.codeCopyError'))
+        }
+    }
+
+    async function responderSolicitud(id, accion) {
+        setError('')
+        setMensaje('')
+
+        try {
+            setResolviendo(id)
+
+            if (accion === 'aceptar') {
+                await solicitudesUnionApi.aceptar(id)
+                setMensaje(t('family.requestAccepted'))
+            } else {
+                await solicitudesUnionApi.rechazar(id)
+                setMensaje(t('family.requestRejected'))
+            }
+
+            await cargarDatos()
+        } catch (err) {
+            // Incluye el 409 del backend (el usuario ya pertenece a una
+            // familia): manejarRespuesta propaga el message tal cual.
+            setError(err.message || t('family.requestError'))
+        } finally {
+            setResolviendo(null)
         }
     }
 
@@ -117,7 +156,7 @@ export default function MiHogar() {
             {/* ENCABEZADO */}
             <div>
                 <h1 className="text-2xl font-bold text-gray-800">
-                    {hogar?.nombreFamiliar || 'Mi familia'}
+                    {hogar?.nombreFamiliar || t('family.title')}
                 </h1>
 
                 <p className="text-gray-500">{t('familia.subtitulo')}</p>
@@ -129,6 +168,33 @@ export default function MiHogar() {
 
             {mensaje && (
                 <Notification tipo="success" mensaje={mensaje} onClose={() => setMensaje('')} />
+            )}
+
+            {/* CÓDIGO PÚBLICO DE LA FAMILIA */}
+            {hogar?.codigoPublico && (
+                <div className="rounded-xl bg-white p-6 shadow-sm">
+                    <h2 className="mb-2 text-lg font-semibold text-gray-800">
+                        {t('family.publicCode')}
+                    </h2>
+
+                    <p className="mb-4 text-sm text-gray-500">
+                        {t('family.publicCodeHint')}
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        <code className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 font-mono text-sm font-semibold tracking-wide text-gray-800 select-all">
+                            {hogar.codigoPublico}
+                        </code>
+
+                        <button
+                            type="button"
+                            onClick={copiarCodigo}
+                            className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                        >
+                            {codigoCopiado ? t('family.codeCopied') : t('family.copyCode')}
+                        </button>
+                    </div>
+                </div>
             )}
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -151,7 +217,7 @@ export default function MiHogar() {
                                     </p>
 
                                     <p className="truncate text-sm text-gray-500">
-                                        {miembro.correo} · Se unió {formatearFecha(miembro.fechaRegistro)}
+                                        {miembro.correo} · {t('family.joined', { date: formatearFecha(miembro.fechaRegistro) })}
                                     </p>
                                 </div>
 
@@ -163,34 +229,34 @@ export default function MiHogar() {
                                                 onChange={async (e) => {
                                                     try {
                                                         await usuariosApi.actualizarMiembro(miembro.idUsuario, { rol: e.target.value })
-                                                        setMensaje(`Rol de ${miembro.nombre} actualizado.`)
+                                                        setMensaje(t('family.roleUpdated', { name: miembro.nombre }))
                                                         await cargarDatos()
                                                     } catch (err) {
-                                                        setError(err.message || 'No se pudo cambiar el rol.')
+                                                        setError(err.message || t('family.roleError'))
                                                     }
                                                 }}
-                                                aria-label={`Rol de ${miembro.nombre}`}
+                                                aria-label={t('family.roleOf', { name: miembro.nombre })}
                                                 className="rounded-lg border border-gray-200 px-2 py-1 text-xs"
                                             >
-                                                <option value="Admin">Admin</option>
-                                                <option value="Miembro">Miembro</option>
+                                                <option value="Admin">{t('family.admin')}</option>
+                                                <option value="Miembro">{t('family.member')}</option>
                                             </select>
 
                                             <button
                                                 type="button"
                                                 onClick={async () => {
-                                                    if (!window.confirm(`¿Retirar a ${miembro.nombre} de la familia?`)) return
+                                                    if (!window.confirm(t('family.removeMember', { name: miembro.nombre }))) return
                                                     try {
                                                         await usuariosApi.eliminarMiembro(miembro.idUsuario)
-                                                        setMensaje(`${miembro.nombre} fue retirado de la familia.`)
+                                                        setMensaje(t('family.memberRemoved', { name: miembro.nombre }))
                                                         await cargarDatos()
                                                     } catch (err) {
-                                                        setError(err.message || 'No se pudo retirar al miembro.')
+                                                        setError(err.message || t('family.removeError'))
                                                     }
                                                 }}
                                                 className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
                                             >
-                                                Retirar
+                                                {t('family.remove')}
                                             </button>
                                         </>
                                     ) : (
@@ -201,7 +267,7 @@ export default function MiHogar() {
                                                     : 'bg-gray-100 text-gray-600'
                                             }`}
                                         >
-                                            {miembro.rol === 'Admin' ? 'Administrador' : miembro.rol || 'Miembro'}
+                                            {miembro.rol === 'Admin' ? t('family.admin') : t('family.member')}
                                         </span>
                                     )}
                                 </div>
@@ -224,7 +290,7 @@ export default function MiHogar() {
                                     value={correo}
                                     onChange={(e) => setCorreo(e.target.value)}
                                     placeholder="correo@ejemplo.com"
-                                    aria-label="Correo de la persona a invitar"
+                                    aria-label={t('family.inviteEmail')}
                                     required
                                     className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                                 />
@@ -234,14 +300,66 @@ export default function MiHogar() {
                                     disabled={enviando}
                                     className="shrink-0 rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                                 >
-                                    {enviando ? 'Enviando...' : 'Invitar'}
+                                    {enviando ? t('common.enviando') : t('family.invite')}
                                 </button>
                             </form>
 
                             <p className="mt-2 text-sm text-gray-500">
-                                La persona recibe una notificación y puede aceptar o rechazar.
-                                Si aún no tiene cuenta, la invitación la espera registrada.
+                                {t('family.inviteInfo')}
                             </p>
+                        </div>
+
+                        {/* SOLICITUDES DE UNIÓN RECIBIDAS (solo Admin) */}
+                        <div className="rounded-xl bg-white p-6 shadow-sm">
+                            <h2 className="mb-1 text-lg font-semibold text-gray-800">
+                                {t('family.joinRequests')}
+                            </h2>
+
+                            <p className="mb-4 text-sm text-gray-500">
+                                {t('family.joinRequestsHint')}
+                            </p>
+
+                            {solicitudes.length === 0 ? (
+                                <p className="py-4 text-center text-sm text-gray-500">
+                                    {t('family.noJoinRequests')}
+                                </p>
+                            ) : (
+                                <ul className="divide-y divide-gray-100">
+                                    {solicitudes.map((sol) => (
+                                        <li key={sol.idSolicitud} className="flex items-center justify-between gap-3 py-3">
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-medium text-gray-800">
+                                                    {sol.nombreSolicitante}
+                                                </p>
+
+                                                <p className="truncate text-xs text-gray-500">
+                                                    {sol.correoSolicitante} · {t('family.joinRequestDate', { date: formatearFecha(sol.fechaSolicitud) })}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex shrink-0 items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    disabled={resolviendo === sol.idSolicitud}
+                                                    onClick={() => responderSolicitud(sol.idSolicitud, 'aceptar')}
+                                                    className="rounded-lg bg-green-100 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-200 disabled:opacity-50"
+                                                >
+                                                    {t('common.aceptar')}
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={resolviendo === sol.idSolicitud}
+                                                    onClick={() => responderSolicitud(sol.idSolicitud, 'rechazar')}
+                                                    className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
+                                                >
+                                                    {t('common.rechazar')}
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
 
                         <div className="rounded-xl bg-white p-6 shadow-sm">
@@ -251,7 +369,7 @@ export default function MiHogar() {
 
                             {enviadas.length === 0 ? (
                                 <p className="py-4 text-center text-sm text-gray-500">
-                                No hay invitaciones enviadas todavía.
+                                {t('family.noInvitations')}
                                 </p>
                             ) : (
                                 <ul className="divide-y divide-gray-100">
@@ -263,9 +381,9 @@ export default function MiHogar() {
                                                 </p>
 
                                                 <p className="text-xs text-gray-500">
-                                                    Enviada {formatearFecha(inv.fechaEnvio)}
+                                                    {t('family.invitationDate', { date: formatearFecha(inv.fechaEnvio) })}
                                                     {inv.fechaRespuesta
-                                                        ? ` · Respondida ${formatearFecha(inv.fechaRespuesta)}`
+                                                        ? t('family.answeredDate', { date: formatearFecha(inv.fechaRespuesta) })
                                                         : ''}
                                                 </p>
                                             </div>
@@ -280,7 +398,7 @@ export default function MiHogar() {
                                                                 : 'bg-yellow-100 text-yellow-700'
                                                     }`}
                                                 >
-                                                    {inv.estado}
+                                                    {inv.estado === 'Aceptada' ? t('family.accepted') : inv.estado === 'Rechazada' ? t('family.rejected') : inv.estado === 'Cancelada' ? t('family.cancelled') : t('family.pending')}
                                                 </span>
 
                                                 {inv.estado === 'Pendiente' && (
@@ -290,32 +408,32 @@ export default function MiHogar() {
                                                             onClick={async () => {
                                                                 try {
                                                                     await invitacionesApi.reenviar(inv.idInvitacion)
-                                                                    setMensaje('Invitación reenviada.')
+                                                                    setMensaje(t('family.resendSuccess'))
                                                                     setEnviadas(await invitacionesApi.enviadas())
                                                                 } catch (err) {
-                                                                    setError(err.message || 'No se pudo reenviar.')
+                                                                    setError(err.message || t('family.resendError'))
                                                                 }
                                                             }}
                                                             className="rounded-lg bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
                                                         >
-                                                            Reenviar
+                                                            {t('family.resend')}
                                                         </button>
 
                                                         <button
                                                             type="button"
                                                             onClick={async () => {
-                                                                if (!window.confirm('¿Cancelar esta invitación?')) return
+                                                                if (!window.confirm(t('family.cancelInvitation') + '?')) return
                                                                 try {
                                                                     await invitacionesApi.cancelar(inv.idInvitacion)
-                                                                    setMensaje('Invitación cancelada.')
+                                                                    setMensaje(t('family.cancelSuccess'))
                                                                     setEnviadas(await invitacionesApi.enviadas())
                                                                 } catch (err) {
-                                                                    setError(err.message || 'No se pudo cancelar.')
+                                                                    setError(err.message || t('family.cancelError'))
                                                                 }
                                                             }}
                                                             className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
                                                         >
-                                                            Cancelar
+                                                            {t('family.cancelInvitation')}
                                                         </button>
                                                     </>
                                                 )}

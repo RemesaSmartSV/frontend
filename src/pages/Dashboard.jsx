@@ -23,7 +23,7 @@ import {
 
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
-import { formatearMoneda, parsearFechaLocal } from '../utils/formato'
+import { formatearMoneda, formatearNumero, formatearFecha, obtenerLocale, parsearFechaLocal } from '../utils/formato'
 
 const COLORES_CATEGORIAS = [
     '#7c3aed',
@@ -36,17 +36,17 @@ const COLORES_CATEGORIAS = [
     '#65a30d',
 ]
 
-function nombreMes(anio, mes) {
+function nombreMes(anio, mes, idioma) {
     const fecha = new Date(anio, mes - 1, 1)
 
-    return fecha.toLocaleDateString('es-SV', {
+    return fecha.toLocaleDateString(obtenerLocale(idioma), {
         month: 'long',
         year: 'numeric',
     })
 }
 
 export default function Dashboard() {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const hoy = new Date()
 
     const [movimientos, setMovimientos] = useState([])
@@ -111,12 +111,12 @@ export default function Dashboard() {
         } catch (err) {
             setError(
                 err.message ||
-                'No se pudieron cargar los datos del dashboard.'
+                t('dashboard.loadError')
             )
         } finally {
             setCargando(false)
         }
-    }, [modoPeriodo, anio, mes])
+    }, [modoPeriodo, anio, mes, t])
 
     useEffect(() => {
         cargarDatos()
@@ -131,14 +131,14 @@ export default function Dashboard() {
             await cargarDatos()
 
             setMensaje(
-                'Resumen financiero actualizado correctamente.'
+                t('dashboard.updated')
             )
         } catch (err) {
             setError(err.message)
         } finally {
             setProcesando(false)
         }
-    }, [cargarDatos])
+    }, [cargarDatos, t])
 
     // Todos los ingresos, incluyendo las remesas
     const ingresos = Number(resumen.totalIngresos || 0)
@@ -233,7 +233,7 @@ export default function Dashboard() {
                 meses[clave] = {
                     clave,
                     mes: fecha.toLocaleDateString(
-                        'es-SV',
+                        obtenerLocale(i18n.language),
                         {
                             month: 'short',
                             year: 'numeric',
@@ -270,7 +270,7 @@ export default function Dashboard() {
                     )
             )
             .slice(-6)
-    }, [movimientos])
+    }, [movimientos, i18n.language])
 
     /*
      * ==========================================
@@ -288,12 +288,9 @@ export default function Dashboard() {
                             idCategoria
                     )
 
-                return (
-                    categoria?.nombre ||
-                    'Sin categoría'
-                )
+                return categoria?.nombre || t('dashboard.noCategory')
             },
-            [categorias]
+            [categorias, t]
         )
 
     /*
@@ -354,7 +351,7 @@ export default function Dashboard() {
     if (cargando) {
         return (
             <main className="mx-auto w-full max-w-5xl p-4 font-sans text-slate-800 sm:p-6 lg:p-10">
-                <Loading mensaje="Cargando resumen financiero..." />
+                <Loading mensaje={t('dashboard.loading')} />
             </main>
         )
     }
@@ -407,7 +404,7 @@ export default function Dashboard() {
                         <button
                             type="button"
                             onClick={() => cambiarMes(-1)}
-                            aria-label="Mes anterior"
+                            aria-label={t('dashboard.mesAnterior')}
                             className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100"
                         >
                             ‹
@@ -426,14 +423,14 @@ export default function Dashboard() {
                             className="rounded-md px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100"
                         >
                             {modoPeriodo === 'mes'
-                                ? nombreMes(anio, mes)
+                                ? nombreMes(anio, mes, i18n.language)
                                 : t('dashboard.todoHistorial')}
                         </button>
 
                         <button
                             type="button"
                             onClick={() => cambiarMes(1)}
-                            aria-label="Mes siguiente"
+                            aria-label={t('dashboard.mesSiguiente')}
                             className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100"
                         >
                             ›
@@ -447,8 +444,8 @@ export default function Dashboard() {
                         className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {procesando
-                            ? 'Actualizando...'
-                            : 'Actualizar'}
+                            ? t('common.procesando')
+                            : t('common.actualizar')}
                     </button>
                 </div>
             </div>
@@ -564,15 +561,13 @@ export default function Dashboard() {
                         </h2>
 
                         <p className="text-sm text-slate-500">
-                            Comportamiento de los últimos
-                            meses registrados.
+                            {t('dashboard.lastMonths')}
                         </p>
                     </div>
 
                     {datosMensuales.length === 0 ? (
                         <div className="flex h-72 items-center justify-center text-sm text-slate-500">
-                            No hay datos suficientes
-                            para mostrar la gráfica.
+                            {t('dashboard.insufficientChartData')}
                         </div>
                     ) : (
                         <div className="h-72 w-full">
@@ -599,7 +594,7 @@ export default function Dashboard() {
                                         dataKey="mes"
                                     />
 
-                                    <YAxis />
+                                    <YAxis tickFormatter={(value) => formatearNumero(value)} />
 
                                     <Tooltip
                                         formatter={(
@@ -615,7 +610,7 @@ export default function Dashboard() {
 
                                     <Bar
                                         dataKey="ingresos"
-                                        name="Ingresos"
+                                        name={t('dashboard.ingresos')}
                                         fill="#16a34a"
                                         radius={[
                                             4,
@@ -627,7 +622,7 @@ export default function Dashboard() {
 
                                     <Bar
                                         dataKey="gastos"
-                                        name="Gastos"
+                                        name={t('dashboard.gastos')}
                                         fill="#dc2626"
                                         radius={[
                                             4,
@@ -652,16 +647,14 @@ export default function Dashboard() {
                         </h2>
 
                         <p className="text-sm text-slate-500">
-                            Distribución de los gastos
-                            registrados.
+                            {t('dashboard.expenseDistribution')}
                         </p>
                     </div>
 
                     {gastosPorCategoria.length ===
                     0 ? (
                         <div className="flex h-72 items-center justify-center text-sm text-slate-500">
-                            No hay gastos registrados
-                            para mostrar.
+                            {t('dashboard.noExpensesChart')}
                         </div>
                     ) : (
                         <div className="h-72 w-full">
@@ -749,7 +742,7 @@ export default function Dashboard() {
                                                 ? 'text-red-700'
                                                 : 'text-amber-700'
                                         }`}>
-                                            {alerta.tipoAlerta}
+                                            {alerta.tipoAlerta === 'Crítico' ? t('dashboard.critical') : t('dashboard.warning')}
                                         </strong>
 
                                         <span className="text-xs font-semibold text-gray-600">
@@ -781,13 +774,13 @@ export default function Dashboard() {
                         href="/ahorro"
                         className="text-sm font-semibold text-blue-600 hover:text-blue-800"
                     >
-                        Ver todas
+                        {t('dashboard.allGoals')}
                     </a>
                 </div>
 
                 {metas.length === 0 ? (
                     <p className="py-4 text-center text-sm text-slate-500">
-                        Aún no hay metas de ahorro.
+                        {t('dashboard.noGoals')}
                     </p>
                 ) : (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -823,7 +816,7 @@ export default function Dashboard() {
                                     </div>
 
                                     <p className="mt-2 text-sm text-slate-500">
-                                        {porcentaje.toFixed(0)}% ·{' '}
+                                        {formatearNumero(porcentaje, { maximumFractionDigits: 0 })}% ·{' '}
                                         {formatearMoneda(actual)} de{' '}
                                         {formatearMoneda(objetivo)}
                                     </p>
@@ -848,8 +841,7 @@ export default function Dashboard() {
                         </h2>
 
                         <p className="text-sm text-slate-500">
-                            Últimos movimientos
-                            registrados.
+                            {t('dashboard.lastTransactions')}
                         </p>
                     </div>
 
@@ -859,15 +851,14 @@ export default function Dashboard() {
                         disabled={procesando}
                         className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        Actualizar
+                        {t('common.actualizar')}
                     </button>
                 </div>
 
                 {movimientosRecientes.length ===
                 0 ? (
                     <div className="p-8 text-center text-sm text-slate-500">
-                        No hay movimientos
-                        registrados.
+                        {t('dashboard.noTransactions')}
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
@@ -876,19 +867,19 @@ export default function Dashboard() {
                             <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                                 <tr>
                                     <th className="px-5 py-3">
-                                        Fecha
+                                        {t('dashboard.transactionDate')}
                                     </th>
 
                                     <th className="px-5 py-3">
-                                        Tipo
+                                        {t('dashboard.transactionType')}
                                     </th>
 
                                     <th className="px-5 py-3">
-                                        Descripción
+                                        {t('dashboard.transactionDescription')}
                                     </th>
 
                                     <th className="px-5 py-3 text-right">
-                                        Monto
+                                        {t('dashboard.transactionAmount')}
                                     </th>
                                 </tr>
                             </thead>
@@ -906,11 +897,7 @@ export default function Dashboard() {
                                             className="hover:bg-slate-50"
                                         >
                                             <td className="whitespace-nowrap px-5 py-4 text-slate-600">
-                                                {movimiento.fecha
-                                                    ?.split(
-                                                        'T'
-                                                    )[0] ||
-                                                    ''}
+                                                {movimiento.fecha ? formatearFecha(movimiento.fecha) : ''}
                                             </td>
 
                                             <td className="px-5 py-4">
@@ -925,15 +912,15 @@ export default function Dashboard() {
                                                     {movimiento.tipo ===
                                                     'Ingreso'
                                                         ? movimiento.origenEmisora
-                                                            ? 'Remesa'
-                                                            : 'Ingreso'
-                                                        : 'Gasto'}
+                                                            ? t('nav.remesas')
+                                                            : t('nav.ingresos')
+                                                        : t('nav.gastos')}
                                                 </span>
                                             </td>
 
                                             <td className="max-w-xs px-5 py-4 text-slate-700">
                                                 {movimiento.descripcion ||
-                                                    'Sin descripción'}
+                                                    t('dashboard.noDescription')}
                                             </td>
 
                                             <td

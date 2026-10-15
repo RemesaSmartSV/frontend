@@ -1,123 +1,96 @@
 import PoliticaLayout from '../components/PoliticaLayout'
+import { useTranslation } from 'react-i18next'
 
 export default function PoliticaPrivacidad() {
+    const { t } = useTranslation()
     return (
         <PoliticaLayout
-            titulo="Política de privacidad"
-            actualizado="30 de septiembre de 2026"
+            titulo={t('legal.privacy.title')}
+            actualizado="2026-09-30"
         >
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    1. Quién trata tus datos
+                    {t('legal.privacy.s1')}
                 </h2>
                 <p>
-                    RemesaSmart SV es una aplicación de gestión financiera
-                    familiar. El responsable del tratamiento de los datos es el
-                    equipo que mantiene esta aplicación.{' '}
+                    {t('legal.privacy.p1')}{' '}
                     <strong>
-                        Pendiente de completar por el equipo: nombre completo
-                        del responsable y canal de contacto antes de publicar.
+                        {t('legal.privacy.pendingContact')}
                     </strong>
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    2. Qué datos recopilamos
+                    {t('legal.privacy.s2')}
                 </h2>
-                <p>La aplicación almacena únicamente los datos que tú introduces:</p>
+                <p>{t('legal.privacy.p2')}</p>
                 <ul className="list-disc space-y-1 pl-6">
                     <li>
-                        <strong>De la cuenta:</strong> nombre, correo
-                        electrónico, contraseña y el nombre del hogar.
+                        <strong>{t('legal.privacy.accountLabel')}</strong> {t('legal.privacy.accountData')}
                     </li>
                     <li>
-                        <strong>Financieros:</strong> movimientos (monto, fecha,
-                        tipo, descripción y origen), categorías, presupuestos,
-                        metas de ahorro, aportes a metas y notas de educación
-                        financiera que registres.
+                        <strong>{t('legal.privacy.financialLabel')}</strong> {t('legal.privacy.financialData')}
                     </li>
                     <li>
-                        <strong>Técnicos:</strong> un token de sesión y la
-                        información básica de tu usuario guardados en el
-                        almacenamiento local de tu navegador.
+                        <strong>{t('legal.privacy.technicalLabel')}</strong> {t('legal.privacy.technicalData')}
                     </li>
                 </ul>
                 <p>
-                    No pedimos datos de tarjetas, cuentas bancarias, documentos
-                    de identidad ni ubicación. La aplicación no procesa pagos
-                    ni realiza transferencias.
+                    {t('legal.privacy.p3')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    3. Cómo se protegen
+                    {t('legal.privacy.s3')}
                 </h2>
                 <ul className="list-disc space-y-1 pl-6">
                     <li>
-                        La contraseña <strong>no se guarda en claro</strong>:
-                        se almacena como hash con un algoritmo estándar de la
-                        industria, por lo que no puede recuperarse desde la base
-                        de datos.
+                        {t('legal.privacy.passwordProtection')}
                     </li>
                     <li>
-                        El acceso a las secciones protegidas requiere un token
-                        de sesión firmado que caduca automáticamente.
+                        {t('legal.privacy.sessionProtection')}
                     </li>
                     <li>
-                        Cada hogar solo ve sus propios datos: las consultas se
-                        filtran por el hogar del usuario autenticado.
+                        {t('legal.privacy.householdProtection')}
                     </li>
                 </ul>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    4. Para qué usamos los datos
+                    {t('legal.privacy.s4')}
                 </h2>
                 <p>
-                    Exclusivamente para prestar el servicio: calcular el
-                    resumen del tablero, mostrar tus movimientos y
-                    presupuestos, generar alertas de presupuesto y mantener tu
-                    sesión iniciada. No usamos los datos para publicidad, no
-                    los vendemos y no los cedemos a terceros.
+                    {t('legal.privacy.p4')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    5. Dónde se almacenan
+                    {t('legal.privacy.s5')}
                 </h2>
                 <p>
-                    En la base de datos PostgreSQL del servidor donde se
-                    despliega la aplicación. No se copian a servicios externos
-                    ni a herramientas de analítica de terceros.
+                    {t('legal.privacy.p5')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    6. Tus derechos
+                    {t('legal.privacy.s6')}
                 </h2>
                 <p>
-                    Puedes solicitar acceso, rectificación o eliminación de tus
-                    datos en cualquier momento. Puedes cerrar la sesión desde
-                    la aplicación y borrar el almacenamiento local desde la
-                    configuración de tu navegador. Para ejercer los derechos
-                    anteriores, contacta al equipo responsable por el canal que
-                    se indique en esta página.
+                    {t('legal.privacy.p6')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    7. Cambios en esta política
+                    {t('legal.privacy.s7')}
                 </h2>
                 <p>
-                    Si cambiamos cómo tratamos los datos, actualizaremos esta
-                    página y la fecha de la última modificación aparecerá al
-                    principio del documento.
+                    {t('legal.privacy.p7')}
                 </p>
             </section>
         </PoliticaLayout>

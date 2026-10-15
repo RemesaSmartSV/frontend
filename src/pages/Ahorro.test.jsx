@@ -4,7 +4,7 @@ import Ahorro from './Ahorro'
 
 vi.mock('react-i18next', () => ({
     useTranslation: () => ({
-        t: (key) => {
+        t: (key, variables = {}) => {
             const map = {
                 'ahorro.titulo': 'Ahorro',
                 'ahorro.subtitulo': 'Crea metas de ahorro, registra aportes y sigue tu progreso.',
@@ -18,9 +18,32 @@ vi.mock('react-i18next', () => ({
                 'ahorro.fechaObjetivo': 'Fecha objetivo',
                 'ahorro.registrarAporte': 'Registrar aporte',
                 'ahorro.sinMetas': 'Sin metas de ahorro',
+                'ahorro.metaCreada': 'Meta creada correctamente.',
+                'ahorro.metaActualizada': 'Meta actualizada correctamente.',
+                'ahorro.metaEliminada': 'Meta eliminada correctamente.',
+                'ahorro.aporteRegistrado': 'Aporte registrado correctamente.',
+                'ahorro.inProgress': 'En progreso',
+                'ahorro.restan': 'Restan',
+                'ahorro.remainingAmount': '{{label}} {{amount}}',
+                'ahorro.goalTitleRequired': 'Ingresa un título para la meta.',
+                'ahorro.goalAmountPositive': 'El monto objetivo debe ser mayor que 0.',
+                'ahorro.goalDateRequired': 'Selecciona la fecha objetivo.',
+                'ahorro.titlePlaceholder': 'Ej. Fondo de emergencia',
+                'ahorro.amountPlaceholder': 'Ej. 500.00',
+                'ahorro.createGoal': 'Crear meta',
+                'ahorro.updateGoal': 'Actualizar meta',
+                'common.editar': 'Editar',
+                'common.eliminar': 'Eliminar',
+                'common.cancelar': 'Cancelar',
+                'common.actualizar': 'Actualizar',
+                'common.guardando': 'Guardando...',
+                'common.procesando': 'Procesando...',
                 'common.cargando': 'Cargando...',
             }
-            return map[key] || key
+            return Object.entries(variables).reduce(
+                (text, [name, value]) => text.replaceAll(`{{${name}}}`, value),
+                map[key] || key
+            )
         },
         i18n: { changeLanguage: () => {} },
     }),

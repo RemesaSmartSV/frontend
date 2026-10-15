@@ -5,7 +5,7 @@ import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
-import { formatearMoneda, obtenerFechaHoy } from '../utils/formato'
+import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 
 function Ingresos() {
     const { t } = useTranslation()
@@ -65,7 +65,7 @@ function Ingresos() {
             setPaginaActual(1)
         } catch (err) {
             console.error(err)
-            setError('No se pudieron cargar los ingresos.')
+        setError(t('income.loadError'))
         } finally {
             setCargando(false)
         }
@@ -90,17 +90,17 @@ function Ingresos() {
         setMensaje('')
 
         if (!formulario.idCategoria) {
-            setError('Selecciona una categoría.')
+            setError(t('expense.categoryRequired'))
             return
         }
 
         if (!formulario.monto || Number(formulario.monto) <= 0) {
-            setError('El monto debe ser mayor que 0.')
+            setError(t('expense.amountPositive'))
             return
         }
 
         if (!formulario.fecha) {
-            setError('Selecciona una fecha.')
+            setError(t('expense.dateRequired'))
             return
         }
 
@@ -122,11 +122,11 @@ function Ingresos() {
                     movimiento
                 )
 
-                setMensaje('Ingreso actualizado correctamente.')
+                setMensaje(t('income.updated'))
             } else {
                 await movimientosApi.crear(movimiento)
 
-                setMensaje('Ingreso registrado correctamente.')
+                setMensaje(t('income.saved'))
             }
 
             limpiarFormulario()
@@ -135,7 +135,7 @@ function Ingresos() {
             console.error(err)
             setError(
                 err.message ||
-                'No se pudo guardar el ingreso.'
+                t('income.saveError')
             )
         } finally {
             setProcesando(false)
@@ -165,8 +165,8 @@ function Ingresos() {
         setConfirmModal({
             abierto: true,
             id,
-            titulo: 'Eliminar ingreso',
-            mensaje: '¿Estás segura de que deseas eliminar este ingreso? Esta acción no se puede deshacer.',
+            titulo: t('income.deleteTitle'),
+            mensaje: t('income.deleteMessage'),
         })
     }
 
@@ -181,12 +181,12 @@ function Ingresos() {
         try {
             await movimientosApi.eliminar(id)
 
-            setMensaje('Ingreso eliminado correctamente.')
+            setMensaje(t('income.deleted'))
 
             await cargarDatos()
         } catch (err) {
             console.error(err)
-            setError('No se pudo eliminar el ingreso.')
+            setError(t('income.deleteError'))
         } finally {
             setProcesando(false)
         }
@@ -208,7 +208,7 @@ function Ingresos() {
             (c) => c.idCategoria === idCategoria
         )
 
-        return categoria?.nombre || 'Sin categoría'
+        return categoria?.nombre || t('common.sinCategoria')
     }
 
     function manejarCambioFiltro(e) {
@@ -317,15 +317,15 @@ function Ingresos() {
 
     function exportarIngresos() {
         if (ingresosFiltradosPorUI.length === 0) {
-            setError('No hay ingresos para exportar.')
+            setError(t('income.exportEmpty'))
             return
         }
 
         const encabezados = [
-            'Fecha',
-            'Categoría',
-            'Monto',
-            'Descripción',
+            t('common.fecha'),
+            t('common.categoria'),
+            t('common.monto'),
+            t('common.descripcion'),
         ]
 
         const filas = ingresosFiltradosPorUI.map(
@@ -406,9 +406,7 @@ function Ingresos() {
 
         URL.revokeObjectURL(url)
 
-        setMensaje(
-            `${ingresosFiltradosPorUI.length} ingreso(s) exportado(s) correctamente.`
-        )
+        setMensaje(t('income.exported', { count: ingresosFiltradosPorUI.length }))
     }
 
     const categoriasIngreso = categorias.filter(
@@ -432,7 +430,7 @@ function Ingresos() {
                 </h1>
 
                 <p className="text-gray-500">
-                    Registra y administra tus ingresos.
+                    {t('income.description')}
                 </p>
             </div>
 
@@ -455,8 +453,8 @@ function Ingresos() {
             <section className="mb-6 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
                 <h2 className="mb-4 text-xl font-semibold text-slate-900">
                     {editandoId
-                        ? 'Editar ingreso'
-                        : 'Registrar ingreso'}
+                        ? t('income.edit')
+                        : t('income.create')}
                 </h2>
 
                 <form
@@ -465,7 +463,7 @@ function Ingresos() {
                 >
                     <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">
-                            Categoría
+                            {t('common.categoria')}
                         </label>
 
                         <select
@@ -476,7 +474,7 @@ function Ingresos() {
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                         >
                             <option value="">
-                                Selecciona una categoría
+                                {t('common.seleccionaCategoria')}
                             </option>
 
                             {categoriasIngreso.map(
@@ -498,7 +496,7 @@ function Ingresos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">
-                            Monto
+                            {t('common.monto')}
                         </label>
 
                         <input
@@ -516,7 +514,7 @@ function Ingresos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">
-                            Fecha
+                            {t('common.fecha')}
                         </label>
 
                         <input
@@ -531,7 +529,7 @@ function Ingresos() {
 
                     <div>
                         <label className="mb-1 block text-sm font-medium text-slate-700">
-                            Descripción
+                            {t('common.descripcion')}
                         </label>
 
                         <input
@@ -539,7 +537,7 @@ function Ingresos() {
                             name="descripcion"
                             value={formulario.descripcion}
                             onChange={manejarCambio}
-                            placeholder="Descripción del ingreso"
+                            placeholder={t('income.description')}
                             disabled={procesando}
                             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                         />
@@ -552,10 +550,10 @@ function Ingresos() {
                             className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {procesando
-                                ? 'Guardando...'
+                                ? t('common.guardando')
                                 : editandoId
-                                    ? 'Actualizar ingreso'
-                                    : 'Guardar ingreso'}
+                                    ? t('income.update')
+                                    : t('income.save')}
                         </button>
 
                         {editandoId && (
@@ -565,7 +563,7 @@ function Ingresos() {
                                 disabled={procesando}
                                 className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                Cancelar
+                                {t('common.cancelar')}
                             </button>
                         )}
                     </div>
@@ -576,7 +574,7 @@ function Ingresos() {
                 <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                         <h2 className="text-xl font-semibold text-slate-900">
-                            Ingresos registrados
+                            {t('income.registered')}
                         </h2>
 
                         <button
@@ -590,7 +588,7 @@ function Ingresos() {
                             }
                             className="w-full rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
-                            Exportar
+                            {t('common.exportar')}
                         </button>
                     </div>
 
@@ -601,9 +599,7 @@ function Ingresos() {
                         }
                         className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
-                        {cargando
-                            ? 'Cargando...'
-                            : 'Actualizar'}
+                        {cargando ? t('common.cargando') : t('common.actualizar')}
                     </button>
                 </div>
 
@@ -611,12 +607,11 @@ function Ingresos() {
                     <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h3 className="font-semibold text-slate-900">
-                                Filtros
+                                {t('common.filtros')}
                             </h3>
 
                             <p className="text-sm text-slate-600">
-                                Filtra los ingresos por fecha,
-                                categoría, monto y descripción.
+                                {t('income.filtersDescription')}
                             </p>
                         </div>
 
@@ -626,21 +621,21 @@ function Ingresos() {
                                 onClick={limpiarFiltros}
                                 className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 transition hover:bg-slate-100"
                             >
-                                Limpiar filtros
+                                {t('common.limpiarFiltros')}
                             </button>
                         )}
                     </div>
 
                     <div className="mb-4">
                         <label className="mb-1 block text-sm font-medium text-slate-700">
-                            Buscar por descripción
+                            {t('common.buscarDescripcion')}
                         </label>
                         <input
                             type="text"
                             name="busqueda"
                             value={filtros.busqueda}
                             onChange={manejarCambioFiltro}
-                            placeholder="Ej. Supermercado, transporte..."
+                            placeholder={t('income.searchPlaceholder')}
                             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500"
                         />
                     </div>
@@ -648,7 +643,7 @@ function Ingresos() {
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">
-                                Fecha desde
+                                {t('common.fechaDesde')}
                             </label>
 
                             <input
@@ -666,7 +661,7 @@ function Ingresos() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">
-                                Fecha hasta
+                                {t('common.fechaHasta')}
                             </label>
 
                             <input
@@ -684,7 +679,7 @@ function Ingresos() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">
-                                Categoría
+                                {t('common.categoria')}
                             </label>
 
                             <select
@@ -698,7 +693,7 @@ function Ingresos() {
                                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 outline-none focus:border-blue-500"
                             >
                                 <option value="">
-                                    Todas
+                                    {t('income.all')}
                                 </option>
 
                                 {categoriasIngreso.map(
@@ -722,7 +717,7 @@ function Ingresos() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">
-                                Monto mínimo
+                                {t('common.montoMinimo')}
                             </label>
 
                             <input
@@ -743,7 +738,7 @@ function Ingresos() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium text-slate-700">
-                                Monto máximo
+                                {t('common.montoMaximo')}
                             </label>
 
                             <input
@@ -764,13 +759,7 @@ function Ingresos() {
                     </div>
 
                     <div className="mt-4 text-sm text-slate-600">
-                        Mostrando{' '}
-                        <span className="font-semibold text-slate-900">
-                            {
-                                ingresosFiltradosPorUI.length
-                            }
-                        </span>{' '}
-                        ingreso(s).
+                        {t('income.count', { count: ingresosFiltradosPorUI.length })}
                     </div>
                 </div>
 
@@ -779,15 +768,14 @@ function Ingresos() {
                 ) : ingresos.length === 0 ? (
                     <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center">
                         <p className="text-slate-600">
-                            No tienes ingresos registrados.
+                            {t('income.empty')}
                         </p>
                     </div>
                 ) : ingresosFiltradosPorUI.length ===
                     0 ? (
                     <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center">
                         <p className="text-slate-600">
-                            No hay ingresos que coincidan
-                            con los filtros.
+                            {t('income.emptyFiltered')}
                         </p>
 
                         <button
@@ -795,7 +783,7 @@ function Ingresos() {
                             onClick={limpiarFiltros}
                             className="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
                         >
-                            Limpiar filtros
+                            {t('common.limpiarFiltros')}
                         </button>
                     </div>
                 ) : (
@@ -805,23 +793,23 @@ function Ingresos() {
                                 <thead>
                                     <tr className="border-b border-slate-200 text-left">
                                         <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                                            Fecha
+                                            {t('common.fecha')}
                                         </th>
 
                                         <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                                            Categoría
+                                            {t('common.categoria')}
                                         </th>
 
                                         <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                                            Monto
+                                            {t('common.monto')}
                                         </th>
 
                                         <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                                            Descripción
+                                            {t('common.descripcion')}
                                         </th>
 
                                         <th className="px-4 py-3 text-sm font-semibold text-slate-700">
-                                            Acciones
+                                            {t('common.acciones')}
                                         </th>
                                     </tr>
                                 </thead>
@@ -836,10 +824,7 @@ function Ingresos() {
                                                 className="border-b border-slate-100 hover:bg-slate-50"
                                             >
                                                 <td className="px-4 py-3 text-sm text-slate-700">
-                                                    {ingreso.fecha?.split(
-                                                        'T'
-                                                    )[0] ||
-                                                        ''}
+                                                    {ingreso.fecha ? formatearFecha(ingreso.fecha) : ''}
                                                 </td>
 
                                                 <td className="px-4 py-3 text-sm text-slate-700">
@@ -854,7 +839,7 @@ function Ingresos() {
 
                                                 <td className="px-4 py-3 text-sm text-slate-700">
                                                     {ingreso.descripcion ||
-                                                        'Sin descripción'}
+                                                        t('common.sinDescripcion')}
                                                 </td>
 
                                                 <td className="px-4 py-3">
@@ -871,7 +856,7 @@ function Ingresos() {
                                                             }
                                                             className="rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-semibold text-blue-700 hover:bg-blue-200 disabled:opacity-50"
                                                         >
-                                                            Editar
+                                                            {t('common.editar')}
                                                         </button>
 
                                                         <button
@@ -886,7 +871,7 @@ function Ingresos() {
                                                             }
                                                             className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50"
                                                         >
-                                                            Eliminar
+                                                            {t('common.eliminar')}
                                                         </button>
                                                     </div>
                                                 </td>

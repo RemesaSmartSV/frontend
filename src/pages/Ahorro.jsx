@@ -1,32 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ahorroApi } from '../services/api'
+import { formatearMoneda, formatearNumero, formatearFecha } from '../utils/formato'
 
 import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
-
-function formatearMoneda(monto) {
-    return `$${Number(monto || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`
-}
-
-function formatearFecha(fecha) {
-    if (!fecha) return '-'
-
-    const valor = new Date(fecha)
-
-    if (Number.isNaN(valor.getTime())) return '-'
-
-    return valor.toLocaleDateString('es-SV', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-    })
-}
 
 function Ahorro() {
     const { t } = useTranslation()
@@ -49,6 +29,7 @@ function Ahorro() {
     const [aportes, setAportes] = useState([])
     const [metaDetalle, setMetaDetalle] = useState(null)
     const [aporteForm, setAporteForm] = useState({ monto: '', fecha: '' })
+    const [aporteIdempotencyKey, setAporteIdempotencyKey] = useState(null)
     const [cargandoAportes, setCargandoAportes] = useState(false)
 
     const [confirmMeta, setConfirmMeta] = useState({ abierto: false, id: null })
@@ -75,11 +56,11 @@ function Ahorro() {
             setMetas(datos || [])
             setPaginaActual(1)
         } catch (err) {
-            setError(err.message || 'No se pudieron cargar las metas de ahorro.')
+            setError(err.message || t('errors.generico'))
         } finally {
             setCargando(false)
         }
-    }, [])
+    }, [t])
 
     useEffect(() => {
         cargarDatos()
@@ -101,15 +82,15 @@ function Ahorro() {
 
     const validarFormulario = () => {
         if (!formulario.titulo.trim()) {
-            setError('Ingresa un título para la meta.')
+            setError(t('ahorro.goalTitleRequired'))
             return false
         }
         if (!formulario.montoObjetivo || Number(formulario.montoObjetivo) <= 0) {
-            setError('El monto objetivo debe ser mayor que 0.')
+            setError(t('ahorro.goalAmountPositive'))
             return false
         }
         if (!formulario.fechaLimite) {
-            setError('Selecciona la fecha objetivo.')
+            setError(t('ahorro.goalDateRequired'))
             return false
         }
         return true
@@ -135,16 +116,16 @@ function Ahorro() {
             // para no forzar una transición no soportada.
             if (editando) {
                 await ahorroApi.actualizarMeta(editando, datos)
-                setMensaje('Meta actualizada correctamente.')
+                setMensaje(t('ahorro.metaActualizada'))
             } else {
                 await ahorroApi.crearMeta(datos)
-                setMensaje('Meta creada correctamente.')
+                setMensaje(t('ahorro.metaCreada'))
             }
 
             limpiarFormulario()
             await cargarDatos()
         } catch (err) {
-            setError(err.message || 'No se pudo guardar la meta.')
+            setError(err.message || t('ahorro.goalSaveError'))
         } finally {
             setProcesando(false)
         }
@@ -174,11 +155,11 @@ function Ahorro() {
                 setMetaDetalle(null)
                 setAportes([])
             }
-            setMensaje('Meta eliminada correctamente.')
+            setMensaje(t('ahorro.metaEliminada'))
             setConfirmMeta({ abierto: false, id: null })
             await cargarDatos()
         } catch (err) {
-            setError(err.message || 'No se pudo eliminar la meta.')
+            setError(err.message || t('ahorro.goalDeleteError'))
         } finally {
             setProcesando(false)
         }
@@ -189,11 +170,12 @@ function Ahorro() {
             setCargandoAportes(true)
             setMetaDetalle(meta)
             setAporteForm({ monto: '', fecha: '' })
+            setAporteIdempotencyKey(null)
             const datos = await ahorroApi.listarAportes(meta.idMeta)
             setAportes(datos || [])
             setError('')
         } catch (err) {
-            setError(err.message || 'No se pudieron cargar los aportes.')
+            setError(err.message || t('ahorro.contributionLoadError'))
         } finally {
             setCargandoAportes(false)
         }
@@ -202,6 +184,7 @@ function Ahorro() {
     const manejarCambioAporte = (e) => {
         const { name, value } = e.target
         setAporteForm((prev) => ({ ...prev, [name]: value }))
+        setAporteIdempotencyKey(null)
     }
 
     const registrarAporte = async (e) => {
@@ -212,25 +195,32 @@ function Ahorro() {
         const monto = Number(aporteForm.monto)
 
         if (!aporteForm.monto || monto <= 0) {
-            setError('El monto del aporte debe ser mayor que 0.')
+            setError(t('ahorro.contributionAmountPositive'))
             return
         }
 
         try {
             setProcesando(true)
 
+            // Se conserva la misma clave si la petición falla y se reintenta;
+            // cambiar monto/fecha la renueva desde manejarCambioAporte.
+            const idempotencyKey = aporteIdempotencyKey || crypto.randomUUID()
+            setAporteIdempotencyKey(idempotencyKey)
+
             await ahorroApi.crearAporte({
                 idMeta: Number(metaDetalle.idMeta),
                 monto,
                 fecha: aporteForm.fecha ? `${aporteForm.fecha}T00:00:00Z` : new Date().toISOString(),
+                idempotencyKey,
             })
 
-            setMensaje('Aporte registrado correctamente.')
+            setMensaje(t('ahorro.aporteRegistrado'))
             setAporteForm({ monto: '', fecha: '' })
+            setAporteIdempotencyKey(null)
             await abrirDetalle(metaDetalle)
             await cargarDatos()
         } catch (err) {
-            setError(err.message || 'No se pudo registrar el aporte.')
+            setError(err.message || t('ahorro.contributionSaveError'))
         } finally {
             setProcesando(false)
         }
@@ -245,14 +235,14 @@ function Ahorro() {
             setProcesando(true)
             setError('')
             await ahorroApi.eliminarAporte(confirmAporte.id)
-            setMensaje('Aporte eliminado correctamente.')
+            setMensaje(t('ahorro.contributionDeleted'))
             setConfirmAporte({ abierto: false, id: null })
             if (metaDetalle) {
                 await abrirDetalle(metaDetalle)
                 await cargarDatos()
             }
         } catch (err) {
-            setError(err.message || 'No se pudo eliminar el aporte.')
+            setError(err.message || t('ahorro.contributionDeleteError'))
         } finally {
             setProcesando(false)
         }
@@ -308,7 +298,7 @@ function Ahorro() {
                         onClick={cargarDatos}
                         className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
-                        Actualizar
+                        {t('common.actualizar')}
                     </button>
                 </div>
             </div>
@@ -342,7 +332,7 @@ function Ahorro() {
                     <p className="text-sm text-gray-500">{t('ahorro.progresoGlobal')}</p>
                     <p className="mt-1 text-2xl font-bold text-gray-800">
                         {totalObjetivo > 0
-                            ? `${((totalAhorro / totalObjetivo) * 100).toFixed(0)}%`
+                            ? `${formatearNumero((totalAhorro / totalObjetivo) * 100, { maximumFractionDigits: 0 })}%`
                             : '0%'}
                     </p>
                 </div>
@@ -366,7 +356,7 @@ function Ahorro() {
                             name="titulo"
                             value={formulario.titulo}
                             onChange={manejarCambio}
-                            placeholder="Ej. Fondo de emergencia"
+                            placeholder={t('ahorro.titlePlaceholder')}
                             maxLength={150}
                             className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                         />
@@ -385,7 +375,7 @@ function Ahorro() {
                             step="0.01"
                             value={formulario.montoObjetivo}
                             onChange={manejarCambio}
-                            placeholder="Ej. 500.00"
+                            placeholder={t('ahorro.amountPlaceholder')}
                             className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                         />
                     </div>
@@ -412,10 +402,10 @@ function Ahorro() {
                             className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                         >
                             {procesando
-                                ? 'Guardando...'
+                                ? t('ahorro.saving')
                                 : editando
-                                    ? 'Actualizar meta'
-                                    : 'Crear meta'}
+                                    ? t('ahorro.updateGoal')
+                                    : t('ahorro.createGoal')}
                         </button>
 
                         {editando && (
@@ -424,7 +414,7 @@ function Ahorro() {
                                 onClick={limpiarFormulario}
                                 className="rounded-lg border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50"
                             >
-                                Cancelar
+                                {t('common.cancelar')}
                             </button>
                         )}
                     </div>
@@ -437,7 +427,7 @@ function Ahorro() {
                     <p className="text-4xl">🐷</p>
                     <p className="mt-2 font-semibold text-gray-800">{t('ahorro.sinMetas')}</p>
                     <p className="text-sm text-gray-500">
-                        Crea tu primera meta para empezar a ahorrar.
+                        {t('ahorro.firstGoalHint')}
                     </p>
                 </div>
             ) : (
@@ -453,7 +443,7 @@ function Ahorro() {
                                             {meta.titulo}
                                         </h3>
                                         <p className="text-sm text-gray-500">
-                                            Fecha objetivo: {formatearFecha(meta.fechaLimite)}
+                                            {t('ahorro.goalDate', { date: formatearFecha(meta.fechaLimite) })}
                                         </p>
                                     </div>
 
@@ -465,7 +455,7 @@ function Ahorro() {
                                                 : 'bg-blue-100 text-blue-700'
                                         }`}
                                     >
-                                        {meta.estado || 'En progreso'}
+                                        {String(meta.estado || '').toLowerCase() === 'completada' ? t('ahorro.metaAlcanzada') : t('ahorro.inProgress')}
                                     </span>
                                 </div>
 
@@ -473,7 +463,7 @@ function Ahorro() {
                                     <div className="mb-1 flex justify-between text-xs text-gray-500">
                                         <span>{formatearMoneda(progreso.actual)}</span>
                                         <span className="font-semibold text-gray-700">
-                                            {progreso.porcentaje.toFixed(0)}%
+                                            {formatearNumero(progreso.porcentaje, { maximumFractionDigits: 0 })}%
                                         </span>
                                         <span>{formatearMoneda(progreso.objetivo)}</span>
                                     </div>
@@ -489,8 +479,8 @@ function Ahorro() {
 
                                     <p className="mt-1 text-sm text-gray-500">
                                         {progreso.restante > 0
-                                            ? `Restan ${formatearMoneda(progreso.restante)}`
-                                            : '¡Meta alcanzada!'}
+                                            ? t('ahorro.remainingAmount', { label: t('ahorro.restan'), amount: formatearMoneda(progreso.restante) })
+                                            : t('ahorro.goalReached')}
                                     </p>
                                 </div>
 
@@ -501,8 +491,8 @@ function Ahorro() {
                                         className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
                                     >
                                         {metaDetalle && Number(metaDetalle.idMeta) === Number(meta.idMeta)
-                                            ? 'Aporte registrado'
-                                            : 'Registrar aporte'}
+                                            ? t('ahorro.contributionRegistered')
+                                            : t('ahorro.registrarAporte')}
                                     </button>
 
                                     <button
@@ -510,7 +500,7 @@ function Ahorro() {
                                         onClick={() => editarMeta(meta)}
                                         className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                                     >
-                                        Editar
+                                        {t('common.editar')}
                                     </button>
 
                                     <button
@@ -518,7 +508,7 @@ function Ahorro() {
                                         onClick={() => solicitarEliminarMeta(meta.idMeta)}
                                         className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200"
                                     >
-                                        Eliminar
+                                        {t('common.eliminar')}
                                     </button>
                                 </div>
                             </div>
@@ -541,7 +531,7 @@ function Ahorro() {
                 <div className="rounded-xl bg-white p-6 shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-gray-800">
-                            Aportes de «{metaDetalle.titulo}»
+                            {t('ahorro.contributionsFor', { title: metaDetalle.titulo })}
                         </h2>
 
                         <button
@@ -549,17 +539,18 @@ function Ahorro() {
                             onClick={() => {
                                 setMetaDetalle(null)
                                 setAportes([])
+                                setAporteIdempotencyKey(null)
                             }}
                             className="rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
-                            Cerrar
+                            {t('common.cerrar')}
                         </button>
                     </div>
 
                     <form onSubmit={registrarAporte} className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div>
                         <label htmlFor="ahorro-aporte-monto" className="mb-1 block text-sm font-medium text-gray-700">
-                            Monto
+                            {t('ahorro.contributionAmount')}
                         </label>
 
                         <input
@@ -570,14 +561,14 @@ function Ahorro() {
                                 step="0.01"
                                 value={aporteForm.monto}
                                 onChange={manejarCambioAporte}
-                                placeholder="Ej. 25.00"
+                                placeholder={t('ahorro.amountPlaceholder')}
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                             />
                         </div>
 
                         <div>
                         <label htmlFor="ahorro-aporte-fecha" className="mb-1 block text-sm font-medium text-gray-700">
-                            Fecha
+                            {t('ahorro.contributionDate')}
                         </label>
 
                         <input
@@ -605,7 +596,7 @@ function Ahorro() {
                         <Loading />
                     ) : aportes.length === 0 ? (
                         <p className="py-6 text-center text-sm text-gray-500">
-                            Esta meta todavía no tiene aportes.
+                            {t('ahorro.noContributions')}
                         </p>
                     ) : (
                         <ul className="divide-y divide-gray-100">
@@ -625,7 +616,7 @@ function Ahorro() {
                                         onClick={() => solicitarEliminarAporte(aporte.idAporte)}
                                         className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
                                     >
-                                        Eliminar
+                                        {t('common.eliminar')}
                                     </button>
                                 </li>
                             ))}
@@ -637,16 +628,16 @@ function Ahorro() {
             {/* MODALES DE CONFIRMACIÓN */}
             <ConfirmModal
                 abierto={confirmMeta.abierto}
-                titulo="Eliminar meta"
-                mensaje="¿Estás segura de que deseas eliminar esta meta junto con su historial de aportes?"
+                titulo={t('ahorro.deleteGoal')}
+                mensaje={t('ahorro.deleteGoalMessage')}
                 onConfirmar={confirmarEliminarMeta}
                 onCancelar={() => setConfirmMeta({ abierto: false, id: null })}
             />
 
             <ConfirmModal
                 abierto={confirmAporte.abierto}
-                titulo="Eliminar aporte"
-                mensaje="¿Estás segura de que deseas eliminar este aporte?"
+                titulo={t('ahorro.deleteContribution')}
+                mensaje={t('ahorro.deleteContributionMessage')}
                 onConfirmar={confirmarEliminarAporte}
                 onCancelar={() => setConfirmAporte({ abierto: false, id: null })}
             />

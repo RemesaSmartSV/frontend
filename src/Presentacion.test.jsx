@@ -12,6 +12,17 @@ vi.mock('react-i18next', () => ({
                 'auth.register': 'Crear cuenta',
                 'app.name': 'RemesaSmartSV',
                 'common.cargando': 'Cargando...',
+                'presentation.previousSection': 'Sección anterior',
+                'presentation.nextSection': 'Sección siguiente',
+                'presentation.goTo': 'Ir a sección',
+                'presentation.inDevelopment': 'Interfaz en desarrollo',
+                'presentation.closingButton': 'Conoce RemesaSmart SV',
+                'presentation.sections.cover': 'Portada',
+                'presentation.sections.problem': 'Problema',
+                'presentation.sections.solution': 'Solución',
+                'presentation.sections.how': 'Cómo funciona',
+                'presentation.sections.benefits': 'Beneficios',
+                'presentation.sections.technology': 'Tecnología',
             }
             return map[key] || key
         },

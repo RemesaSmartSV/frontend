@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import i18n, { normalizarIdioma } from './i18n/index.js'
 import {
     BrowserRouter,
     Routes,
@@ -91,6 +92,11 @@ export default function App() {
     const [nombreFamiliar, setNombreFamiliar] = useState('')
 
     useEffect(() => {
+        const idiomaPerfil = normalizarIdioma(usuario?.idiomaPreferido)
+        if (idiomaPerfil) i18n.changeLanguage(idiomaPerfil)
+    }, [usuario])
+
+    useEffect(() => {
         if (!usuario) {
             setNombreFamiliar('')
             return
@@ -121,7 +127,7 @@ export default function App() {
     useEffect(() => {
         setOnUnauthorized(() => {
             setUsuario(null)
-            setMensajeSesion('Tu sesión expiró. Inicia sesión nuevamente.')
+        setMensajeSesion(i18n.t('shell.sessionExpired'))
         })
 
         return () => setOnUnauthorized(null)
@@ -151,7 +157,7 @@ export default function App() {
     if (!usuario) {
         if (mostrarRegistro) {
             return (
-                <Suspense fallback={<Loading mensaje="Cargando..." />}>
+                <Suspense fallback={<Loading />}>
                     <Register volverLogin={() => setMostrarRegistro(false)} />
                 </Suspense>
             )
@@ -164,7 +170,7 @@ export default function App() {
                     mensaje={mensajeSesion}
                     onClose={() => setMensajeSesion('')}
                 />
-                <Suspense fallback={<Loading mensaje="Cargando..." />}>
+                <Suspense fallback={<Loading />}>
                     <Login
                         onLogin={manejarLogin}
                         irRegistro={() => setMostrarRegistro(true)}
@@ -181,7 +187,7 @@ export default function App() {
     // refrescado.
     if (!usuario.idHogar) {
         return (
-            <Suspense fallback={<Loading mensaje="Cargando..." />}>
+            <Suspense fallback={<Loading />}>
                 <HogarPendiente onHogarCreado={manejarLogin} />
             </Suspense>
         )
@@ -190,7 +196,7 @@ export default function App() {
     return (
         <BrowserRouter>
             <ScrollToTop />
-            <Suspense fallback={<Loading mensaje="Cargando página..." />}>
+            <Suspense fallback={<Loading mensaje={i18n.t('shell.loadPage')} />}>
                 <Routes>
                     <Route
                         element={

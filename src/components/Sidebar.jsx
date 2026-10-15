@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 
 import logo from '../assets/remesa-smart (blanco).png'
+import LanguageSelector from './LanguageSelector'
 
 export default function Sidebar({
     usuario,
@@ -123,7 +124,7 @@ export default function Sidebar({
                         
 
                     <p className="-mt-15 text-sm font-medium text-white/80 text-center">
-                        Tus finanzas
+                        {t('shell.tagline')}
                     </p>
 
                 
@@ -132,7 +133,7 @@ export default function Sidebar({
                 <div className="mb-4 mt-8">
 
                     <p className="px-4 text-xs font-bold tracking-[0.15em] text-blue-200">
-                        TU ESPACIO
+                        {t('shell.workspace')}
                     </p>
 
                 </div>
@@ -140,7 +141,7 @@ export default function Sidebar({
 
                 {/* ENLACES */}
                 <nav
-                    aria-label="Navegación principal"
+                    aria-label={t('shell.navLabel')}
                     className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0"
                 >
 
@@ -192,6 +193,7 @@ export default function Sidebar({
 
                 {/* USUARIO Y CERRAR SESIÓN */}
                 <div className="mt-4 shrink-0 border-t border-white/15 pt-5">
+                    <LanguageSelector className="mb-4 border-white/20 bg-white/10 [&_button]:text-white [&_button[aria-pressed=true]]:bg-white [&_button[aria-pressed=true]]:text-blue-800" />
 
                     <div className="flex items-center gap-3">
 
@@ -207,11 +209,11 @@ export default function Sidebar({
                         <div className="min-w-0 flex-1">
 
                             <p className="truncate text-sm font-bold text-white">
-                                {usuario?.nombre || 'Usuario'}
+                                {usuario?.nombre || t('shell.unknownUser')}
                             </p>
 
                             <p className="mt-0.5 text-xs text-blue-200">
-                                Administrador
+                                {usuario?.rol === 'Admin' ? t('family.admin') : t('family.member')}
                             </p>
 
                         </div>

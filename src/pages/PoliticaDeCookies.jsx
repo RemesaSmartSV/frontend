@@ -1,86 +1,68 @@
 import PoliticaLayout from '../components/PoliticaLayout'
+import { useTranslation } from 'react-i18next'
 
 export default function PoliticaDeCookies() {
+    const { t } = useTranslation()
     return (
         <PoliticaLayout
-            titulo="Política de cookies"
-            actualizado="30 de septiembre de 2026"
+            titulo={t('legal.cookies.title')}
+            actualizado="2026-09-30"
         >
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    1. Resumen
+                    {t('legal.cookies.s1')}
                 </h2>
                 <p>
-                    RemesaSmart SV <strong>no utiliza cookies</strong> propias
-                    ni de terceros. No hay cookies publicitarias, ni de
-                    analítica, ni de redes sociales, y por eso la aplicación no
-                    muestra un banner de consentimiento: no hay nada que
-                    consentir.
+                    {t('legal.cookies.p1')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    2. Cómo se guarda tu sesión
+                    {t('legal.cookies.s2')}
                 </h2>
-                <p>
-                    En lugar de cookies, la aplicación usa el{' '}
-                    <strong>almacenamiento local del navegador</strong>{' '}
-                    (<code className="rounded bg-gray-100 px-1">localStorage</code>
-                    ), que es información que solo vive en tu equipo y solo
-                    esta aplicación puede leer desde el mismo origen:
-                </p>
+                <p>{t('legal.cookies.p2')}</p>
                 <ul className="list-disc space-y-1 pl-6">
                     <li>
-                        <code className="rounded bg-gray-100 px-1">token</code>
-                        : el token de sesión que caduca a las 8 horas.
+                        <code className="rounded bg-gray-100 px-1">token</code>{' '}
+                        {t('legal.cookies.token')}
                     </li>
                     <li>
                         <code className="rounded bg-gray-100 px-1">
                             usuario
-                        </code>
-                        : los datos básicos de tu cuenta para no pedirte el
-                        inicio de sesión en cada visita.
+                        </code>{' '}
+                        {t('legal.cookies.user')}
                     </li>
                 </ul>
                 <p>
-                    Al cerrar la sesión, la aplicación borra ambas entradas.
+                    {t('legal.cookies.p3')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    3. Herramientas de terceros
+                    {t('legal.cookies.s3')}
                 </h2>
                 <p>
-                    No incorporamos Google Analytics, Google Tag Manager,
-                    píxeles de publicidad, heatmaps ni widgets sociales. Las
-                    únicas solicitudes que hace la aplicación van a su propio
-                    servidor.
+                    {t('legal.cookies.p4')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    4. Cómo borrar estos datos
+                    {t('legal.cookies.s4')}
                 </h2>
                 <p>
-                    Puedes eliminar el almacenamiento local en cualquier
-                    momento desde la configuración de privacidad de tu
-                    navegador o cerrando la sesión desde la aplicación. Al
-                    hacerlo, se te pedirá iniciar sesión de nuevo.
+                    {t('legal.cookies.p5')}
                 </p>
             </section>
 
             <section>
                 <h2 className="text-lg font-semibold text-gray-900">
-                    5. Cambios en esta política
+                    {t('legal.cookies.s5')}
                 </h2>
                 <p>
-                    Si en el futuro incorporamos cookies, actualizaremos esta
-                    página y pediremos consentimiento antes de instalarlas. La
-                    fecha de la última modificación aparece al principio del
-                    documento.
+                    {t('legal.cookies.p6')}
                 </p>
             </section>
         </PoliticaLayout>
