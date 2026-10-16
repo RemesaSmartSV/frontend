@@ -11,12 +11,16 @@ import { formatearFecha } from '../utils/formato'
 
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
+import ConfirmModal from '../components/ConfirmModal'
 
 export default function MiHogar() {
     const { t } = useTranslation()
-    // Layout expone salirDeFamilia por el Outlet: actualiza la sesión en App
-    // y navega al inicio. Fuera del router (render unitario de este archivo)
-    // el contexto llega vacío y se usa una navegación completa como respaldo.
+    // Layout exposes salirDeFamilia and cambiarDeFamilia through the Outlet:
+    // both refresh the session in App (a LoginResponse without a household);
+    // the former navigates home and the latter to /hogar, where
+    // HogarPendiente offers create/search. Outside the router (standalone
+    // render of this file) the context arrives empty and a full page
+    // navigation is used as a fallback.
     const contextoLayout = useOutletContext()
     const [hogar, setHogar] = useState(null)
     const [miembros, setMiembros] = useState([])
@@ -25,6 +29,7 @@ export default function MiHogar() {
     const [resolviendo, setResolviendo] = useState(null)
     const [codigoCopiado, setCodigoCopiado] = useState(false)
     const [cargando, setCargando] = useState(true)
+    const [cambioFamiliaAbierto, setCambioFamiliaAbierto] = useState(false)
 
     const [correo, setCorreo] = useState('')
     const [enviando, setEnviando] = useState(false)
@@ -150,6 +155,35 @@ export default function MiHogar() {
 
     if (cargando) {
         return <Loading />
+    }
+
+    // Switch family: leave the current one under the same rule as "leave"
+    // (the last member deletes the family together with its data) and drop
+    // the user on /hogar, where HogarPendiente offers creating or searching
+    // for another family.
+    async function cambiarDeFamilia() {
+        setError('')
+        setMensaje('')
+
+        try {
+            // The backend answers with a refreshed LoginResponse WITHOUT a
+            // household; persist it exactly like the leave flow does.
+            const datosUsuario = await usuariosApi.abandonarFamilia()
+            localStorage.setItem('token', datosUsuario.token)
+            localStorage.setItem('usuario', JSON.stringify(datosUsuario))
+
+            setCambioFamiliaAbierto(false)
+
+            if (typeof contextoLayout?.cambiarDeFamilia === 'function') {
+                contextoLayout.cambiarDeFamilia(datosUsuario)
+            } else {
+                // Render outside the router (unit tests).
+                window.location.assign('/hogar')
+            }
+        } catch (err) {
+            setCambioFamiliaAbierto(false)
+            setError(err.message || t('family.leaveError'))
+        }
     }
 
     const iniciales = (nombre) =>
@@ -470,40 +504,60 @@ export default function MiHogar() {
                     {esUltimoMiembro ? t('family.leaveWarningLast') : t('family.leaveWarning')}
                 </p>
 
-                <button
-                    type="button"
-                    onClick={async () => {
-                        const aviso = esUltimoMiembro ? t('family.leaveConfirmLast') : t('family.leaveConfirm')
-                        if (!window.confirm(aviso)) return
-                        try {
-                            // El backend responde un LoginResponse refrescado
-                            // SIN hogar; si éste era el último miembro, además
-                            // borró la familia entera con sus datos financieros.
-                            const datosUsuario = await usuariosApi.abandonarFamilia()
-                            localStorage.setItem('token', datosUsuario.token)
-                            localStorage.setItem('usuario', JSON.stringify(datosUsuario))
+                <div className="flex flex-wrap gap-3">
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            const aviso = esUltimoMiembro ? t('family.leaveConfirmLast') : t('family.leaveConfirm')
+                            if (!window.confirm(aviso)) return
+                            try {
+                                // El backend responde un LoginResponse refrescado
+                                // SIN hogar; si éste era el último miembro, además
+                                // borró la familia entera con sus datos financieros.
+                                const datosUsuario = await usuariosApi.abandonarFamilia()
+                                localStorage.setItem('token', datosUsuario.token)
+                                localStorage.setItem('usuario', JSON.stringify(datosUsuario))
 
-                            // Sin window.location.reload(): App toma el nuevo
-                            // LoginResponse y Layout navega al inicio, así que
-                            // el usuario queda en la app, con la sesión
-                            // actualizada y sin familia. Nadie es empujado a
-                            // entrar a otra: la pantalla de creación/búsqueda
-                            // solo aparece si se entra a /hogar.
-                            if (typeof contextoLayout?.salirDeFamilia === 'function') {
-                                contextoLayout.salirDeFamilia(datosUsuario)
-                            } else {
-                                // Render fuera del router (tests unitarios).
-                                window.location.assign('/')
+                                // Sin window.location.reload(): App toma el nuevo
+                                // LoginResponse y Layout navega al inicio, así que
+                                // el usuario queda en la app, con la sesión
+                                // actualizada y sin familia. Nadie es empujado a
+                                // entrar a otra: la pantalla de creación/búsqueda
+                                // solo aparece si se entra a /hogar.
+                                if (typeof contextoLayout?.salirDeFamilia === 'function') {
+                                    contextoLayout.salirDeFamilia(datosUsuario)
+                                } else {
+                                    // Render fuera del router (tests unitarios).
+                                    window.location.assign('/')
+                                }
+                            } catch (err) {
+                                setError(err.message || t('family.leaveError'))
                             }
-                        } catch (err) {
-                            setError(err.message || t('family.leaveError'))
-                        }
-                    }}
-                    className="rounded-lg border border-red-300 bg-white px-5 py-2.5 font-medium text-red-700 transition hover:bg-red-50"
-                >
-                    {t('family.leave')}
-                </button>
+                        }}
+                        className="rounded-lg border border-red-300 bg-white px-5 py-2.5 font-medium text-red-700 transition hover:bg-red-50"
+                    >
+                        {t('family.leave')}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setCambioFamiliaAbierto(true)}
+                        className="rounded-lg border border-red-300 bg-white px-5 py-2.5 font-medium text-red-700 transition hover:bg-red-50"
+                    >
+                        {t('family.switchFamily')}
+                    </button>
+                </div>
             </div>
+
+            {/* MODAL: CAMBIAR DE FAMILIA */}
+            <ConfirmModal
+                abierto={cambioFamiliaAbierto}
+                titulo={t('family.switchFamily')}
+                mensaje={esUltimoMiembro ? t('family.leaveConfirmLast') : t('family.leaveConfirm')}
+                onConfirmar={cambiarDeFamilia}
+                onCancelar={() => setCambioFamiliaAbierto(false)}
+                textoConfirmar={t('family.switchConfirm')}
+            />
         </div>
     )
 }

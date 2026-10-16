@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
+import { MemoryRouter, Routes, Route, Outlet } from 'react-router-dom'
 import MiHogar from './MiHogar'
 
 // El mock devuelve SIEMPRE la misma referencia de `t`: si `t` cambia en cada
@@ -37,6 +38,10 @@ vi.mock('react-i18next', () => {
         'family.requestAccepted': 'Solicitud aceptada.',
         'family.requestRejected': 'Solicitud rechazada.',
         'family.requestError': 'No se pudo responder la solicitud.',
+        'family.leaveConfirm': '¿Estás seguro de que deseas abandonar esta familia? Perderás acceso a sus movimientos, presupuestos y metas compartidas. Tus datos personales no se eliminarán.',
+        'family.leaveConfirmLast': '¿Estás seguro? Eres el último miembro, así que la familia y todos sus datos se eliminarán definitivamente.',
+        'family.switchFamily': 'Cambiar de familia',
+        'family.switchConfirm': 'Sí, cambiar de familia',
         'common.aceptar': 'Aceptar',
         'common.rechazar': 'Rechazar',
         'common.enviando': 'Enviando...',
@@ -276,5 +281,63 @@ describe('MiHogar', () => {
         render(<MiHogar />)
 
         expect(await screen.findByText('No hay solicitudes pendientes.')).toBeInTheDocument()
+    })
+
+    it('muestra el botón Cambiar de familia y, al confirmarlo, llama a cambiarDeFamilia del Layout', async () => {
+        // api.obtenerToken() decodifica el payload con atob(token.split('.')[1])
+        // y borra la clave 'token' si eso revienta. El token de prueba tiene que
+        // ser un JWT sintácticamente válido con exp futuro, o desaparece de
+        // localStorage antes de que corra la aserción.
+        const tokenFalso = `eyJhbGciOiJIUzI1NiJ9.${btoa(
+            JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })
+        )}.firma-de-prueba`
+
+        sesion('Admin')
+        const cambiarDeFamilia = vi.fn()
+        const fetchBase = fetchFamilia([
+            { idUsuario: 1, nombre: 'Ana Duarte', correo: 'ana@demo.com', rol: 'Admin', fechaRegistro: '2026-01-10T00:00:00Z' },
+        ])
+        global.fetch = vi.fn(async (url, opciones = {}) => {
+            if (String(url).includes('/Usuarios/abandonar-familia')) {
+                return respuesta({
+                    idUsuario: 1,
+                    nombre: 'Ana Duarte',
+                    correo: 'ana@demo.com',
+                    rol: 'Miembro',
+                    idHogar: null,
+                    token: tokenFalso,
+                })
+            }
+            return fetchBase(url, opciones)
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/hogar']}>
+                <Routes>
+                    <Route element={<Outlet context={{ cambiarDeFamilia }} />}>
+                        <Route path="/hogar" element={<MiHogar />} />
+                    </Route>
+                </Routes>
+            </MemoryRouter>
+        )
+
+        await screen.findByText('Ana Duarte')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cambiar de familia' }))
+
+        // Only one member: the modal must warn that the whole family is
+        // deleted together with its data.
+        const dialogo = await screen.findByRole('dialog')
+        expect(dialogo).toHaveTextContent(
+            '¿Estás seguro? Eres el último miembro, así que la familia y todos sus datos se eliminarán definitivamente.'
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Sí, cambiar de familia' }))
+
+        await waitFor(() => expect(cambiarDeFamilia).toHaveBeenCalledTimes(1))
+        expect(cambiarDeFamilia).toHaveBeenCalledWith(
+            expect.objectContaining({ token: tokenFalso, idHogar: null })
+        )
+        expect(localStorage.getItem('token')).toBe(tokenFalso)
     })
 })

@@ -540,6 +540,8 @@
     "leaveConfirmLast": "Are you sure? You are the last member, so the family and all of its data will be permanently deleted.",
     "leave": "Leave family",
     "leaveError": "Could not leave the family.",
+    "switchFamily": "Switch family",
+    "switchConfirm": "Yes, switch family",
     "loadError": "Could not load household information.",
     "soloAdmin": "Only a family administrator can invite new members.",
     "publicCode": "Family public code",

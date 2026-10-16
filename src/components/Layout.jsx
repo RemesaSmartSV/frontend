@@ -134,13 +134,20 @@ export default function Layout({
         }
     }
 
-    // Contrato para las páginas del Outlet: al abandonar la familia la
-    // sesión se actualiza en App (LoginResponse sin hogar) y se navega al
-    // inicio, de modo que el usuario queda en la app sin familia y sin caer
-    // en la pantalla de creación que /hogar muestra a los que no tienen una.
+    // Contract for the Outlet pages: when leaving a family the session is
+    // refreshed in App (a LoginResponse without a household). salirDeFamilia
+    // navigates home — the user keeps browsing the app without a family and
+    // never lands on the create/search screen. cambiarDeFamilia navigates to
+    // /hogar instead, where HogarPendiente (create/search) awaits whoever no
+    // longer has a family.
     function salirDeFamilia(datosUsuario) {
         onSesionActualizada?.(datosUsuario)
         navigate('/')
+    }
+
+    function cambiarDeFamilia(datosUsuario) {
+        onSesionActualizada?.(datosUsuario)
+        navigate('/hogar')
     }
 
     return (
@@ -191,7 +198,7 @@ export default function Layout({
                     </div>
                 )}
 
-                <Outlet context={{ salirDeFamilia }} />
+                <Outlet context={{ salirDeFamilia, cambiarDeFamilia }} />
 
                 <footer className="mt-10 border-t border-gray-200 pt-4 pb-2 text-xs text-gray-500">
                     <nav

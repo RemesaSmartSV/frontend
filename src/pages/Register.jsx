@@ -4,7 +4,7 @@ import Notification from '../components/Notification'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../components/LanguageSelector'
 
-export default function Register({ volverLogin }) {
+export default function Register({ volverLogin, onLogin }) {
     const { t } = useTranslation()
     const [formulario, setFormulario] = useState({
         nombre: '',
@@ -120,6 +120,11 @@ export default function Register({ volverLogin }) {
                 contrasena: '',
                 confirmarContrasena: '',
             })
+
+            // Same contract as Login: hand the full LoginResponse to the
+            // parent (App), which establishes the session and mounts the
+            // router — the new account enters the app already signed in.
+            onLogin(respuesta)
         } catch (err) {
             setError(
                 err.message ||

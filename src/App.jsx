@@ -162,7 +162,10 @@ export default function App() {
         if (mostrarRegistro) {
             return (
                 <Suspense fallback={<Loading />}>
-                    <Register volverLogin={() => setMostrarRegistro(false)} />
+                    <Register
+                        volverLogin={() => setMostrarRegistro(false)}
+                        onLogin={manejarLogin}
+                    />
                 </Suspense>
             )
         }

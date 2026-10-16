@@ -492,6 +492,8 @@
     "leaveConfirmLast": "¿Estás seguro? Eres el último miembro, así que la familia y todos sus datos se eliminarán definitivamente.",
     "leave": "Abandonar familia",
     "leaveError": "No se pudo abandonar la familia.",
+    "switchFamily": "Cambiar de familia",
+    "switchConfirm": "Sí, cambiar de familia",
     "loadError": "No se pudo cargar la información del hogar.",
     "soloAdmin": "Solo un administrador de la familia puede invitar nuevos miembros.",
     "publicCode": "Código público de la familia",

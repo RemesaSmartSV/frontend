@@ -167,7 +167,14 @@ export const authApi = {
             body: JSON.stringify(datos),
         })
 
-        return manejarRespuesta(res)
+        // The backend answers register with a full LoginResponse (same shape
+        // as login): persist it so the new account lands signed in.
+        const data = await manejarRespuesta(res)
+        if (data.token) {
+            localStorage.setItem('token', data.token)
+            localStorage.setItem('usuario', JSON.stringify(data))
+        }
+        return data
     },
 
     cerrarSesion() {
