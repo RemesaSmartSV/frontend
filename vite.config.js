@@ -26,8 +26,10 @@ export default defineConfig(({ mode }) => {
                 ignored: ['**/.vs/**'],
             },
             proxy: {
+                // 5203 = `dotnet run` (launchSettings). Con el backend de Docker
+                // hay que apuntar al 8080: VITE_API_TARGET=http://localhost:8080
                 '/api': {
-                    target: 'http://localhost:5203',
+                    target: process.env.VITE_API_TARGET || 'http://localhost:5203',
                     changeOrigin: true,
                 },
             },

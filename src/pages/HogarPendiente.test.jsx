@@ -43,6 +43,16 @@ vi.mock('react-i18next', () => {
         'family.rejected': 'Rechazada',
         'family.cancelled': 'Cancelada',
         'family.pending': 'Pendiente',
+        'family.skipForNow': 'Ahora no, usar la app',
+        'family.skipHint': 'Más tarde puedes crear o unirte a una familia desde Mi familia.',
+        'family.searchByNameTitle': 'Buscar familia por nombre',
+        'family.searchByNameHint': 'Escribe al menos 3 caracteres. Podrás solicitar unirte y el administrador de la familia aprobará o rechazará la solicitud.',
+        'family.searchByNameLabel': 'Nombre de la familia',
+        'family.searchByNamePlaceholder': 'Ej. Familia Duarte',
+        'family.searchByNameMin': 'Ingresa al menos 3 caracteres para buscar.',
+        'family.searchByNameSearch': 'Buscar por nombre',
+        'family.searchByNameEmpty': 'No se encontraron familias con ese nombre.',
+        'family.searchByNameError': 'No se pudo buscar por nombre.',
         'common.aceptar': 'Aceptar',
         'common.rechazar': 'Rechazar',
         'common.cancelar': 'Cancelar',
@@ -77,12 +87,16 @@ afterEach(() => {
 })
 
 // Stub de fetch por ruta para HogarPendiente: invitaciones propias,
-// solicitudes de unión, búsqueda por código y acciones sobre solicitudes.
+// solicitudes de unión, búsqueda por código, búsqueda por nombre y acciones
+// sobre solicitudes.
 function fetchPendiente({
     invitaciones = [],
     solicitudes = [],
     familias = {},
     buscarStatus = null,
+    coincidencias = [],
+    solicitudStatus = null,
+    solicitudMessage = '',
 } = {}) {
     return vi.fn(async (url, opciones = {}) => {
         const destino = String(url)
@@ -96,6 +110,20 @@ function fetchPendiente({
                 rol: 'Miembro',
                 idHogar: 42,
             })
+        }
+
+        // Va ANTES que /Hogares/buscar: la ruta por nombre también contiene
+        // ese fragmento y el stub tendría que responder como búsqueda por
+        // código. Reproduce las reglas del backend (mínimo 3 caracteres).
+        if (destino.includes('/Hogares/buscar-por-nombre')) {
+            const q = new URL(destino, 'http://test').searchParams.get('q') || ''
+
+            if (q.trim().length < 3) {
+                return respuesta({ message: 'La búsqueda debe tener al menos 3 caracteres.' }, 400)
+            }
+
+            // El endpoint nunca incluye CodigoPublico.
+            return respuesta(coincidencias)
         }
 
         if (destino.includes('/Hogares/buscar')) {
@@ -120,6 +148,10 @@ function fetchPendiente({
         if (destino.includes('/SolicitudesUnion') && opciones.method === 'POST') {
             if (destino.includes('/cancelar')) {
                 return new Response(null, { status: 204 })
+            }
+
+            if (solicitudStatus) {
+                return respuesta({ message: solicitudMessage }, solicitudStatus)
             }
 
             return respuesta({
@@ -301,5 +333,123 @@ describe('HogarPendiente', () => {
         render(<HogarPendiente onHogarCreado={() => {}} />)
 
         expect(await screen.findByText('Aún no has enviado solicitudes de unión.')).toBeInTheDocument()
+    })
+
+    it('ofrece salir del flujo sin crear familia', async () => {
+        global.fetch = fetchPendiente()
+
+        render(<HogarPendiente onHogarCreado={() => {}} />)
+
+        // Ancla, no botón con onClick: la salida es simplemente navegar a la
+        // app, que ya no está bloqueada para cuentas sin familia.
+        const enlace = await screen.findByRole('link', { name: 'Ahora no, usar la app' })
+        expect(enlace).toHaveAttribute('href', '/')
+
+        expect(
+            screen.getByText('Más tarde puedes crear o unirte a una familia desde Mi familia.')
+        ).toBeInTheDocument()
+    })
+
+    it('valida el mínimo de 3 caracteres antes de buscar por nombre', async () => {
+        const fetchMock = fetchPendiente()
+        global.fetch = fetchMock
+
+        render(<HogarPendiente onHogarCreado={() => {}} />)
+
+        fireEvent.change(await screen.findByLabelText('Nombre de la familia'), {
+            target: { value: 'Du' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Buscar por nombre' }))
+
+        expect(
+            await screen.findByText('Ingresa al menos 3 caracteres para buscar.')
+        ).toBeInTheDocument()
+
+        // El backend responde 400 con menos de 3 caracteres: no se llama.
+        expect(
+            fetchMock.mock.calls.some(([url]) =>
+                String(url).includes('/Hogares/buscar-por-nombre')
+            )
+        ).toBe(false)
+    })
+
+    it('busca por nombre y solicita unión con el idHogar', async () => {
+        const fetchMock = fetchPendiente({
+            coincidencias: [{ idHogar: 7, nombreFamiliar: 'Familia Argueta' }],
+        })
+        global.fetch = fetchMock
+
+        render(<HogarPendiente onHogarCreado={() => {}} />)
+
+        fireEvent.change(await screen.findByLabelText('Nombre de la familia'), {
+            target: { value: 'Argueta' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Buscar por nombre' }))
+
+        expect(await screen.findByText('Familia Argueta')).toBeInTheDocument()
+
+        const llamadaBusqueda = fetchMock.mock.calls.find(([url]) =>
+            String(url).includes('/Hogares/buscar-por-nombre')
+        )
+        expect(llamadaBusqueda).toBeDefined()
+        expect(
+            new URL(llamadaBusqueda[0], 'http://test').searchParams.get('q')
+        ).toBe('Argueta')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Solicitar unirse' }))
+
+        await waitFor(() =>
+            expect(
+                screen.getByText('Solicitud enviada. Espera la respuesta del administrador de la familia.')
+            ).toBeInTheDocument()
+        )
+
+        // La búsqueda por nombre no expone el código público: el cuerpo del
+        // POST lleva idHogar y jamás codigoPublico (el backend exige exactamente uno).
+        const llamadaSolicitud = fetchMock.mock.calls.find(([url, opciones]) =>
+            String(url).endsWith('/SolicitudesUnion') && opciones?.method === 'POST'
+        )
+        expect(llamadaSolicitud).toBeDefined()
+
+        const cuerpo = JSON.parse(llamadaSolicitud[1].body)
+        expect(cuerpo.idHogar).toBe(7)
+        expect(cuerpo.codigoPublico).toBeUndefined()
+    })
+
+    it('muestra el estado vacío cuando el nombre no coincide con ninguna familia', async () => {
+        global.fetch = fetchPendiente({ coincidencias: [] })
+
+        render(<HogarPendiente onHogarCreado={() => {}} />)
+
+        fireEvent.change(await screen.findByLabelText('Nombre de la familia'), {
+            target: { value: 'Zzzzzzz' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Buscar por nombre' }))
+
+        expect(
+            await screen.findByText('No se encontraron familias con ese nombre.')
+        ).toBeInTheDocument()
+    })
+
+    it('muestra el error del backend (409) al solicitar unión por nombre', async () => {
+        global.fetch = fetchPendiente({
+            coincidencias: [{ idHogar: 7, nombreFamiliar: 'Familia Argueta' }],
+            solicitudStatus: 409,
+            solicitudMessage: 'Ya enviaste una solicitud a esa familia.',
+        })
+
+        render(<HogarPendiente onHogarCreado={() => {}} />)
+
+        fireEvent.change(await screen.findByLabelText('Nombre de la familia'), {
+            target: { value: 'Argueta' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Buscar por nombre' }))
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Solicitar unirse' }))
+
+        // Los 409 viajan con message: se muestra en lugar de un texto genérico.
+        expect(
+            await screen.findByText('Ya enviaste una solicitud a esa familia.')
+        ).toBeInTheDocument()
     })
 })

@@ -97,7 +97,11 @@ export default function App() {
     }, [usuario])
 
     useEffect(() => {
-        if (!usuario) {
+        // Sin hogar no se consulta el endpoint: GET /Hogares responde 404
+        // (el backend lo devuelve solo cuando hay hogar asociado), y hacerlo
+        // en cada montaje solo ensuciaría la consola. El nombre se limpia
+        // para que el Navbar caiga en su propio fallback "Sin familia".
+        if (!usuario?.idHogar) {
             setNombreFamiliar('')
             return
         }
@@ -180,19 +184,14 @@ export default function App() {
         )
     }
 
-    // Gate único de "hogar pendiente": una cuenta recién creada llega con
-    // idHogar null (el backend solo lo completa al crear el hogar). Mientras
-    // falte, no se monta el router: se muestra la pantalla de creación y
-    // manejarLogin re-evalúa este mismo render al recibir el LoginResponse
-    // refrescado.
-    if (!usuario.idHogar) {
-        return (
-            <Suspense fallback={<Loading />}>
-                <HogarPendiente onHogarCreado={manejarLogin} />
-            </Suspense>
-        )
-    }
-
+    // Sin familia NO hay muro: el router se monta igual y toda la app queda
+    // navegable (antes este bloque devolvía HogarPendiente por fuera de
+    // BrowserRouter y dejaba la cuenta sin hogar sin rutas ni navegación).
+    // La pantalla de creación/búsqueda vive ahora en la ruta /hogar —ahí
+    // MiHogar no corresponde cuando no hay hogar—, el Layout muestra un
+    // banner con el acceso a esa pantalla, y el resto de las páginas
+    // renderizan sus estados vacíos habituales (los GET filtran por
+    // idHogar = 0 y devuelven lista vacía).
     return (
         <BrowserRouter>
             <ScrollToTop />
@@ -216,7 +215,21 @@ export default function App() {
                         <Route path="/gastos" element={<Gastos />} />
                         <Route path="/presupuestos" element={<Presupuestos />} />
                         <Route path="/ahorro" element={<Ahorro />} />
-                        <Route path="/hogar" element={<MiHogar />} />
+                        <Route
+                            path="/hogar"
+                            element={
+                                // Con hogar: la pantalla de familia. Sin hogar:
+                                // el flujo de creación/búsqueda (mismo
+                                // componente que antes bloqueaba la app, ahora
+                                // es una ruta más y manejarLogin lo saca de
+                                // aquí al recibir el LoginResponse refrescado).
+                                usuario.idHogar ? (
+                                    <MiHogar />
+                                ) : (
+                                    <HogarPendiente onHogarCreado={manejarLogin} />
+                                )
+                            }
+                        />
                         <Route
                             path="/educacion-financiera"
                             element={<EducacionFinanciera />}

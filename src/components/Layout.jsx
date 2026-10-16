@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
 import { alertasApi, notificacionesApi, invitacionesApi } from '../services/api'
@@ -12,6 +12,7 @@ export default function Layout({
     onSesionActualizada
 }) {
     const { t } = useTranslation()
+    const navigate = useNavigate()
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [alertas, setAlertas] = useState([])
     const [cargandoAlertas, setCargandoAlertas] = useState(true)
@@ -133,6 +134,15 @@ export default function Layout({
         }
     }
 
+    // Contrato para las páginas del Outlet: al abandonar la familia la
+    // sesión se actualiza en App (LoginResponse sin hogar) y se navega al
+    // inicio, de modo que el usuario queda en la app sin familia y sin caer
+    // en la pantalla de creación que /hogar muestra a los que no tienen una.
+    function salirDeFamilia(datosUsuario) {
+        onSesionActualizada?.(datosUsuario)
+        navigate('/')
+    }
+
     return (
         <div className="min-h-screen bg-gray-100">
 
@@ -160,7 +170,28 @@ export default function Layout({
             />
 
             <main className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:ml-64">
-                <Outlet />
+                {/* CUENTA SIN FAMILIA: recordatorio no bloqueante. El flujo de
+                    creación/búsqueda vive en /hogar, así que el resto de la app
+                    sigue siendo usable sin familia. */}
+                {!usuario?.idHogar && (
+                    <div
+                        role="status"
+                        className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3"
+                    >
+                        <p className="text-sm font-medium text-blue-800">
+                            {t('family.noFamilyBanner')}
+                        </p>
+
+                        <a
+                            href="/hogar"
+                            className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-bold text-white transition hover:bg-blue-700"
+                        >
+                            {t('family.noFamilyBannerCta')}
+                        </a>
+                    </div>
+                )}
+
+                <Outlet context={{ salirDeFamilia }} />
 
                 <footer className="mt-10 border-t border-gray-200 pt-4 pb-2 text-xs text-gray-500">
                     <nav

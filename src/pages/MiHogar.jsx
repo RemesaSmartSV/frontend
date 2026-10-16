@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useOutletContext } from 'react-router-dom'
 import {
     hogaresApi,
     usuariosApi,
@@ -13,6 +14,10 @@ import Loading from '../components/Loading'
 
 export default function MiHogar() {
     const { t } = useTranslation()
+    // Layout expone salirDeFamilia por el Outlet: actualiza la sesión en App
+    // y navega al inicio. Fuera del router (render unitario de este archivo)
+    // el contexto llega vacío y se usa una navegación completa como respaldo.
+    const contextoLayout = useOutletContext()
     const [hogar, setHogar] = useState(null)
     const [miembros, setMiembros] = useState([])
     const [enviadas, setEnviadas] = useState([])
@@ -471,10 +476,25 @@ export default function MiHogar() {
                         const aviso = esUltimoMiembro ? t('family.leaveConfirmLast') : t('family.leaveConfirm')
                         if (!window.confirm(aviso)) return
                         try {
+                            // El backend responde un LoginResponse refrescado
+                            // SIN hogar; si éste era el último miembro, además
+                            // borró la familia entera con sus datos financieros.
                             const datosUsuario = await usuariosApi.abandonarFamilia()
                             localStorage.setItem('token', datosUsuario.token)
                             localStorage.setItem('usuario', JSON.stringify(datosUsuario))
-                            window.location.reload()
+
+                            // Sin window.location.reload(): App toma el nuevo
+                            // LoginResponse y Layout navega al inicio, así que
+                            // el usuario queda en la app, con la sesión
+                            // actualizada y sin familia. Nadie es empujado a
+                            // entrar a otra: la pantalla de creación/búsqueda
+                            // solo aparece si se entra a /hogar.
+                            if (typeof contextoLayout?.salirDeFamilia === 'function') {
+                                contextoLayout.salirDeFamilia(datosUsuario)
+                            } else {
+                                // Render fuera del router (tests unitarios).
+                                window.location.assign('/')
+                            }
                         } catch (err) {
                             setError(err.message || t('family.leaveError'))
                         }

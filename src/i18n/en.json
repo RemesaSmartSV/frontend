@@ -553,7 +553,19 @@
     "joinRequestDate": "Requested {{date}}",
     "requestAccepted": "Request accepted.",
     "requestRejected": "Request rejected.",
-    "requestError": "Could not respond to the request."
+    "requestError": "Could not respond to the request.",
+    "noFamilyBanner": "You don't have a family yet. You can use the app and create or join one anytime.",
+    "noFamilyBannerCta": "Create or join a family",
+    "skipForNow": "Not now, use the app",
+    "skipHint": "You can create or join a family later from My Family.",
+    "searchByNameTitle": "Search family by name",
+    "searchByNameHint": "Type at least 3 characters. You can request to join and the family administrator will approve or decline the request.",
+    "searchByNameLabel": "Family name",
+    "searchByNamePlaceholder": "E.g. Duarte family",
+    "searchByNameMin": "Enter at least 3 characters to search.",
+    "searchByNameSearch": "Search by name",
+    "searchByNameEmpty": "No families found with that name.",
+    "searchByNameError": "Could not search by name."
   },
   "pendingHome": {
     "invited": "You have been invited to a family",

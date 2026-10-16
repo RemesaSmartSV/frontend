@@ -197,6 +197,20 @@ export const hogaresApi = {
 
         return manejarRespuesta(res)
     },
+
+    // GET /api/Hogares/buscar-por-nombre?q=<texto>: hasta 10 coincidencias
+    // [{ idHogar, nombreFamiliar }]; q necesita mínimo 3 caracteres y sin
+    // coincidencias devuelve lista vacía (no 404). El endpoint NUNCA trae
+    // CodigoPublico: requisito de privacidad, la búsqueda por nombre solo
+    // permite solicitar unión (que un Admin aprueba), no unirse directo.
+    async buscarPorNombre(texto) {
+        const params = new URLSearchParams({ q: texto })
+        const res = await fetch(`${API_URL}/Hogares/buscar-por-nombre?${params}`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
 }
 
 export const usuariosApi = {
@@ -354,11 +368,16 @@ export const invitacionesApi = {
 }
 
 export const solicitudesUnionApi = {
-    async crear(codigoPublico) {
+    // POST /api/SolicitudesUnion: el cuerpo lleva EXACTAMENTE UNO de los dos
+    // campos, o el backend responde 400:
+    //   { codigoPublico: "RS-FAM-..." } → pase directo con código público.
+    //   { idHogar: 7 }                   → flujo de búsqueda por nombre, que
+    //                                       no expone el código público.
+    async crear(datos) {
         const res = await fetch(`${API_URL}/SolicitudesUnion`, {
             method: 'POST',
             headers: obtenerHeaders(true),
-            body: JSON.stringify({ codigoPublico }),
+            body: JSON.stringify(datos),
         })
         return manejarRespuesta(res)
     },

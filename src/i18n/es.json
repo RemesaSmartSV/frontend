@@ -505,7 +505,19 @@
     "joinRequestDate": "Solicitada {{date}}",
     "requestAccepted": "Solicitud aceptada.",
     "requestRejected": "Solicitud rechazada.",
-    "requestError": "No se pudo responder la solicitud."
+    "requestError": "No se pudo responder la solicitud.",
+    "noFamilyBanner": "Aún no tienes una familia. Puedes usar la app y crear o unirte cuando quieras.",
+    "noFamilyBannerCta": "Crear o unirme a una familia",
+    "skipForNow": "Ahora no, usar la app",
+    "skipHint": "Más tarde puedes crear o unirte a una familia desde Mi familia.",
+    "searchByNameTitle": "Buscar familia por nombre",
+    "searchByNameHint": "Escribe al menos 3 caracteres. Podrás solicitar unirte y el administrador de la familia aprobará o rechazará la solicitud.",
+    "searchByNameLabel": "Nombre de la familia",
+    "searchByNamePlaceholder": "Ej. Familia Duarte",
+    "searchByNameMin": "Ingresa al menos 3 caracteres para buscar.",
+    "searchByNameSearch": "Buscar por nombre",
+    "searchByNameEmpty": "No se encontraron familias con ese nombre.",
+    "searchByNameError": "No se pudo buscar por nombre."
   },
   "pendingHome": {
     "invited": "Te invitaron a una familia",
