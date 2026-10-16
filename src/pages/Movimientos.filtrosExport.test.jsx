@@ -26,6 +26,9 @@ import Movimientos from './Movimientos'
 // 2. Hay TRES botones de exportar: "CSV filtrado" (genera el archivo en el
 //    cliente a partir de las filas visibles) y "CSV"/"JSON" (van al endpoint
 //    /Movimientos/exportar). Se prueban los tres, porque son rutas distintas.
+// 3. La columna "Registrado por" resuelve idUsuario → nombre con /Usuarios
+//    en el NAVEGADOR (el API devuelve la entidad cruda). El filtro por
+//    miembro es también client-side, igual que el resto del panel.
 
 const MOVIMIENTOS = [
     {
@@ -53,7 +56,9 @@ const MOVIMIENTOS = [
     {
         idMovimiento: 3,
         idHogar: 14,
-        idUsuario: 16,
+        // idUsuario 99 NO existe en MIEMBROS: sirve para comprobar que la
+        // columna "Registrado por" degrada sin romper la fila.
+        idUsuario: 99,
         idCategoria: 2,
         monto: 55.5,
         fecha: '2026-08-01T12:00:00Z',
@@ -66,6 +71,27 @@ const MOVIMIENTOS = [
 const CATEGORIAS = [
     { idCategoria: 1, idHogar: 14, nombre: 'Salario', tipo: 'Ingreso', icono: 'x' },
     { idCategoria: 2, idHogar: 14, nombre: 'Comida', tipo: 'Gasto', icono: 'x' },
+]
+
+// Devueltos por /Usuarios como array plano (GetMiembros no pagina). María
+// usa nombreVisible; Juan no, para ejercitar el armado "Nombre Apellido".
+const MIEMBROS = [
+    {
+        idUsuario: 16,
+        nombre: 'María',
+        apellido: 'López',
+        nombreVisible: 'María L.',
+        correo: 'maria@remesa.test',
+        rol: 'Admin',
+    },
+    {
+        idUsuario: 17,
+        nombre: 'Juan',
+        apellido: 'Pérez',
+        nombreVisible: null,
+        correo: 'juan@remesa.test',
+        rol: 'Miembro',
+    },
 ]
 
 let fetchMock
@@ -151,6 +177,11 @@ beforeEach(() => {
 
         if (destino.includes('/Categorias')) {
             return respuesta(paginado(CATEGORIAS))
+        }
+
+        // GetMiembros responde un array plano, no un PaginatedResponse.
+        if (destino.includes('/Usuarios')) {
+            return respuesta(MIEMBROS)
         }
 
         return respuesta(paginado([]))
@@ -342,6 +373,44 @@ describe('Movimientos — filtros', () => {
     })
 })
 
+describe('Movimientos — atribución', () => {
+    it('muestra "Registrado por" con el nombre del miembro', async () => {
+        await montar()
+
+        const tabla = screen.getByRole('table')
+
+        // idUsuario 16 tiene nombreVisible "María L." y registró dos filas.
+        expect(within(tabla).getAllByText('María L.')).toHaveLength(2)
+
+        // idUsuario 99 no existe en /Usuarios: la fila degrada sin romperse.
+        expect(within(tabla).getByText('Desconocido')).toBeInTheDocument()
+        expect(
+            within(tabla).getByText('transporte urbano')
+        ).toBeInTheDocument()
+    })
+
+    it('filtra por miembro', async () => {
+        await montar()
+
+        fireEvent.change(control('filtroMiembroMovimientos'), {
+            target: { value: '16' },
+        })
+
+        expect(screen.getByText('sueldo mensual')).toBeInTheDocument()
+        expect(screen.getByText('supermercado')).toBeInTheDocument()
+        expect(
+            screen.queryByText('transporte urbano')
+        ).not.toBeInTheDocument()
+
+        // Volver a "Todos los miembros" restaura las tres filas.
+        fireEvent.change(control('filtroMiembroMovimientos'), {
+            target: { value: '' },
+        })
+
+        expect(screen.getByText('transporte urbano')).toBeInTheDocument()
+    })
+})
+
 describe('Movimientos — exportación', () => {
     it('"CSV filtrado" genera el archivo en el cliente con SOLO las filas visibles', async () => {
         await montar()
@@ -378,6 +447,35 @@ describe('Movimientos — exportación', () => {
                 /1 movimiento\(s\) exportado\(s\) correctamente\./
             )
         ).toBeInTheDocument()
+    })
+
+    it('"CSV filtrado" incluye la columna del autor al final de la fila', async () => {
+        await montar()
+
+        // Filtro a una sola fila (idUsuario 16 → "María L.") antes de exportar.
+        fireEvent.change(control('busquedaMovimientos'), {
+            target: { value: 'supermercado' },
+        })
+        expect(screen.getByText('supermercado')).toBeInTheDocument()
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'CSV filtrado' })
+        )
+
+        await waitFor(() => expect(crearUrlSpy).toHaveBeenCalledTimes(1))
+
+        const [blob] = crearUrlSpy.mock.calls[0]
+        const contenido = await leerTexto(blob)
+
+        // 7 encabezados y 7 campos por fila: el autor se agrega al FINAL
+        // para no romper el orden de las columnas existentes.
+        expect(contenido).toContain(
+            '"Fecha","Tipo","Categoría","Monto","Descripción","Origen","Registrado por"'
+        )
+        expect(contenido).toContain(
+            '"2026-09-12","Gasto","Comida","120.00","supermercado","Efectivo","María L."'
+        )
+        expect(contenido).not.toContain('Desconocido')
     })
 
     it('"CSV filtrado" queda deshabilitado si el filtro dejó la tabla vacía', async () => {

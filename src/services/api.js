@@ -80,12 +80,30 @@ function obtenerHeaders(incluyeBody = false) {
     return headers
 }
 
-async function listarTodasLasPaginas(ruta) {
+// Recorre todas las páginas de un endpoint paginado y devuelve los items
+// en un solo array. `filtros` permite agregar query params opcionales (p. ej.
+// usuarioId); los valores vacíos no viajan.
+async function listarTodasLasPaginas(ruta, filtros = {}) {
     const pageSize = 100
-    const primeraRespuesta = await fetch(
-        `${API_URL}/${ruta}?page=1&pageSize=${pageSize}`,
-        { headers: obtenerHeaders() }
-    )
+
+    function construirUrl(page) {
+        const parametros = new URLSearchParams()
+
+        Object.entries(filtros).forEach(([clave, valor]) => {
+            if (valor !== undefined && valor !== null && valor !== '') {
+                parametros.set(clave, valor)
+            }
+        })
+
+        parametros.set('page', page)
+        parametros.set('pageSize', pageSize)
+
+        return `${API_URL}/${ruta}?${parametros.toString()}`
+    }
+
+    const primeraRespuesta = await fetch(construirUrl(1), {
+        headers: obtenerHeaders(),
+    })
     const primeraPagina = await manejarRespuesta(primeraRespuesta)
 
     if (Array.isArray(primeraPagina)) {
@@ -96,10 +114,9 @@ async function listarTodasLasPaginas(ruta) {
     const totalPages = primeraPagina.totalPages || 1
 
     for (let page = 2; page <= totalPages; page += 1) {
-        const res = await fetch(
-            `${API_URL}/${ruta}?page=${page}&pageSize=${pageSize}`,
-            { headers: obtenerHeaders() }
-        )
+        const res = await fetch(construirUrl(page), {
+            headers: obtenerHeaders(),
+        })
         const data = await manejarRespuesta(res)
         items.push(...(data.items || []))
     }
@@ -521,8 +538,10 @@ export const movimientosApi = {
         return manejarRespuesta(res)
     },
 
-    async listar() {
-        return listarTodasLasPaginas('Movimientos')
+    // GET /api/Movimientos: acepta filtros opcionales del query string
+    // (p. ej. { usuarioId }); sin filtros se comporta como siempre.
+    async listar(filtros = {}) {
+        return listarTodasLasPaginas('Movimientos', filtros)
     },
 
     async crear(movimiento) {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { categoriasApi, movimientosApi } from '../services/api'
+import { categoriasApi, movimientosApi, usuariosApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
@@ -12,6 +12,7 @@ export default function Movimientos() {
     const { t } = useTranslation()
     const [movimientos, setMovimientos] = useState([])
     const [categorias, setCategorias] = useState([])
+    const [miembros, setMiembros] = useState([])
 
     const [formulario, setFormulario] = useState({
         idCategoria: '',
@@ -44,6 +45,7 @@ export default function Movimientos() {
         fechaDesde: '',
         fechaHasta: '',
         idCategoria: '',
+        idUsuario: '',
         montoMinimo: '',
         montoMaximo: '',
         busqueda: '',
@@ -61,14 +63,16 @@ export default function Movimientos() {
             setCargando(true)
             setError('')
 
-            const [movimientosData, categoriasData] =
+            const [movimientosData, categoriasData, miembrosData] =
                 await Promise.all([
                     movimientosApi.listar(),
                     categoriasApi.listar(),
+                    usuariosApi.listar(),
                 ])
 
             setMovimientos(movimientosData)
             setCategorias(categoriasData)
+            setMiembros(miembrosData || [])
             setPaginaActual(1)
         } catch (err) {
             setError(err.message)
@@ -258,6 +262,7 @@ export default function Movimientos() {
             fechaDesde: '',
             fechaHasta: '',
             idCategoria: '',
+            idUsuario: '',
             montoMinimo: '',
             montoMaximo: '',
             busqueda: '',
@@ -269,6 +274,31 @@ export default function Movimientos() {
     // =========================
     // FILTRADO
     // =========================
+
+    // Map idUsuario → nombre para atribuir cada movimiento. Se prefiere
+    // NombreVisible; si no existe, se arma "Nombre Apellido" sin espacios de
+    // sobra. Un id huérfano (no está en /Usuarios) degrada a "Desconocido".
+    const nombresPorUsuario = useMemo(() => {
+        const map = new Map()
+
+        miembros.forEach((miembro) => {
+            const nombre = (
+                miembro.nombreVisible ||
+                `${miembro.nombre || ''} ${miembro.apellido || ''}`
+            ).trim()
+
+            map.set(miembro.idUsuario, nombre)
+        })
+
+        return map
+    }, [miembros])
+
+    function nombreDeUsuario(idUsuario) {
+        return (
+            nombresPorUsuario.get(idUsuario) ||
+            t('transactions.unknownUser')
+        )
+    }
 
     const movimientosFiltrados = useMemo(() => {
         return movimientos.filter((movimiento) => {
@@ -294,6 +324,15 @@ export default function Movimientos() {
                 if (
                     String(movimiento.idCategoria) !==
                     String(filtros.idCategoria)
+                ) {
+                    return false
+                }
+            }
+
+            if (filtros.idUsuario) {
+                if (
+                    String(movimiento.idUsuario) !==
+                    String(filtros.idUsuario)
                 ) {
                     return false
                 }
@@ -356,6 +395,7 @@ export default function Movimientos() {
             t('common.monto'),
             t('common.descripcion'),
             t('common.origen'),
+            t('transactions.registeredBy'),
         ]
 
         const filas = movimientosFiltrados.map(
@@ -385,6 +425,9 @@ export default function Movimientos() {
                 const origen =
                     movimiento.origenEmisora || ''
 
+                const registradoPor =
+                    nombreDeUsuario(movimiento.idUsuario)
+
                 return [
                     fecha,
                     tipo,
@@ -392,6 +435,7 @@ export default function Movimientos() {
                     monto,
                     descripcion,
                     origen,
+                    registradoPor,
                 ]
             }
         )
@@ -812,7 +856,7 @@ export default function Movimientos() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
                         <div className="flex min-w-0 flex-col gap-2">
                             <label htmlFor="fechaDesde" className="text-sm font-semibold text-gray-700">
                                 {t('common.fechaDesde')}
@@ -894,6 +938,26 @@ export default function Movimientos() {
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
                             />
                         </div>
+
+                        <div className="flex min-w-0 flex-col gap-2">
+                            <label htmlFor="filtroMiembroMovimientos" className="text-sm font-semibold text-gray-700">
+                                {t('transactions.member')}
+                            </label>
+                            <select
+                                id="filtroMiembroMovimientos"
+                                name="idUsuario"
+                                value={filtros.idUsuario}
+                                onChange={manejarCambioFiltro}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                            >
+                                <option value="">{t('transactions.allMembers')}</option>
+                                {miembros.map((miembro) => (
+                                    <option key={miembro.idUsuario} value={miembro.idUsuario}>
+                                        {nombresPorUsuario.get(miembro.idUsuario)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -973,6 +1037,10 @@ export default function Movimientos() {
                                         </th>
 
                                         <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                            {t('transactions.registeredBy')}
+                                        </th>
+
+                                        <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
                                             {t('common.acciones')}
                                         </th>
 
@@ -1036,6 +1104,10 @@ export default function Movimientos() {
                                                 <td className="max-w-[180px] break-words border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
                                                     {movimiento.origenEmisora ||
                                                         '-'}
+                                                </td>
+
+                                                <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
+                                                    {nombreDeUsuario(movimiento.idUsuario)}
                                                 </td>
 
                                                 <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
