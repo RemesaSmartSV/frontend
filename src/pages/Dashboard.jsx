@@ -36,6 +36,13 @@ const COLORES_CATEGORIAS = [
     '#65a30d',
 ]
 
+// Paleta del proyecto (Index.css): success, warning y danger. El ahorro usa
+// el naranja --color-warning para no confundirse ni con el verde (ingreso)
+// ni con el rojo (gasto).
+const COLOR_INGRESO = '#16a34a'
+const COLOR_AHORRO = '#f59e0b'
+const COLOR_GASTO = '#dc2626'
+
 function nombreMes(anio, mes, idioma) {
     const fecha = new Date(anio, mes - 1, 1)
 
@@ -54,6 +61,7 @@ export default function Dashboard() {
     const [resumen, setResumen] = useState({
         totalIngresos: 0,
         totalGastos: 0,
+        totalAhorro: 0,
         balance: 0,
     })
     const [metas, setMetas] = useState([])
@@ -146,6 +154,10 @@ export default function Dashboard() {
     // Todos los gastos
     const gastos = Number(resumen.totalGastos || 0)
 
+    // Ahorro del periodo: suma de los aportes a metas. Regla de negocio
+    // «ingreso y ahorro por separado»: el aporte no descuenta de Ingresos.
+    const ahorro = Number(resumen.totalAhorro || 0)
+
     const remesas = useMemo(() => {
         return movimientos
             .filter(
@@ -175,6 +187,8 @@ export default function Dashboard() {
     }, [movimientos, modoPeriodo, anio, mes])
 
     // Ahorro consolidado de las metas del hogar (saldo actual, no flujo).
+    // Se muestra como dato complementario del KPI de ahorro; el KPI y el
+    // balance usan el flujo del periodo (ahorro), no este saldo.
     const ahorroTotal = useMemo(() => {
         return metas.reduce(
             (total, meta) => total + Number(meta.montoActual || 0),
@@ -189,8 +203,11 @@ export default function Dashboard() {
         setMes(nuevo.getMonth() + 1)
     }
 
-    // Balance
-    const balance = Number(resumen.balance || ingresos - gastos)
+    // Balance disponible. El backend ya devuelve Ingresos - Gastos - Ahorro;
+    // el cálculo local es solo un respaldo si el campo no viniera.
+    const balance = Number.isFinite(Number(resumen.balance))
+        ? Number(resumen.balance)
+        : ingresos - gastos - ahorro
 
     const movimientosRecientes = useMemo(() => {
         return [...movimientos]
@@ -240,6 +257,7 @@ export default function Dashboard() {
                         }
                     ),
                     ingresos: 0,
+                    ahorro: 0,
                     gastos: 0,
                 }
             }
@@ -252,6 +270,13 @@ export default function Dashboard() {
                 'Ingreso'
             ) {
                 meses[clave].ingresos += monto
+            }
+
+            if (
+                movimiento.tipo ===
+                'Ahorro'
+            ) {
+                meses[clave].ahorro += monto
             }
 
             if (
@@ -458,12 +483,12 @@ export default function Dashboard() {
 
                 {/* INGRESOS */}
 
-                <div className="rounded-xl border border-green-100 bg-green-50 p-5 shadow-sm">
-                    <p className="text-sm font-medium text-green-700">
+                <div className="flex min-w-0 flex-col rounded-xl border border-green-100 bg-green-50 p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
                         {t('dashboard.ingresos')}
                     </p>
 
-                    <p className="mt-2 text-2xl font-bold text-green-700">
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-green-700">
                         {formatearMoneda(
                             ingresos
                         )}
@@ -472,40 +497,44 @@ export default function Dashboard() {
 
                 {/* REMESAS */}
 
-                <div className="rounded-xl border border-violet-100 bg-violet-50 p-5 shadow-sm">
-                    <p className="text-sm font-medium text-violet-700">
+                <div className="flex min-w-0 flex-col rounded-xl border border-violet-100 bg-violet-50 p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
                         {t('dashboard.remesas')}
                     </p>
 
-                    <p className="mt-2 text-2xl font-bold text-violet-700">
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-violet-700">
                         {formatearMoneda(
                             remesas
                         )}
                     </p>
                 </div>
 
-                {/* AHORRO */}
+                {/* AHORRO: el flujo del periodo, el mismo que descuenta el balance */}
 
-                <div className="rounded-xl border border-teal-100 bg-teal-50 p-5 shadow-sm">
-                    <p className="text-sm font-medium text-teal-700">
+                <div className="flex min-w-0 flex-col rounded-xl border border-amber-100 bg-amber-50 p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
                         {t('dashboard.ahorro')}
                     </p>
 
-                    <p className="mt-2 text-2xl font-bold text-teal-700">
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-amber-700">
                         {formatearMoneda(
-                            ahorroTotal
+                            ahorro
                         )}
+                    </p>
+
+                    <p className="mt-1 truncate text-xs text-amber-700/80">
+                        {t('dashboard.ahorroSaldoMetas')}: {formatearMoneda(ahorroTotal)}
                     </p>
                 </div>
 
                 {/* GASTOS */}
 
-                <div className="rounded-xl border border-red-100 bg-red-50 p-5 shadow-sm">
-                    <p className="text-sm font-medium text-red-700">
+                <div className="flex min-w-0 flex-col rounded-xl border border-red-100 bg-red-50 p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
                         {t('dashboard.gastos')}
                     </p>
 
-                    <p className="mt-2 text-2xl font-bold text-red-700">
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-red-700">
                         {formatearMoneda(
                             gastos
                         )}
@@ -515,14 +544,14 @@ export default function Dashboard() {
                 {/* BALANCE */}
 
                 <div
-                    className={`rounded-xl border p-5 shadow-sm ${
+                    className={`flex min-w-0 flex-col rounded-xl border p-5 shadow-sm ${
                         balance >= 0
                             ? 'border-blue-100 bg-blue-50'
                             : 'border-red-100 bg-red-50'
                     }`}
                 >
                     <p
-                        className={`text-sm font-medium ${
+                        className={`text-xs font-semibold uppercase tracking-wide ${
                             balance >= 0
                                 ? 'text-blue-700'
                                 : 'text-red-700'
@@ -532,7 +561,7 @@ export default function Dashboard() {
                     </p>
 
                     <p
-                        className={`mt-2 text-2xl font-bold ${
+                        className={`mt-2 text-2xl font-bold tabular-nums ${
                             balance >= 0
                                 ? 'text-blue-700'
                                 : 'text-red-700'
@@ -557,7 +586,7 @@ export default function Dashboard() {
 
                     <div className="mb-5">
                         <h2 className="text-lg font-bold text-slate-800">
-                            {t('dashboard.ingresos')} vs. {t('dashboard.gastos')}
+                            {t('dashboard.flujoMensual')}
                         </h2>
 
                         <p className="text-sm text-slate-500">
@@ -608,10 +637,24 @@ export default function Dashboard() {
 
                                     <Legend />
 
+                                    {/* Orden visual: ingresos (verde), ahorro
+                                        (naranja) y gastos (rojo). */}
                                     <Bar
                                         dataKey="ingresos"
                                         name={t('dashboard.ingresos')}
-                                        fill="#16a34a"
+                                        fill={COLOR_INGRESO}
+                                        radius={[
+                                            4,
+                                            4,
+                                            0,
+                                            0,
+                                        ]}
+                                    />
+
+                                    <Bar
+                                        dataKey="ahorro"
+                                        name={t('dashboard.ahorro')}
+                                        fill={COLOR_AHORRO}
                                         radius={[
                                             4,
                                             4,
@@ -623,7 +666,7 @@ export default function Dashboard() {
                                     <Bar
                                         dataKey="gastos"
                                         name={t('dashboard.gastos')}
-                                        fill="#dc2626"
+                                        fill={COLOR_GASTO}
                                         radius={[
                                             4,
                                             4,
@@ -906,7 +949,10 @@ export default function Dashboard() {
                                                         movimiento.tipo ===
                                                         'Ingreso'
                                                             ? 'bg-green-100 text-green-700'
-                                                            : 'bg-red-100 text-red-700'
+                                                            : movimiento.tipo ===
+                                                              'Ahorro'
+                                                                ? 'bg-amber-100 text-amber-700'
+                                                                : 'bg-red-100 text-red-700'
                                                     }`}
                                                 >
                                                     {movimiento.tipo ===
@@ -914,7 +960,10 @@ export default function Dashboard() {
                                                         ? movimiento.origenEmisora
                                                             ? t('nav.remesas')
                                                             : t('nav.ingresos')
-                                                        : t('nav.gastos')}
+                                                        : movimiento.tipo ===
+                                                          'Ahorro'
+                                                            ? t('dashboard.ahorro')
+                                                            : t('nav.gastos')}
                                                 </span>
                                             </td>
 
@@ -928,7 +977,10 @@ export default function Dashboard() {
                                                     movimiento.tipo ===
                                                     'Ingreso'
                                                         ? 'text-green-600'
-                                                        : 'text-red-600'
+                                                        : movimiento.tipo ===
+                                                          'Ahorro'
+                                                            ? 'text-amber-600'
+                                                            : 'text-red-600'
                                                 }`}
                                             >
                                                 {movimiento.tipo ===

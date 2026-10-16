@@ -1077,7 +1077,10 @@ export default function Movimientos() {
                                                             movimiento.tipo ===
                                                                 'Ingreso'
                                                                 ? 'inline-block rounded-full bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700'
-                                                                : 'inline-block rounded-full bg-red-100 px-2.5 py-1 text-sm font-bold text-red-600'
+                                                                : movimiento.tipo ===
+                                                                  'Ahorro'
+                                                                    ? 'inline-block rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700'
+                                                                    : 'inline-block rounded-full bg-red-100 px-2.5 py-1 text-sm font-bold text-red-600'
                                                         }
                                                     >
                                                         {movimiento.tipo}
