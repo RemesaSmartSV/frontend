@@ -23,6 +23,7 @@ import {
 
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
+import LeyendaOrdenada from '../components/LeyendaOrdenada'
 import { formatearMoneda, formatearNumero, formatearFecha, obtenerLocale, parsearFechaLocal } from '../utils/formato'
 
 const COLORES_CATEGORIAS = [
@@ -635,7 +636,12 @@ export default function Dashboard() {
                                         }
                                     />
 
-                                    <Legend />
+                                    {/* Recharts ordena la leyenda
+                                        alfabéticamente por el name, así
+                                        que sale Ahorro, Gastos, Ingresos.
+                                        LeyendaOrdenada la toma y devuelve
+                                        el orden de negocio. */}
+                                    <Legend content={LeyendaOrdenada} />
 
                                     {/* Orden visual: ingresos (verde), ahorro
                                         (naranja) y gastos (rojo). */}
