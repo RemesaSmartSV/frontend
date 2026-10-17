@@ -12,9 +12,11 @@ import Notification from '../components/Notification'
 import LanguageSelector from '../components/LanguageSelector'
 
 // Formato del código público generado por el backend (CodigoHogar):
-// prefijo fijo + 16 caracteres. La validación es solo UX; el backend
-// vuelve a validar y normaliza (mayúsculas, sin espacios).
-const CODIGO_FAMILIA_REGEX = /^RS-FAM-[A-Z0-9]{16}$/
+// ID de 6 dígitos numéricos. También se acepta el formato legacy
+// "RS-FAM-" + 16 caracteres para hogares ya emitidos. La validación
+// es solo UX; el backend vuelve a validar y normaliza (mayúsculas,
+// sin espacios).
+const CODIGO_FAMILIA_REGEX = /^(\d{6}|RS-FAM-[A-Z0-9]{16})$/
 
 // Pantalla de creación/búsqueda de familia. Vive en la ruta /hogar cuando la
 // cuenta no tiene hogar (App.jsx ya no la usa como muro: el router se monta

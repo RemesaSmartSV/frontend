@@ -20,9 +20,9 @@ vi.mock('react-i18next', () => {
         'pendingHome.joinTitle': 'Únete a una familia existente',
         'pendingHome.joinDescription': '¿Te dieron el código de una familia? Búscalo y solicita unirte.',
         'pendingHome.codeLabel': 'Código de la familia',
-        'pendingHome.codePlaceholder': 'RS-FAM-XXXXXXXXXXXXXXXX',
+        'pendingHome.codePlaceholder': '123456',
         'pendingHome.codeRequired': 'Ingresa el código de la familia.',
-        'pendingHome.codeInvalid': 'El código debe empezar con RS-FAM- y tener 16 caracteres después del guion.',
+        'pendingHome.codeInvalid': 'Introduce el código de 6 dígitos de tu familia.',
         'pendingHome.search': 'Buscar familia',
         'pendingHome.familyFound': 'Familia encontrada',
         'pendingHome.joinRequest': 'Solicitar unirse',
@@ -173,6 +173,7 @@ function fetchPendiente({
 }
 
 const CODIGO_VALIDO = 'RS-FAM-ABCDEF23456789XY'
+const CODIGO_DIGITOS = '048293'
 
 describe('HogarPendiente', () => {
     it('valida el formato del código en el cliente antes de buscar', async () => {
@@ -187,13 +188,34 @@ describe('HogarPendiente', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Buscar familia' }))
 
         expect(
-            await screen.findByText('El código debe empezar con RS-FAM- y tener 16 caracteres después del guion.')
+            await screen.findByText('Introduce el código de 6 dígitos de tu familia.')
         ).toBeInTheDocument()
 
         // No llegó a tocar el backend.
         expect(
             fetchMock.mock.calls.some(([url]) => String(url).includes('/Hogares/buscar'))
         ).toBe(false)
+    })
+
+    it('acepta el código de 6 dígitos del formato vigente y busca sin error de formato', async () => {
+        const fetchMock = fetchPendiente({
+            familias: { [CODIGO_DIGITOS]: 'Familia Duarte' },
+        })
+        global.fetch = fetchMock
+
+        render(<HogarPendiente onHogarCreado={() => {}} />)
+
+        fireEvent.change(await screen.findByLabelText('Código de la familia'), {
+            target: { value: CODIGO_DIGITOS },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Buscar familia' }))
+
+        expect(await screen.findByText('Familia Duarte')).toBeInTheDocument()
+
+        // Pasó la validación de formato: jamás se mostró el error de código.
+        expect(
+            screen.queryByText('Introduce el código de 6 dígitos de tu familia.')
+        ).not.toBeInTheDocument()
     })
 
     it('busca una familia por código y envía la solicitud de unión', async () => {
