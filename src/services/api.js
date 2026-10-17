@@ -747,3 +747,73 @@ export const educacionApi = {
         return manejarRespuesta(res)
     },
 }
+
+export const remesasApi = {
+    // GET /api/Remesas: ledger del hogar ordenado por fecha descendente.
+    // `filtros` acepta { anio, direccion } con direccion 'Envio' | 'Recepcion';
+    // los valores vacíos no viajan y el endpoint devuelve un array crudo.
+    async listar(filtros = {}) {
+        const parametros = new URLSearchParams()
+
+        Object.entries(filtros).forEach(([clave, valor]) => {
+            if (valor !== undefined && valor !== null && valor !== '') {
+                parametros.set(clave, valor)
+            }
+        })
+
+        const query = parametros.toString()
+        const res = await fetch(
+            `${API_URL}/Remesas${query ? `?${query}` : ''}`,
+            { headers: obtenerHeaders() }
+        )
+
+        return manejarRespuesta(res)
+    },
+
+    // POST /api/Remesas: 201 con la remesa creada. El backend responde 400 con
+    // { message } si el monto recibido supera el enviado o si la remesa
+    // vinculada no pertenece al hogar; ese mensaje viaja en el Error lanzado.
+    async crear(remesa) {
+        const res = await fetch(`${API_URL}/Remesas`, {
+            method: 'POST',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify(remesa),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    // PUT /api/Remesas/{id}: 204. 403 si no sos el dueño ni Admin; 404 si la
+    // remesa pertenece a otro hogar.
+    async actualizar(id, remesa) {
+        const res = await fetch(`${API_URL}/Remesas/${id}`, {
+            method: 'PUT',
+            headers: obtenerHeaders(true),
+            body: JSON.stringify(remesa),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    // DELETE /api/Remesas/{id}: 204. 409 si otra remesa del hogar está
+    // vinculada a esta ("Desvinculala antes de eliminarla").
+    async eliminar(id) {
+        const res = await fetch(`${API_URL}/Remesas/${id}`, {
+            method: 'DELETE',
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    // GET /api/Remesas/resumen?anio=: totales del año (enviado, recibido,
+    // comisión, cantidad) más el desglose por canal.
+    async resumen(anio) {
+        const query = anio != null ? `?anio=${anio}` : ''
+        const res = await fetch(`${API_URL}/Remesas/resumen${query}`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+}

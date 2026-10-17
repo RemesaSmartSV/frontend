@@ -1,31 +1,70 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { categoriasApi, movimientosApi } from '../services/api'
+import { remesasApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
-import Pagination from '../components/Pagination'
 import ConfirmModal from '../components/ConfirmModal'
-import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
+import {
+    formatearFecha,
+    formatearMoneda,
+    obtenerFechaHoy,
+} from '../utils/formato'
+
+// Valores enviados al backend; las etiquetas visibles viven en i18n.
+const DIRECCIONES = ['Envio', 'Recepcion']
+
+const CANALES = [
+    'WesternUnion',
+    'Giros',
+    'AgenteBanco',
+    'Efectivo',
+    'BilleteraDigital',
+    'Otro',
+]
+
+const ETIQUETAS_CANAL = {
+    WesternUnion: 'remesas.canalWesternUnion',
+    Giros: 'remesas.canalGiros',
+    AgenteBanco: 'remesas.canalAgenteBanco',
+    Efectivo: 'remesas.canalEfectivo',
+    BilleteraDigital: 'remesas.canalBilleteraDigital',
+    Otro: 'remesas.canalOtro',
+}
+
+// Los últimos 5 años como opciones del filtro anual (el actual primero).
+const ANIOS_DISPONIBLES = Array.from(
+    { length: 5 },
+    (_, indice) => new Date().getFullYear() - indice
+)
+
+function crearFormularioVacio() {
+    return {
+        direccion: 'Recepcion',
+        canal: 'WesternUnion',
+        montoEnviado: '',
+        montoRecibido: '',
+        comision: '',
+        folio: '',
+        fecha: obtenerFechaHoy(),
+        notas: '',
+    }
+}
 
 export default function Remesas() {
     const { t } = useTranslation()
+
+    const [anio, setAnio] = useState(() => new Date().getFullYear())
     const [remesas, setRemesas] = useState([])
-    const [categorias, setCategorias] = useState([])
+    const [resumen, setResumen] = useState(null)
 
-    const [formulario, setFormulario] = useState({
-        idCategoria: '',
-        monto: '',
-        fecha: obtenerFechaHoy(),
-        origenEmisora: '',
-        descripcion: '',
-    })
-
-    const [editandoId, setEditandoId] = useState(null)
     const [cargando, setCargando] = useState(false)
     const [procesando, setProcesando] = useState(false)
 
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
+
+    const [formulario, setFormulario] = useState(crearFormularioVacio)
+    const [editandoId, setEditandoId] = useState(null)
 
     const [confirmModal, setConfirmModal] = useState({
         abierto: false,
@@ -34,50 +73,25 @@ export default function Remesas() {
         mensaje: '',
     })
 
-    // FILTROS
-    const [filtros, setFiltros] = useState({
-        fechaDesde: '',
-        fechaHasta: '',
-        idCategoria: '',
-        montoMinimo: '',
-        montoMaximo: '',
-        busqueda: '',
-    })
-
-    // PAGINACIÓN
-    const [paginaActual, setPaginaActual] = useState(1)
-    const registrosPorPagina = 5
-
+    // El año vive fuera del formulario: es el filtro de lectura de la página.
     const cargarDatos = useCallback(async () => {
         try {
             setCargando(true)
             setError('')
 
-            const [movimientosData, categoriasData] =
-                await Promise.all([
-                    movimientosApi.listar(),
-                    categoriasApi.listar(),
-                ])
+            const [lista, resumenAnual] = await Promise.all([
+                remesasApi.listar({ anio }),
+                remesasApi.resumen(anio),
+            ])
 
-            const remesasFiltradas = movimientosData.filter(
-                (movimiento) =>
-                    movimiento.tipo === 'Ingreso' &&
-                    movimiento.origenEmisora
-            )
-
-            setRemesas(remesasFiltradas)
-            setCategorias(categoriasData)
-
-            setPaginaActual(1)
+            setRemesas(Array.isArray(lista) ? lista : [])
+            setResumen(resumenAnual)
         } catch (err) {
-            setError(
-                err.message ||
-                t('remittance.loadError')
-            )
+            setError(err.message || t('remesas.errorCarga'))
         } finally {
             setCargando(false)
         }
-    }, [t])
+    }, [anio, t])
 
     useEffect(() => {
         cargarDatos()
@@ -92,115 +106,52 @@ export default function Remesas() {
         })
     }
 
-    // CAMBIO DE FILTROS
-    function manejarCambioFiltro(e) {
-        const { name, value } = e.target
-
-        setFiltros({
-            ...filtros,
-            [name]: value,
-        })
-
-        setPaginaActual(1)
+    function manejarCambioAnio(e) {
+        setAnio(Number(e.target.value))
     }
 
-    // LIMPIAR FILTROS
-    function limpiarFiltros() {
-        setFiltros({
-            fechaDesde: '',
-            fechaHasta: '',
-            idCategoria: '',
-            montoMinimo: '',
-            montoMaximo: '',
-            busqueda: '',
-        })
+    // Validación en cliente del mismo criterio del backend: montos > 0 y
+    // montoRecibido <= montoEnviado. El resto de los errores (400/403/409)
+    // llega del backend y se muestra tal cual desde el catch.
+    function validarFormulario(datos) {
+        if (!datos.fecha) {
+            return t('remesas.errorFecha')
+        }
 
-        setPaginaActual(1)
+        if (!(Number(datos.montoEnviado) > 0)) {
+            return t('remesas.errorMontoEnviado')
+        }
+
+        if (!(Number(datos.montoRecibido) > 0)) {
+            return t('remesas.errorMontoRecibido')
+        }
+
+        if (Number(datos.montoRecibido) > Number(datos.montoEnviado)) {
+            return t('remesas.errorRecibidoMayor')
+        }
+
+        return ''
     }
-
-    // APLICAR FILTROS
-    const remesasFiltradas = useMemo(() => {
-        return remesas.filter((remesa) => {
-            // FILTRO POR CATEGORÍA
-            if (
-                filtros.idCategoria &&
-                Number(remesa.idCategoria) !==
-                Number(filtros.idCategoria)
-            ) {
-                return false
-            }
-
-            // FILTRO POR MONTO MÍNIMO
-            if (
-                filtros.montoMinimo !== '' &&
-                Number(remesa.monto) <
-                Number(filtros.montoMinimo)
-            ) {
-                return false
-            }
-
-            // FILTRO POR MONTO MÁXIMO
-            if (
-                filtros.montoMaximo !== '' &&
-                Number(remesa.monto) >
-                Number(filtros.montoMaximo)
-            ) {
-                return false
-            }
-
-            // FILTRO POR FECHA
-            const fechaRemesa =
-                remesa.fecha?.split('T')[0] || ''
-
-            if (
-                filtros.fechaDesde &&
-                fechaRemesa < filtros.fechaDesde
-            ) {
-                return false
-            }
-
-            if (
-                filtros.fechaHasta &&
-                fechaRemesa > filtros.fechaHasta
-            ) {
-                return false
-            }
-
-            // FILTRO POR BÚSQUEDA
-            if (filtros.busqueda) {
-                const termino = filtros.busqueda.toLowerCase()
-                const descripcion = (remesa.descripcion || '').toLowerCase()
-                const origen = (remesa.origenEmisora || '').toLowerCase()
-                if (!descripcion.includes(termino) && !origen.includes(termino)) {
-                    return false
-                }
-            }
-
-            return true
-        })
-    }, [remesas, filtros])
 
     async function guardarRemesa(e) {
         e.preventDefault()
 
-        if (!formulario.idCategoria) {
-            setError(t('common.seleccionaCategoria'))
+        const errorValidacion = validarFormulario(formulario)
+
+        if (errorValidacion) {
+            setError(errorValidacion)
             return
         }
 
-        if (!formulario.monto || Number(formulario.monto) <= 0) {
-            setError(t('expense.amountPositive'))
-            return
-        }
-
-        if (!formulario.fecha) {
-            setError(t('expense.dateRequired'))
-            return
-        }
-
-        if (!formulario.origenEmisora.trim()) {
-            setError(t('remittance.sourceRequired'))
-            return
+        const datos = {
+            direccion: formulario.direccion,
+            canal: formulario.canal,
+            montoEnviado: Number(formulario.montoEnviado),
+            montoRecibido: Number(formulario.montoRecibido),
+            comision: Number(formulario.comision || 0),
+            folio: formulario.folio.trim() || null,
+            notas: formulario.notas.trim() || null,
+            fecha: formulario.fecha,
         }
 
         try {
@@ -208,53 +159,37 @@ export default function Remesas() {
             setMensaje('')
             setProcesando(true)
 
-            const movimiento = {
-                idCategoria: Number(formulario.idCategoria),
-                monto: Number(formulario.monto),
-                fecha: formulario.fecha,
-                tipo: 'Ingreso',
-                descripcion: formulario.descripcion,
-                origenEmisora: formulario.origenEmisora,
-            }
-
             if (editandoId) {
-                await movimientosApi.actualizar(
-                    editandoId,
-                    movimiento
-                )
+                await remesasApi.actualizar(editandoId, datos)
 
-                setMensaje(
-                    t('remittance.updated')
-                )
+                setMensaje(t('remesas.actualizada'))
             } else {
-                await movimientosApi.crear(movimiento)
+                await remesasApi.crear(datos)
 
-                setMensaje(
-                    t('remittance.saved')
-                )
+                setMensaje(t('remesas.guardada'))
             }
 
             limpiarFormulario()
             await cargarDatos()
         } catch (err) {
-            setError(
-                err.message ||
-                t('remittance.saveError')
-            )
+            setError(err.message || t('remesas.errorGuardar'))
         } finally {
             setProcesando(false)
         }
     }
 
     function editarRemesa(remesa) {
-        setEditandoId(remesa.idMovimiento)
+        setEditandoId(remesa.idRemesa)
 
         setFormulario({
-            idCategoria: remesa.idCategoria,
-            monto: remesa.monto,
+            direccion: remesa.direccion,
+            canal: remesa.canal,
+            montoEnviado: remesa.montoEnviado,
+            montoRecibido: remesa.montoRecibido,
+            comision: remesa.comision,
+            folio: remesa.folio || '',
             fecha: remesa.fecha?.split('T')[0] || '',
-            origenEmisora: remesa.origenEmisora || '',
-            descripcion: remesa.descripcion || '',
+            notas: remesa.notas || '',
         })
 
         setError('')
@@ -270,8 +205,8 @@ export default function Remesas() {
         setConfirmModal({
             abierto: true,
             id,
-            titulo: t('remittance.deleteTitle'),
-            mensaje: t('remittance.deleteMessage'),
+            titulo: t('remesas.eliminarTitulo'),
+            mensaje: t('remesas.eliminarMensaje'),
         })
     }
 
@@ -284,12 +219,13 @@ export default function Remesas() {
             setMensaje('')
             setProcesando(true)
 
-            await movimientosApi.eliminar(id)
+            await remesasApi.eliminar(id)
 
-            setMensaje(t('remittance.deleted'))
+            setMensaje(t('remesas.eliminada'))
 
             await cargarDatos()
         } catch (err) {
+            // El 409 explica que otra remesa sigue vinculada a esta.
             setError(err.message || t('errors.generico'))
         } finally {
             setProcesando(false)
@@ -298,133 +234,19 @@ export default function Remesas() {
 
     function limpiarFormulario() {
         setEditandoId(null)
-
-        setFormulario({
-            idCategoria: '',
-            monto: '',
-            fecha: obtenerFechaHoy(),
-            origenEmisora: '',
-            descripcion: '',
-        })
+        setFormulario(crearFormularioVacio())
     }
 
-    function obtenerNombreCategoria(idCategoria) {
-        const categoria = categorias.find(
-            (c) => c.idCategoria === idCategoria
-        )
+    function nombreCanal(canal) {
+        const clave = ETIQUETAS_CANAL[canal]
 
-        return categoria?.nombre || t('common.sinCategoria')
+        return clave ? t(clave) : canal
     }
 
-    // EXPORTAR REMESAS A CSV
-    function exportarRemesas() {
-        if (remesasFiltradas.length === 0) {
-            setError(t('remittance.exportEmpty'))
-            return
-        }
-
-        const encabezados = [
-            t('common.fecha'),
-            t('common.origen'),
-            t('common.categoria'),
-            t('common.monto'),
-            t('common.descripcion'),
-        ]
-
-        const filas = remesasFiltradas.map((remesa) => {
-            const fecha =
-                remesa.fecha?.split('T')[0] || ''
-
-            const origen =
-                remesa.origenEmisora || ''
-
-            const categoria =
-                obtenerNombreCategoria(
-                    remesa.idCategoria
-                )
-
-            const monto =
-                Number(remesa.monto).toFixed(2)
-
-            const descripcion =
-                remesa.descripcion || ''
-
-            return [
-                fecha,
-                origen,
-                categoria,
-                monto,
-                descripcion,
-            ]
-        })
-
-        function escaparCSV(valor) {
-            let texto = String(valor).replace(/"/g, '""')
-
-            if (/^[=+\-@\t\r]/.test(texto)) {
-                texto = "'" + texto
-            }
-
-            return `"${texto}"`
-        }
-
-        const contenidoCSV = [
-            encabezados.map(escaparCSV).join(','),
-            ...filas.map((fila) =>
-                fila.map(escaparCSV).join(',')
-            ),
-        ].join('\n')
-
-        // BOM para que Excel reconozca correctamente
-        // los caracteres especiales y tildes.
-        const BOM = '\uFEFF'
-
-        const archivo = new Blob(
-            [BOM + contenidoCSV],
-            {
-                type: 'text/csv;charset=utf-8;',
-            }
-        )
-
-        const url = URL.createObjectURL(archivo)
-
-        const enlace = document.createElement('a')
-        enlace.href = url
-
-        const fechaActual = obtenerFechaHoy()
-
-        enlace.download =
-            `remesas_${fechaActual}.csv`
-
-        document.body.appendChild(enlace)
-        enlace.click()
-        document.body.removeChild(enlace)
-
-        URL.revokeObjectURL(url)
-
-        setMensaje(t('remittance.exported', { count: remesasFiltradas.length }))
-    }
-
-    // PAGINACIÓN DE RESULTADOS FILTRADOS
-    const totalPaginas = Math.ceil(
-        remesasFiltradas.length / registrosPorPagina
-    )
-
-    const indiceInicial =
-        (paginaActual - 1) * registrosPorPagina
-
-    const remesasPagina = remesasFiltradas.slice(
-        indiceInicial,
-        indiceInicial + registrosPorPagina
-    )
-
-    function cambiarPagina(nuevaPagina) {
-        if (
-            nuevaPagina >= 1 &&
-            nuevaPagina <= totalPaginas
-        ) {
-            setPaginaActual(nuevaPagina)
-        }
+    function etiquetaDireccion(direccion) {
+        return direccion === 'Envio'
+            ? t('remesas.envio')
+            : t('remesas.recepcion')
     }
 
     return (
@@ -444,193 +266,406 @@ export default function Remesas() {
             />
 
             {/* ENCABEZADO */}
-            <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-                <div className="min-w-0">
-                    <h1 className="text-2xl font-bold text-gray-800">
-                        {t('remittance.title')}
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl">
+                        {t('remesas.titulo')}
                     </h1>
 
-                    <p className="text-gray-500">
-                        {t('remittance.description')}
+                    <p className="mt-1 text-sm text-slate-500">
+                        {t('remesas.descripcion')}
                     </p>
                 </div>
 
-                <button
-                    onClick={cargarDatos}
-                    disabled={cargando || procesando}
-                    className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                >
-                    {cargando ? t('common.cargando') : t('common.actualizar')}
-                </button>
+                <div className="flex items-end gap-3">
 
+                    <div className="flex flex-col gap-1">
+                        <label
+                            htmlFor="anioRemesas"
+                            className="text-sm font-semibold text-slate-700"
+                        >
+                            {t('remesas.anio')}
+                        </label>
+
+                        <select
+                            id="anioRemesas"
+                            name="anio"
+                            value={anio}
+                            onChange={manejarCambioAnio}
+                            disabled={cargando || procesando}
+                            className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                        >
+                            {ANIOS_DISPONIBLES.map((anioOpcion) => (
+                                <option
+                                    key={anioOpcion}
+                                    value={anioOpcion}
+                                >
+                                    {anioOpcion}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={cargarDatos}
+                        disabled={cargando || procesando}
+                        className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {cargando
+                            ? t('common.cargando')
+                            : t('common.actualizar')}
+                    </button>
+
+                </div>
             </div>
 
-            {/* FORMULARIO */}
-            <section className="mb-6 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+            {/* ================================
+                TARJETAS RESUMEN
+            ================================= */}
 
-                <h2 className="mb-5 text-xl font-semibold text-slate-900">
+            <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+                {/* TOTAL ENVIADO */}
+                <div className="flex min-w-0 flex-col rounded-xl border border-violet-100 bg-violet-50 p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+                        {t('remesas.totalEnviado')}
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-violet-700">
+                        {formatearMoneda(resumen?.totalEnviado ?? 0)}
+                    </p>
+                </div>
+
+                {/* TOTAL RECIBIDO */}
+                <div className="flex min-w-0 flex-col rounded-xl border border-green-100 bg-green-50 p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
+                        {t('remesas.totalRecibido')}
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-green-700">
+                        {formatearMoneda(resumen?.totalRecibido ?? 0)}
+                    </p>
+                </div>
+
+                {/* TOTAL DE COMISIONES: el dato estrella del ledger, destacado
+                    con un anillo para separarlo visualmente del resto. */}
+                <div className="flex min-w-0 flex-col rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm ring-2 ring-amber-300">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                        {t('remesas.totalComisiones')}
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-amber-700">
+                        {formatearMoneda(resumen?.totalComision ?? 0)}
+                    </p>
+                </div>
+
+                {/* CANTIDAD */}
+                <div className="flex min-w-0 flex-col rounded-xl border border-blue-100 bg-blue-50 p-5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+                        {t('remesas.cantidad')}
+                    </p>
+
+                    <p className="mt-2 text-2xl font-bold tabular-nums text-blue-700">
+                        {resumen?.cantidad ?? 0}
+                    </p>
+                </div>
+            </section>
+
+            {/* ================================
+                DESGLOSE POR CANAL
+            ================================= */}
+
+            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
+
+                <div className="mb-5">
+                    <h2 className="text-lg font-bold text-slate-800">
+                        {t('remesas.porCanalTitulo')}
+                    </h2>
+                </div>
+
+                {!resumen?.porCanal?.length ? (
+                    <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+                        {t('remesas.vacia')}
+                    </div>
+                ) : (
+                    <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+                        <table className="min-w-[700px] w-full border-collapse text-left text-sm">
+
+                            <thead>
+                                <tr>
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.canal')}
+                                    </th>
+
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.cantidad')}
+                                    </th>
+
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.montoEnviado')}
+                                    </th>
+
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.montoRecibido')}
+                                    </th>
+
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.comision')}
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {resumen.porCanal.map((fila) => (
+                                    <tr
+                                        key={fila.canal}
+                                        className="transition hover:bg-violet-50"
+                                    >
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm font-semibold">
+                                            {nombreCanal(fila.canal)}
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm tabular-nums">
+                                            {fila.cantidad}
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm tabular-nums text-violet-600">
+                                            {formatearMoneda(fila.montoEnviado)}
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm tabular-nums text-green-600">
+                                            {formatearMoneda(fila.montoRecibido)}
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold tabular-nums text-amber-600">
+                                            {formatearMoneda(fila.comision)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
+
+            {/* ================================
+                FORMULARIO
+            ================================= */}
+
+            <section className="mb-6 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
+
+                <h2 className="mb-4 text-xl font-semibold text-slate-900">
                     {editandoId
-                        ? t('remittance.edit')
-                        : t('remittance.create')}
+                        ? t('remesas.editarTitulo')
+                        : t('remesas.crearTitulo')}
                 </h2>
 
-                <form onSubmit={guardarRemesa}>
+                <form
+                    onSubmit={guardarRemesa}
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                >
 
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    {/* DIRECCIÓN */}
+                    <div>
+                        <label
+                            htmlFor="direccion"
+                            className="mb-1 block text-sm font-medium text-slate-700"
+                        >
+                            {t('remesas.direccion')}
+                        </label>
 
-                        {/* CATEGORÍA */}
-                        <div className="flex min-w-0 flex-col gap-2">
-
-                            <label
-                                htmlFor="idCategoria"
-                                className="font-semibold text-gray-700"
-                            >
-                                {t('common.categoria')}
-                            </label>
-
-                            <select
-                                id="idCategoria"
-                                name="idCategoria"
-                                value={formulario.idCategoria}
-                                onChange={manejarCambio}
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 disabled:bg-gray-100"
-                            >
-                                <option value="">
-                                    {t('common.seleccionaCategoria')}
+                        <select
+                            id="direccion"
+                            name="direccion"
+                            value={formulario.direccion}
+                            onChange={manejarCambio}
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                        >
+                            {DIRECCIONES.map((direccion) => (
+                                <option
+                                    key={direccion}
+                                    value={direccion}
+                                >
+                                    {etiquetaDireccion(direccion)}
                                 </option>
+                            ))}
+                        </select>
+                    </div>
 
-                                {categorias
-                                    .filter(
-                                        (categoria) =>
-                                            categoria.tipo ===
-                                            'Ingreso'
-                                    )
-                                    .map((categoria) => (
-                                        <option
-                                            key={
-                                                categoria.idCategoria
-                                            }
-                                            value={
-                                                categoria.idCategoria
-                                            }
-                                        >
-                                            {categoria.nombre}
-                                        </option>
-                                    ))}
-                            </select>
+                    {/* CANAL */}
+                    <div>
+                        <label
+                            htmlFor="canal"
+                            className="mb-1 block text-sm font-medium text-slate-700"
+                        >
+                            {t('remesas.canal')}
+                        </label>
 
-                        </div>
+                        <select
+                            id="canal"
+                            name="canal"
+                            value={formulario.canal}
+                            onChange={manejarCambio}
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                        >
+                            {CANALES.map((canal) => (
+                                <option
+                                    key={canal}
+                                    value={canal}
+                                >
+                                    {nombreCanal(canal)}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                        {/* MONTO */}
-                        <div className="flex min-w-0 flex-col gap-2">
+                    {/* MONTO ENVIADO */}
+                    <div>
+                        <label
+                            htmlFor="montoEnviado"
+                            className="mb-1 block text-sm font-medium text-slate-700"
+                        >
+                            {t('remesas.montoEnviado')}
+                        </label>
 
-                            <label
-                                htmlFor="monto"
-                                className="font-semibold text-gray-700"
-                            >
-                                {t('common.monto')}
-                            </label>
+                        <input
+                            id="montoEnviado"
+                            type="number"
+                            name="montoEnviado"
+                            value={formulario.montoEnviado}
+                            onChange={manejarCambio}
+                            min="0.01"
+                            step="0.01"
+                            placeholder="0.00"
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                        />
+                    </div>
 
-                            <input
-                                id="monto"
-                                type="number"
-                                name="monto"
-                                min="0"
-                                step="0.01"
-                                value={formulario.monto}
-                                onChange={manejarCambio}
-                                placeholder="0.00"
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
-                            />
+                    {/* MONTO RECIBIDO */}
+                    <div>
+                        <label
+                            htmlFor="montoRecibido"
+                            className="mb-1 block text-sm font-medium text-slate-700"
+                        >
+                            {t('remesas.montoRecibido')}
+                        </label>
 
-                        </div>
+                        <input
+                            id="montoRecibido"
+                            type="number"
+                            name="montoRecibido"
+                            value={formulario.montoRecibido}
+                            onChange={manejarCambio}
+                            min="0.01"
+                            step="0.01"
+                            placeholder="0.00"
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                        />
+                    </div>
 
-                        {/* FECHA */}
-                        <div className="flex min-w-0 flex-col gap-2">
+                    {/* COMISIÓN */}
+                    <div>
+                        <label
+                            htmlFor="comision"
+                            className="mb-1 block text-sm font-medium text-slate-700"
+                        >
+                            {t('remesas.comision')}
+                        </label>
 
-                            <label
-                                htmlFor="fecha"
-                                className="font-semibold text-gray-700"
-                            >
-                                {t('common.fecha')}
-                            </label>
+                        <input
+                            id="comision"
+                            type="number"
+                            name="comision"
+                            value={formulario.comision}
+                            onChange={manejarCambio}
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                        />
+                    </div>
 
-                            <input
-                                id="fecha"
-                                type="date"
-                                name="fecha"
-                                value={formulario.fecha}
-                                onChange={manejarCambio}
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 disabled:bg-gray-100"
-                            />
+                    {/* FECHA */}
+                    <div>
+                        <label
+                            htmlFor="fecha"
+                            className="mb-1 block text-sm font-medium text-slate-700"
+                        >
+                            {t('common.fecha')}
+                        </label>
 
-                        </div>
+                        <input
+                            id="fecha"
+                            type="date"
+                            name="fecha"
+                            value={formulario.fecha}
+                            onChange={manejarCambio}
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                        />
+                    </div>
 
-                        {/* ORIGEN / EMISORA */}
-                        <div className="flex min-w-0 flex-col gap-2">
+                    {/* FOLIO */}
+                    <div>
+                        <label
+                            htmlFor="folio"
+                            className="mb-1 block text-sm font-medium text-slate-700"
+                        >
+                            {t('remesas.folio')}
+                        </label>
 
-                            <label
-                                htmlFor="origenEmisora"
-                                className="font-semibold text-gray-700"
-                            >
-                                {t('transactions.source')}
-                            </label>
+                        <input
+                            id="folio"
+                            type="text"
+                            name="folio"
+                            value={formulario.folio}
+                            onChange={manejarCambio}
+                            placeholder={t('remesas.folioPlaceholder')}
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                        />
+                    </div>
 
-                            <input
-                                id="origenEmisora"
-                                type="text"
-                                name="origenEmisora"
-                                value={formulario.origenEmisora}
-                                onChange={manejarCambio}
-                                placeholder={t('transactions.sourceExample')}
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
-                            />
+                    {/* NOTAS */}
+                    <div>
+                        <label
+                            htmlFor="notas"
+                            className="mb-1 block text-sm font-medium text-slate-700"
+                        >
+                            {t('remesas.notas')}
+                        </label>
 
-                        </div>
-
-                        {/* DESCRIPCIÓN */}
-                        <div className="flex min-w-0 flex-col gap-2 md:col-span-2">
-
-                            <label
-                                htmlFor="descripcion"
-                                className="font-semibold text-gray-700"
-                            >
-                                {t('common.descripcion')}
-                            </label>
-
-                            <input
-                                id="descripcion"
-                                type="text"
-                                name="descripcion"
-                                value={formulario.descripcion}
-                                onChange={manejarCambio}
-                                placeholder={t('transactions.descriptionPlaceholder')}
-                                disabled={procesando}
-                                className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
-                            />
-
-                        </div>
-
+                        <input
+                            id="notas"
+                            type="text"
+                            name="notas"
+                            value={formulario.notas}
+                            onChange={manejarCambio}
+                            placeholder={t('remesas.notasPlaceholder')}
+                            disabled={procesando}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                        />
                     </div>
 
                     {/* BOTONES */}
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-
+                    <div className="flex flex-col gap-2 sm:flex-row md:col-span-2">
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="w-full rounded-lg bg-violet-600 px-5 py-2.5 font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                            className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {procesando
                                 ? t('common.guardando')
                                 : editandoId
-                                    ? t('remittance.update')
-                                    : t('remittance.save')}
+                                    ? t('remesas.actualizar')
+                                    : t('remesas.guardar')}
                         </button>
 
                         {editandoId && (
@@ -638,380 +673,165 @@ export default function Remesas() {
                                 type="button"
                                 onClick={limpiarFormulario}
                                 disabled={procesando}
-                                className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {t('common.cancelar')}
                             </button>
                         )}
-
                     </div>
-
                 </form>
-
             </section>
 
-            {/* LISTA DE REMESAS */}
-            <section className="mb-8 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+            {/* ================================
+                LISTADO
+            ================================= */}
 
-                <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <section className="rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
 
-                    <div className="min-w-0">
-                        <h2 className="text-xl font-semibold text-slate-900">
-                            {t('remittance.registered')}
-                        </h2>
+                <div className="mb-5">
+                    <h2 className="text-xl font-semibold text-slate-900">
+                        {t('remesas.listadoTitulo')}
+                    </h2>
 
-                        <p className="mt-1 text-sm text-gray-500">
-                            {t('remittance.listDescription')}
-                        </p>
-                    </div>
-
-                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-
-                        {/* BOTÓN EXPORTAR */}
-                        <button
-                            type="button"
-                            onClick={exportarRemesas}
-                            disabled={
-                                cargando ||
-                                procesando ||
-                                remesasFiltradas.length === 0
-                            }
-                            className="w-full rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            {t('common.exportar')}
-                        </button>
-
-                        {/* BOTÓN ACTUALIZAR */}
-                        <button
-                            onClick={cargarDatos}
-                            disabled={cargando || procesando}
-                            className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            {cargando ? t('common.cargando') : t('common.actualizar')}
-                        </button>
-
-                    </div>
-
-                </div>
-
-                {/* FILTROS */}
-                <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
-
-                    <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-
-                        <div>
-                            <h3 className="text-lg font-semibold text-slate-900">
-                                {t('common.filtros')}
-                            </h3>
-
-                            <p className="text-sm text-gray-500">
-                                {t('remittance.filterDescription')}
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={limpiarFiltros}
-                            className="w-full rounded-lg bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-600 sm:w-auto"
-                        >
-                            {t('common.limpiarFiltros')}
-                        </button>
-
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="text-sm font-semibold text-gray-700">
-                            {t('remittance.search')}
-                        </label>
-                        <input
-                            type="text"
-                            name="busqueda"
-                            value={filtros.busqueda}
-                            onChange={manejarCambioFiltro}
-                            placeholder={t('remittance.searchPlaceholder')}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-
-                        {/* FECHA DESDE */}
-                        <div className="flex min-w-0 flex-col gap-2">
-
-                            <label
-                                htmlFor="fechaDesde"
-                                className="text-sm font-semibold text-gray-700"
-                            >
-                                {t('common.fechaDesde')}
-                            </label>
-
-                            <input
-                                id="fechaDesde"
-                                type="date"
-                                name="fechaDesde"
-                                value={filtros.fechaDesde}
-                                onChange={manejarCambioFiltro}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10"
-                            />
-
-                        </div>
-
-                        {/* FECHA HASTA */}
-                        <div className="flex min-w-0 flex-col gap-2">
-
-                            <label
-                                htmlFor="fechaHasta"
-                                className="text-sm font-semibold text-gray-700"
-                            >
-                                {t('common.fechaHasta')}
-                            </label>
-
-                            <input
-                                id="fechaHasta"
-                                type="date"
-                                name="fechaHasta"
-                                value={filtros.fechaHasta}
-                                onChange={manejarCambioFiltro}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10"
-                            />
-
-                        </div>
-
-                        {/* CATEGORÍA */}
-                        <div className="flex min-w-0 flex-col gap-2">
-
-                            <label
-                                htmlFor="filtroCategoria"
-                                className="text-sm font-semibold text-gray-700"
-                            >
-                                {t('common.categoria')}
-                            </label>
-
-                            <select
-                                id="filtroCategoria"
-                                name="idCategoria"
-                                value={filtros.idCategoria}
-                                onChange={manejarCambioFiltro}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10"
-                            >
-                                <option value="">
-                                    {t('income.all')}
-                                </option>
-
-                                {categorias
-                                    .filter(
-                                        (categoria) =>
-                                            categoria.tipo ===
-                                            'Ingreso'
-                                    )
-                                    .map((categoria) => (
-                                        <option
-                                            key={
-                                                categoria.idCategoria
-                                            }
-                                            value={
-                                                categoria.idCategoria
-                                            }
-                                        >
-                                            {categoria.nombre}
-                                        </option>
-                                    ))}
-                            </select>
-
-                        </div>
-
-                        {/* MONTO MÍNIMO */}
-                        <div className="flex min-w-0 flex-col gap-2">
-
-                            <label
-                                htmlFor="montoMinimo"
-                                className="text-sm font-semibold text-gray-700"
-                            >
-                                {t('common.montoMinimo')}
-                            </label>
-
-                            <input
-                                id="montoMinimo"
-                                type="number"
-                                name="montoMinimo"
-                                min="0"
-                                step="0.01"
-                                value={filtros.montoMinimo}
-                                onChange={manejarCambioFiltro}
-                                placeholder="0.00"
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400"
-                            />
-
-                        </div>
-
-                        {/* MONTO MÁXIMO */}
-                        <div className="flex min-w-0 flex-col gap-2">
-
-                            <label
-                                htmlFor="montoMaximo"
-                                className="text-sm font-semibold text-gray-700"
-                            >
-                                {t('common.montoMaximo')}
-                            </label>
-
-                            <input
-                                id="montoMaximo"
-                                type="number"
-                                name="montoMaximo"
-                                min="0"
-                                step="0.01"
-                                value={filtros.montoMaximo}
-                                onChange={manejarCambioFiltro}
-                                placeholder="0.00"
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-600/10 placeholder:text-gray-400"
-                            />
-
-                        </div>
-
-                    </div>
-
-                    {/* RESULTADOS */}
-                    <p className="mt-4 text-sm text-gray-600">
-                        {t('remittance.count', { filtered: remesasFiltradas.length, total: remesas.length })}
+                    <p className="mt-1 text-sm text-gray-500">
+                        {t('remesas.listadoDescripcion', { anio })}
                     </p>
-
                 </div>
 
                 {cargando ? (
                     <Loading mensaje={t('common.cargando')} />
 
-                ) : remesasFiltradas.length === 0 ? (
+                ) : remesas.length === 0 ? (
 
                     <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-                        {remesas.length === 0
-                            ? t('remittance.empty')
-                            : t('remittance.emptyFiltered')}
+                        {t('remesas.vacia')}
                     </div>
 
                 ) : (
 
-                    <>
+                    <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
 
-                        <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
+                        <table className="min-w-[1000px] w-full border-collapse text-left text-sm">
 
-                            <table className="min-w-[950px] w-full border-collapse text-left text-sm">
+                            <thead>
+                                <tr>
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('common.fecha')}
+                                    </th>
 
-                                <thead>
-                                    <tr>
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.direccion')}
+                                    </th>
 
-                                        <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            {t('common.fecha')}
-                                        </th>
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.canal')}
+                                    </th>
 
-                                        <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            {t('common.origen')}
-                                        </th>
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.montoEnviado')}
+                                    </th>
 
-                                        <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            {t('common.categoria')}
-                                        </th>
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.montoRecibido')}
+                                    </th>
 
-                                        <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            {t('common.monto')}
-                                        </th>
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.comision')}
+                                    </th>
 
-                                        <th className="bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            {t('common.descripcion')}
-                                        </th>
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.folio')}
+                                    </th>
 
-                                        <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
-                                            {t('common.acciones')}
-                                        </th>
+                                    <th className="bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('remesas.notas')}
+                                    </th>
 
+                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                        {t('common.acciones')}
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {remesas.map((remesa) => (
+                                    <tr
+                                        key={remesa.idRemesa}
+                                        className="transition hover:bg-violet-50"
+                                    >
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                            {formatearFecha(remesa.fecha)}
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                            <span
+                                                className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                                    remesa.direccion === 'Envio'
+                                                        ? 'bg-blue-100 text-blue-800'
+                                                        : 'bg-green-100 text-green-800'
+                                                }`}
+                                            >
+                                                {etiquetaDireccion(remesa.direccion)}
+                                            </span>
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                            {nombreCanal(remesa.canal)}
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm tabular-nums text-violet-600">
+                                            {formatearMoneda(remesa.montoEnviado)}
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm tabular-nums text-green-600">
+                                            {formatearMoneda(remesa.montoRecibido)}
+                                        </td>
+
+                                        <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold tabular-nums text-amber-600">
+                                            {formatearMoneda(remesa.comision)}
+                                        </td>
+
+                                        <td className="max-w-[150px] break-words border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                            {remesa.folio || '-'}
+                                        </td>
+
+                                        <td className="max-w-[220px] break-words border-b border-gray-200 px-3.5 py-3.5 text-sm">
+                                            {remesa.notas || '-'}
+                                        </td>
+
+                                        <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
+
+                                            <div className="flex flex-col gap-2 sm:flex-row">
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => editarRemesa(remesa)}
+                                                    disabled={procesando}
+                                                    className="w-full rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                                >
+                                                    {t('common.editar')}
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => eliminarRemesa(remesa.idRemesa)}
+                                                    disabled={procesando}
+                                                    className="w-full rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                                >
+                                                    {procesando
+                                                        ? t('common.procesando')
+                                                        : t('common.eliminar')}
+                                                </button>
+
+                                            </div>
+
+                                        </td>
                                     </tr>
-                                </thead>
-
-                                <tbody>
-
-                                    {remesasPagina.map((remesa) => (
-                                        <tr
-                                            key={
-                                                remesa.idMovimiento
-                                            }
-                                            className="transition hover:bg-violet-50"
-                                        >
-
-                                            <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                                {formatearFecha(remesa.fecha)}
-                                            </td>
-
-                                            <td className="max-w-[180px] break-words border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                                {remesa.origenEmisora}
-                                            </td>
-
-                                            <td className="max-w-[180px] break-words border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                                {obtenerNombreCategoria(
-                                                    remesa.idCategoria
-                                                )}
-                                            </td>
-
-                                            <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm font-bold text-violet-600">
-                                                +{formatearMoneda(remesa.monto)}
-                                            </td>
-
-                                            <td className="max-w-[250px] break-words border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                                {remesa.descripcion ||
-                                                    '-'}
-                                            </td>
-
-                                            <td className="border-b border-gray-200 px-3.5 py-3.5 text-sm">
-
-                                                <div className="flex flex-col gap-2 sm:flex-row">
-
-                                                    <button
-                                                        onClick={() =>
-                                                            editarRemesa(
-                                                                remesa
-                                                            )
-                                                        }
-                                                        disabled={procesando}
-                                                        className="w-full rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                                                    >
-                                                        {t('common.editar')}
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() =>
-                                                            eliminarRemesa(
-                                                                remesa.idMovimiento
-                                                            )
-                                                        }
-                                                        disabled={procesando}
-                                                        className="w-full rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                                                    >
-                                                        {procesando
-                                                            ? t('common.procesando')
-                                                            : t('common.eliminar')}
-                                                    </button>
-
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-                                    ))}
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
-                        {/* PAGINACIÓN */}
-                        <Pagination
-                            paginaActual={paginaActual}
-                            totalPaginas={totalPaginas}
-                            cambiarPagina={cambiarPagina}
-                        />
-
-                    </>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
-
             </section>
 
             <ConfirmModal
@@ -1021,7 +841,6 @@ export default function Remesas() {
                 onConfirmar={confirmarEliminarRemesa}
                 onCancelar={() => setConfirmModal({ abierto: false, id: null, titulo: '', mensaje: '' })}
             />
-
         </div>
     )
 }

@@ -39,6 +39,7 @@ vi.mock('react-i18next', () => {
         // claves el mock devuelve la key cruda (p.ej. "remittance.title") y
         // findByRole agota el timeout buscando el título real de la página.
         'remittance.title': 'Remesas',
+        'remesas.titulo': 'Remesas',
         'education.title': 'Educación Financiera',
         'profile.title': 'Mi perfil',
         'common.editar': 'Editar',
