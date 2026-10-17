@@ -8,12 +8,6 @@ import MiHogar from './MiHogar'
 // re-ejecuta cargarDatos, y la página queda en un bucle de "Cargando...".
 vi.mock('react-i18next', () => {
     const map = {
-        'familia.titulo': 'Mi Familia',
-        'familia.subtitulo': 'Administra los miembros de tu familia y sus roles.',
-        'familia.miembros': 'Miembros',
-        'familia.invitar': 'Invitar miembro',
-        'familia.invitacionesEnviadas': 'Invitaciones enviadas',
-        'familia.soloAdmin': 'Solo un administrador de la familia puede invitar nuevos miembros.',
         'family.title': 'Mi familia',
         'family.subtitle': 'Administra los miembros de tu familia y sus roles.',
         'family.members': 'Miembros',

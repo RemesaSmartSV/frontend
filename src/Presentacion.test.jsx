@@ -6,9 +6,9 @@ vi.mock('react-i18next', () => ({
         t: (key) => {
             const map = {
                 'auth.login': 'Iniciar sesión',
-                'auth.correo': 'Correo',
-                'auth.contrasena': 'Contraseña',
-                'auth.entrar': 'Iniciar sesión',
+                'auth.email': 'Correo electrónico',
+                'auth.password': 'Contraseña',
+                'auth.signIn': 'Entrar',
                 'auth.register': 'Crear cuenta',
                 'app.name': 'RemesaSmartSV',
                 'common.cargando': 'Cargando...',
@@ -139,9 +139,9 @@ describe('Presentacion como vista publica de App', () => {
             })
         ).toBeInTheDocument()
 
-        // No debe caer en el login.
+        // No debe caer en el login. El botón del formulario usa auth.signIn ("Entrar").
         expect(
-            screen.queryByRole('button', { name: /Iniciar sesión/i })
+            screen.queryByRole('button', { name: /Entrar/i })
         ).not.toBeInTheDocument()
     })
 
@@ -151,7 +151,7 @@ describe('Presentacion como vista publica de App', () => {
         render(<App />)
 
         expect(
-            await screen.findByRole('button', { name: /Iniciar sesión/i })
+            await screen.findByRole('button', { name: /Entrar/i })
         ).toBeInTheDocument()
     })
 })

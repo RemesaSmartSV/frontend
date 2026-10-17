@@ -203,7 +203,7 @@ export default function MiHogar() {
                     {hogar?.nombreFamiliar || t('family.title')}
                 </h1>
 
-                <p className="text-gray-500">{t('familia.subtitulo')}</p>
+                <p className="text-gray-500">{t('family.subtitle')}</p>
             </div>
 
             {error && (
@@ -245,7 +245,7 @@ export default function MiHogar() {
                 {/* MIEMBROS */}
                 <div className="rounded-xl bg-white p-6 shadow-sm">
                     <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                        {t('familia.miembros')} ({miembros.length})
+                        {t('family.members')} ({miembros.length})
                     </h2>
 
                     <ul className="divide-y divide-gray-100">
@@ -325,7 +325,7 @@ export default function MiHogar() {
                     <div className="space-y-6">
                         <div className="rounded-xl bg-white p-6 shadow-sm">
                             <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                                {t('familia.invitar')}
+                                {t('family.invite')}
                             </h2>
 
                             <form onSubmit={invitar} className="flex flex-col gap-3 sm:flex-row">
@@ -408,7 +408,7 @@ export default function MiHogar() {
 
                         <div className="rounded-xl bg-white p-6 shadow-sm">
                             <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                                    {t('familia.invitacionesEnviadas')}
+                                    {t('family.sentInvitations')}
                             </h2>
 
                             {enviadas.length === 0 ? (
@@ -491,7 +491,7 @@ export default function MiHogar() {
                 ) : (
                     <div className="rounded-xl bg-white p-6 shadow-sm">
                         <p className="text-sm text-gray-500">
-                                    {t('familia.soloAdmin')}
+                                    {t('family.soloAdmin')}
                         </p>
                     </div>
                 )}

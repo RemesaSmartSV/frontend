@@ -100,7 +100,7 @@ export default function Login({ onLogin, irRegistro }) {
                         {/* Correo */}
                         <div>
                             <label htmlFor="correo" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                {t('auth.correo')}
+                                {t('auth.email')}
                             </label>
                             <div className="relative">
                                 <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -122,7 +122,7 @@ export default function Login({ onLogin, irRegistro }) {
                         {/* Contraseña */}
                         <div>
                             <label htmlFor="contrasena" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                {t('auth.contrasena')}
+                                {t('auth.password')}
                             </label>
                             <div className="relative">
                                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -172,7 +172,7 @@ export default function Login({ onLogin, irRegistro }) {
                                 }}
                                 className="text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400"
                             >
-                                {t('auth.olvidaste')}
+                                {t('auth.forgot')}
                             </button>
                         </div>
 
@@ -187,7 +187,7 @@ export default function Login({ onLogin, irRegistro }) {
                             ) : (
                                 <ArrowRight size={18} />
                             )}
-                            {cargando ? t('common.cargando') : t('auth.entrar')}
+                            {cargando ? t('common.cargando') : t('auth.signIn')}
                         </button>
                     </form>
 
@@ -207,7 +207,7 @@ export default function Login({ onLogin, irRegistro }) {
 
                     {/* Registro */}
                     <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                        {t('auth.noCuenta')}{' '}
+                        {t('auth.noAccount')}{' '}
                         <button
                             type="button"
                             onClick={irRegistro}
