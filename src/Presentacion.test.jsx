@@ -16,6 +16,9 @@ vi.mock('react-i18next', () => ({
                 'presentation.nextSection': 'Sección siguiente',
                 'presentation.goTo': 'Ir a sección',
                 'presentation.inDevelopment': 'Interfaz en desarrollo',
+                // El paso 3 y el beneficio de metas rotulan aparte la deuda de UI.
+                'presentation.steps.budget.note': 'metas: interfaz en desarrollo',
+                'presentation.benefit.goals.note': 'Interfaz en desarrollo',
                 'presentation.closingButton': 'Conoce RemesaSmart SV',
                 'presentation.sections.cover': 'Portada',
                 'presentation.sections.problem': 'Problema',

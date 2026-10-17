@@ -2,52 +2,60 @@
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react'
 import Ahorro from './Ahorro'
 
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: (key, variables = {}) => {
-            const map = {
-                'ahorro.titulo': 'Ahorro',
-                'ahorro.subtitulo': 'Crea metas de ahorro, registra aportes y sigue tu progreso.',
-                'ahorro.totalAhorrado': 'Total ahorrado',
-                'ahorro.totalObjetivo': 'Total objetivo',
-                'ahorro.progresoGlobal': 'Progreso global',
-                'ahorro.crearMeta': 'Crear meta de ahorro',
-                'ahorro.editarMeta': 'Editar meta',
-                'ahorro.tituloMeta': 'Título',
-                'ahorro.montoObjetivo': 'Monto objetivo',
-                'ahorro.fechaObjetivo': 'Fecha objetivo',
-                'ahorro.registrarAporte': 'Registrar aporte',
-                'ahorro.sinMetas': 'Sin metas de ahorro',
-                'ahorro.metaCreada': 'Meta creada correctamente.',
-                'ahorro.metaActualizada': 'Meta actualizada correctamente.',
-                'ahorro.metaEliminada': 'Meta eliminada correctamente.',
-                'ahorro.aporteRegistrado': 'Aporte registrado correctamente.',
-                'ahorro.inProgress': 'En progreso',
-                'ahorro.restan': 'Restan',
-                'ahorro.remainingAmount': '{{label}} {{amount}}',
-                'ahorro.goalTitleRequired': 'Ingresa un título para la meta.',
-                'ahorro.goalAmountPositive': 'El monto objetivo debe ser mayor que 0.',
-                'ahorro.goalDateRequired': 'Selecciona la fecha objetivo.',
-                'ahorro.titlePlaceholder': 'Ej. Fondo de emergencia',
-                'ahorro.amountPlaceholder': 'Ej. 500.00',
-                'ahorro.createGoal': 'Crear meta',
-                'ahorro.updateGoal': 'Actualizar meta',
-                'common.editar': 'Editar',
-                'common.eliminar': 'Eliminar',
-                'common.cancelar': 'Cancelar',
-                'common.actualizar': 'Actualizar',
-                'common.guardando': 'Guardando...',
-                'common.procesando': 'Procesando...',
-                'common.cargando': 'Cargando...',
-            }
-            return Object.entries(variables).reduce(
-                (text, [name, value]) => text.replaceAll(`{{${name}}}`, value),
-                map[key] || key
-            )
-        },
-        i18n: { changeLanguage: () => {} },
-    }),
-}))
+// react-i18next devuelve un `t` con identidad estable entre renders; el mock
+// tiene que imitar ese contrato. Si `t` cambia de identidad en cada render,
+// los `useCallback(..., [t])` de la página se re-crean en cada render y su
+// `useEffect` vuelve a correr, reiniciando `cargando` en bucle infinito.
+vi.mock('react-i18next', () => {
+    const map = {
+        'ahorro.titulo': 'Ahorro',
+        'ahorro.subtitulo': 'Crea metas de ahorro, registra aportes y sigue tu progreso.',
+        'ahorro.totalAhorrado': 'Total ahorrado',
+        'ahorro.totalObjetivo': 'Total objetivo',
+        'ahorro.progresoGlobal': 'Progreso global',
+        'ahorro.crearMeta': 'Crear meta de ahorro',
+        'ahorro.editarMeta': 'Editar meta',
+        'ahorro.tituloMeta': 'Título',
+        'ahorro.montoObjetivo': 'Monto objetivo',
+        'ahorro.fechaObjetivo': 'Fecha objetivo',
+        'ahorro.registrarAporte': 'Registrar aporte',
+        'ahorro.sinMetas': 'Sin metas de ahorro',
+        'ahorro.firstGoalHint': 'Crea tu primera meta para empezar a ahorrar.',
+        'ahorro.goalDate': 'Fecha objetivo: {{date}}',
+        'ahorro.metaCreada': 'Meta creada correctamente.',
+        'ahorro.metaActualizada': 'Meta actualizada correctamente.',
+        'ahorro.metaEliminada': 'Meta eliminada correctamente.',
+        'ahorro.aporteRegistrado': 'Aporte registrado correctamente.',
+        'ahorro.inProgress': 'En progreso',
+        'ahorro.restan': 'Restan',
+        'ahorro.remainingAmount': '{{label}} {{amount}}',
+        'ahorro.goalTitleRequired': 'Ingresa un título para la meta.',
+        'ahorro.goalAmountPositive': 'El monto objetivo debe ser mayor que 0.',
+        'ahorro.goalDateRequired': 'Selecciona la fecha objetivo.',
+        'ahorro.titlePlaceholder': 'Ej. Fondo de emergencia',
+        'ahorro.amountPlaceholder': 'Ej. 500.00',
+        'ahorro.createGoal': 'Crear meta',
+        'ahorro.updateGoal': 'Actualizar meta',
+        'ahorro.saving': 'Guardando...',
+        'common.editar': 'Editar',
+        'common.eliminar': 'Eliminar',
+        'common.cancelar': 'Cancelar',
+        'common.actualizar': 'Actualizar',
+        'common.guardando': 'Guardando...',
+        'common.procesando': 'Procesando...',
+        'common.cargando': 'Cargando...',
+    }
+
+    const t = (key, variables = {}) =>
+        Object.entries(variables).reduce(
+            (text, [name, value]) => text.replaceAll(`{{${name}}}`, value),
+            map[key] || key
+        )
+
+    const i18n = { changeLanguage: () => {} }
+
+    return { useTranslation: () => ({ t, i18n }) }
+})
 
 // La página consume ahorroApi (MetasAhorro + Aportes). Se stubbea global.fetch
 // igual que en el resto de la suite.

@@ -32,10 +32,10 @@ describe('Registro sin campo de familia', () => {
 
         render(<Register volverLogin={() => {}} />)
 
-        fireEvent.change(screen.getByLabelText('Nombre'), {
+        fireEvent.change(screen.getByLabelText('Nombre completo'), {
             target: { value: 'Ana' },
         })
-        fireEvent.change(screen.getByLabelText('Correo'), {
+        fireEvent.change(screen.getByLabelText('Correo electrónico'), {
             target: { value: 'ana@gmail.com' },
         })
         fireEvent.change(screen.getByLabelText('Contraseña'), {

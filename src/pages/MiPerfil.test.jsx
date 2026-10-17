@@ -51,7 +51,8 @@ describe('MiPerfil', () => {
 
         // Cuenta en solo lectura
         expect(screen.getByText('ana@demo.com')).toBeInTheDocument()
-        expect(screen.getByText('Admin')).toBeInTheDocument()
+        // El rol se traduce con family.admin; el backend envía el código 'Admin'.
+        expect(screen.getByText('Administrador')).toBeInTheDocument()
         expect(screen.getByText('Familia Ana')).toBeInTheDocument()
     })
 
