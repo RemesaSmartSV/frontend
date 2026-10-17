@@ -521,8 +521,20 @@ export const categoriasApi = {
 }
 
 export const movimientosApi = {
-    async resumen(anio, mes) {
+    // Extensión del contrato histórico resumen(anio, mes): además acepta un
+    // tercer argumento opcional { fechaInicio, fechaFin } (ISO UTC). El
+    // backend aplica prelación: rango explícito > anio+mes > historial, así
+    // que cuando viene un rango se envía solo, sin anio/mes.
+    async resumen(anio, mes, opciones = {}) {
         const parametros = new URLSearchParams()
+
+        if (opciones.fechaInicio) {
+            parametros.set('fechaInicio', opciones.fechaInicio)
+        }
+
+        if (opciones.fechaFin) {
+            parametros.set('fechaFin', opciones.fechaFin)
+        }
 
         if (anio != null && mes != null) {
             parametros.set('anio', anio)

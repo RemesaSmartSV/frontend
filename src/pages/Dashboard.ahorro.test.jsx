@@ -216,10 +216,12 @@ describe('Dashboard - ahorro en el tablero', () => {
         // movimientos recientes, por eso se buscan todas las coincidencias.
         expect((await screen.findAllByText('Ahorro')).length).toBeGreaterThan(0)
 
-        // El monto principal de la tarjeta de ahorro es el flujo del periodo.
+        // El monto del flujo del periodo aparece en el KPI y también en la
+        // tarjeta de enlace ingresos↔ahorro; alcanza con que esté presente.
         expect(
-            await screen.findByText(formatearMoneda(RESUMEN.totalAhorro))
-        ).toBeInTheDocument()
+            (await screen.findAllByText(formatearMoneda(RESUMEN.totalAhorro)))
+                .length
+        ).toBeGreaterThan(0)
     })
 
     it('muestra el saldo consolidado de las metas como dato complementario del ahorro', async () => {

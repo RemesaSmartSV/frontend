@@ -22,6 +22,11 @@ vi.mock('react-i18next', () => {
         'dashboard.metas': 'Metas de ahorro',
         'dashboard.movimientosRecientes': 'Movimientos recientes',
         'dashboard.todoHistorial': 'Todo el historial',
+        'dashboard.periodos.dia': 'Día',
+        'dashboard.periodos.semana': 'Semana',
+        'dashboard.periodos.mes': 'Mes',
+        'dashboard.periodos.anio': 'Año',
+        'dashboard.periodos.historial': 'Historial',
         'nav.categorias': 'Categorías',
     }
 
@@ -140,10 +145,10 @@ describe('Dashboard', () => {
             name: /Resumen financiero/i,
         })
 
-        // Primer clic: cambia de historial al mes actual.
+        // Clic en el modo "Mes": el resumen usa el filtro histórico anio+mes.
         fireEvent.click(
             screen.getByRole('button', {
-                name: /Todo el historial/i,
+                name: 'Mes',
             })
         )
 
