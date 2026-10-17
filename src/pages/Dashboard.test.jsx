@@ -3,28 +3,37 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import Dashboard from './Dashboard'
 
 // Mock de useTranslation: devuelve las claves como texto (suficiente para tests).
-vi.mock('react-i18next', () => ({
-    useTranslation: () => ({
-        t: (key) => {
-            const map = {
-                'dashboard.titulo': 'Resumen financiero',
-                'dashboard.subtitulo': 'Consulta el estado actual de las finanzas de tu hogar.',
-                'dashboard.ingresos': 'Ingresos',
-                'dashboard.gastos': 'Gastos',
-                'dashboard.ahorro': 'Ahorro',
-                'dashboard.balance': 'Balance',
-                'dashboard.remesas': 'Remesas',
-                'dashboard.alertas': 'Alertas de presupuesto',
-                'dashboard.metas': 'Metas de ahorro',
-                'dashboard.movimientosRecientes': 'Movimientos recientes',
-                'dashboard.todoHistorial': 'Todo el historial',
-                'nav.categorias': 'Categorías',
-            }
-            return map[key] || key
-        },
-        i18n: { changeLanguage: () => {} },
-    }),
-}))
+//
+// IMPORTANTE: `t` e `i18n` deben ser referencias ESTABLES creadas una sola vez.
+// El componente `Dashboard` usa `t` como dependencia de `useCallback` (cargarDatos)
+// y de `useEffect`; si el mock devolviera una función `t` nueva en cada render,
+// el effect se re-dispararía en bucle infinito y el dashboard nunca terminaría
+// de cargar. Por eso se definen fuera del retorno y se reutilizan.
+vi.mock('react-i18next', () => {
+    const map = {
+        'dashboard.titulo': 'Resumen financiero',
+        'dashboard.subtitulo': 'Consulta el estado actual de las finanzas de tu hogar.',
+        'dashboard.ingresos': 'Ingresos',
+        'dashboard.gastos': 'Gastos',
+        'dashboard.ahorro': 'Ahorro',
+        'dashboard.balance': 'Balance',
+        'dashboard.remesas': 'Remesas',
+        'dashboard.alertas': 'Alertas de presupuesto',
+        'dashboard.metas': 'Metas de ahorro',
+        'dashboard.movimientosRecientes': 'Movimientos recientes',
+        'dashboard.todoHistorial': 'Todo el historial',
+        'nav.categorias': 'Categorías',
+    }
+
+    const t = (key) => map[key] || key
+
+    // `language` también debe estar: Dashboard lo usa para los gráficos.
+    const i18n = { language: 'es', changeLanguage: () => {} }
+
+    return {
+        useTranslation: () => ({ t, i18n }),
+    }
+})
 
 // Mock de global.fetch que responde con las formas REALES que devuelve el
 // backend en producción, y que registra cada URL solicitada.
