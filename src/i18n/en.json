@@ -775,5 +775,9 @@
     "red": "Connection error. Check your internet.",
     "noAutorizado": "Session expired. Please sign in again.",
     "prohibido": "You don't have permission for this action."
+  },
+  "filtros": {
+    "titulo": "Filters",
+    "conContador": "Filters ({{cantidad}} active)"
   }
 }

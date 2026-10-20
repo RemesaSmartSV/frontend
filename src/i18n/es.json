@@ -775,5 +775,9 @@
     "red": "Error de conexión. Verifica tu internet.",
     "noAutorizado": "Sesión expirada. Inicia sesión nuevamente.",
     "prohibido": "No tienes permisos para esta acción."
+  },
+  "filtros": {
+    "titulo": "Filtros",
+    "conContador": "Filtros ({{cantidad}} activos)"
   }
 }
