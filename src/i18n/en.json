@@ -85,6 +85,7 @@
     "loginSubtitle": "Sign in to your household account.",
     "completeFields": "Complete all fields.",
     "gmailOnly": "Only accounts with @gmail.com email addresses are allowed.",
+    "gmailHint": "Gmail accounts only (@gmail.com).",
     "loginError": "Could not sign in. Check your credentials.",
     "googleLoginError": "Could not sign in with Google.",
     "hidePassword": "Hide password",

@@ -255,9 +255,14 @@ export default function Register({ volverLogin, onLogin }) {
                                 autoComplete="email"
                                 required
                                 disabled={cargando}
-                                {...ariaDe('correo')}
+                                aria-invalid={camposConError.includes('correo') ? 'true' : undefined}
+                                aria-describedby={camposConError.includes('correo') ? 'registro-error-campo' : 'correo-ayuda'}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
                             />
+                            {/* La política @gmail.com se avisa siempre, no como error tardío. */}
+                            <p id="correo-ayuda" className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                {t('auth.gmailHint')}
+                            </p>
                         </div>
 
                         {/* CONTRASEÑA */}

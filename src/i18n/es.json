@@ -758,6 +758,7 @@
     "loginSubtitle": "Accede a la cuenta de tu hogar.",
     "completeFields": "Completa todos los campos.",
     "gmailOnly": "Solo se permiten cuentas con direcciones de correo @gmail.com.",
+    "gmailHint": "Solo cuentas de Gmail (@gmail.com).",
     "loginError": "No se pudo iniciar sesión. Verifica tus datos.",
     "googleLoginError": "No se pudo iniciar sesión con Google.",
     "hidePassword": "Ocultar contraseña",

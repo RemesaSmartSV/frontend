@@ -180,10 +180,15 @@ export default function Login({ onLogin, irRegistro }) {
                                             autoComplete="email"
                                             required
                                             disabled={cargando}
-                                            {...(errorCampo ? { 'aria-invalid': 'true', 'aria-describedby': 'login-error-campo' } : {})}
+                                            aria-invalid={errorCampo ? 'true' : undefined}
+                                            aria-describedby={errorCampo ? 'login-error-campo' : 'correo-ayuda'}
                                             className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
                                         />
                                     </div>
+                                    {/* La política @gmail.com se avisa siempre, no como error tardío. */}
+                                    <p id="correo-ayuda" className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                        {t('auth.gmailHint')}
+                                    </p>
                                 </div>
 
                                 {errorCampo && (
@@ -236,10 +241,15 @@ export default function Login({ onLogin, irRegistro }) {
                                     autoComplete="email"
                                     required
                                     disabled={cargando}
-                                    {...(errorCampo ? { 'aria-invalid': 'true', 'aria-describedby': 'login-error-campo' } : {})}
+                                    aria-invalid={errorCampo ? 'true' : undefined}
+                                    aria-describedby={errorCampo ? 'login-error-campo' : 'correo-ayuda'}
                                     className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
                                 />
                             </div>
+                            {/* La política @gmail.com se avisa siempre, no como error tardío. */}
+                            <p id="correo-ayuda" className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                {t('auth.gmailHint')}
+                            </p>
                         </div>
 
                         {/* Contraseña */}
