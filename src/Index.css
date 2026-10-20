@@ -9,10 +9,11 @@
     --color-surface: #ffffff;
     --color-surface-hover: #f9fafb;
     --color-border: #e5e7eb;
+    --color-border-strong: #d1d5db;
     --color-text: #1f2937;
     --color-text-secondary: #6b7280;
-    --color-primary: #2563eb;
-    --color-primary-hover: #1d4ed8;
+    --color-primary: #123b8f;
+    --color-primary-hover: #0b2e6b;
     --color-success: #16a34a;
     --color-warning: #f59e0b;
     --color-danger: #dc2626;
@@ -23,6 +24,7 @@
     --color-surface: #1e293b;
     --color-surface-hover: #334155;
     --color-border: #334155;
+    --color-border-strong: #475569;
     --color-text: #f1f5f9;
     --color-text-secondary: #94a3b8;
     --color-primary: #3b82f6;
@@ -121,4 +123,67 @@ body {
 :where(a, button, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+}
+
+/*
+ * Clases base del sistema de diseño (T6). Van en la capa `components`
+ * para que cualquier utilidad de Tailwind siga pudiendo sobreescribirlas.
+ * Toda la interacción primaria se unifica en --color-primary (#123B8F).
+ */
+@layer components {
+    .card {
+        border-radius: 0.75rem;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+    }
+
+    .input {
+        width: 100%;
+        border-radius: 0.5rem;
+        border: 1px solid var(--color-border-strong);
+        background-color: var(--color-surface);
+        color: var(--color-text);
+        padding: 0.75rem;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .input:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 20%, transparent);
+    }
+
+    .input::placeholder {
+        color: var(--color-text-secondary);
+        opacity: 0.6;
+    }
+
+    .input:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: 0.5rem;
+        background-color: var(--color-primary);
+        color: #ffffff;
+        font-weight: 600;
+        padding: 0.625rem 1rem;
+        transition: background-color 0.15s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background-color: var(--color-primary-hover);
+    }
+
+    .btn-primary:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
 }
