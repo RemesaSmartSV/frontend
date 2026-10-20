@@ -31,7 +31,7 @@ export default function Notification({ tipo = 'success', mensaje, onClose }) {
     return (
         <div
             role="alert"
-            className={`fixed right-5 top-5 z-50 flex w-80 items-center gap-3 rounded-lg border-l-4 p-4 shadow-lg ${estilos[tipo]}`}
+            className={`fixed right-5 bottom-5 z-50 flex w-80 items-center gap-3 rounded-lg border-l-4 p-4 shadow-lg ${estilos[tipo]}`}
         >
             <span className="text-xl font-bold" aria-hidden="true">
                 {iconos[tipo]}
