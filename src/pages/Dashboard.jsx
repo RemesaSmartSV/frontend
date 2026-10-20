@@ -1525,8 +1525,10 @@ export default function Dashboard() {
 
                                         <p className="mt-2 text-sm text-slate-500">
                                             {formatearNumero(porcentaje, { maximumFractionDigits: 0 })}% ·{' '}
-                                            {formatearMoneda(actual)} de{' '}
-                                            {formatearMoneda(objetivo)}
+                                            {t('dashboard.goalSavedOf', {
+                                                saved: formatearMoneda(actual),
+                                                target: formatearMoneda(objetivo),
+                                            })}
                                         </p>
                                     </div>
                                 )
@@ -1572,8 +1574,10 @@ export default function Dashboard() {
 
                                     <p className="mt-2 text-sm text-slate-500">
                                         {formatearNumero(porcentaje, { maximumFractionDigits: 0 })}% ·{' '}
-                                        {formatearMoneda(actual)} de{' '}
-                                        {formatearMoneda(objetivo)}
+                                        {t('dashboard.goalSavedOf', {
+                                            saved: formatearMoneda(actual),
+                                            target: formatearMoneda(objetivo),
+                                        })}
                                     </p>
                                 </div>
                             )

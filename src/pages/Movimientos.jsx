@@ -775,7 +775,7 @@ export default function Movimientos() {
                 <div className="mb-5">
 
                     <h2 className="text-xl font-semibold text-slate-900">
-                        {t('nav.movimientos')} / {t('common.editar')}
+                        {t('transactions.filtersTitle')}
                     </h2>
 
                     <div className="flex flex-col gap-2 sm:flex-row">
@@ -798,7 +798,7 @@ export default function Movimientos() {
                             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             <Download size={17} aria-hidden="true" />
-                            CSV
+                            {t('transactions.csv')}
                         </button>
                         <button
                             onClick={() => exportarMovimientosRemotos('json')}
@@ -806,14 +806,14 @@ export default function Movimientos() {
                             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             <Download size={17} aria-hidden="true" />
-                            JSON
+                            {t('transactions.json')}
                         </button>
                         <button
                             onClick={cargarDatos}
                             disabled={cargando || procesando}
                             className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
-                            {cargando ? 'Cargando...' : 'Actualizar'}
+                            {cargando ? t('common.cargando') : t('common.actualizar')}
                         </button>
                     </div>
 
@@ -823,7 +823,7 @@ export default function Movimientos() {
                     <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                         <div>
                             <h3 className="text-lg font-semibold text-slate-900">
-                                Filtros
+                                {t('common.filtros')}
                             </h3>
                             <p className="text-sm text-gray-500">
                             {t('transactions.filterDescription')}
@@ -896,7 +896,7 @@ export default function Movimientos() {
                                 onChange={manejarCambioFiltro}
                                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
                             >
-                                <option value="">Todas</option>
+                                <option value="">{t('transactions.allCategories')}</option>
                                 {categorias.map((categoria) => (
                                     <option key={categoria.idCategoria} value={categoria.idCategoria}>
                                         {categoria.nombre}

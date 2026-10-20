@@ -241,7 +241,9 @@
     "loadError": "No se pudieron cargar los movimientos.",
     "saveError": "No se pudo guardar el movimiento.",
     "amountPositive": "El monto debe ser mayor que 0.",
-    "dateRequired": "Selecciona una fecha."
+    "dateRequired": "Selecciona una fecha.",
+    "filtersTitle": "Filtros de movimientos",
+    "allCategories": "Todas"
   },
   "income": {
     "description": "Registra y administra tus ingresos.",

@@ -285,7 +285,9 @@
     "loadError": "Could not load transactions.",
     "saveError": "Could not save the transaction.",
     "amountPositive": "Amount must be greater than 0.",
-    "dateRequired": "Select a date."
+    "dateRequired": "Select a date.",
+    "filtersTitle": "Transaction filters",
+    "allCategories": "All"
   },
   "income": {
     "description": "Record and manage your income.",
