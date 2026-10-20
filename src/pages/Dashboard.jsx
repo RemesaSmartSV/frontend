@@ -823,6 +823,11 @@ export default function Dashboard() {
                         aria-label={t('dashboard.periodos.grupo')}
                         className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-white p-1"
                     >
+                        {/* T12: objetivo táctil ≥44px. Se decide por el
+                            PUNTERO, no por el ancho: una tablet en horizontal
+                            (≥640px) sigue siendo táctil y `sm` la dejaría en
+                            36px. Con puntero fino (ratón) se conserva la
+                            densidad compacta del grupo segmentado. */}
                         {MODOS_PERIODO.map((modo) => (
                             <button
                                 key={modo}
@@ -833,7 +838,7 @@ export default function Dashboard() {
                                 aria-pressed={
                                     modoPeriodo === modo
                                 }
-                                className={`rounded-md px-2.5 py-1 text-sm font-semibold transition ${
+                                className={`flex items-center justify-center rounded-md px-2.5 py-1 text-sm font-semibold transition pointer-coarse:min-h-11 pointer-coarse:px-3 ${
                                     modoPeriodo === modo
                                         ? 'bg-blue-600 text-white'
                                         : 'text-slate-700 hover:bg-slate-100'
@@ -851,7 +856,7 @@ export default function Dashboard() {
                             onClick={() => navegarPeriodo(-1)}
                             disabled={modoPeriodo === 'historial'}
                             aria-label={t('dashboard.periodos.anterior')}
-                            className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                            className="flex items-center justify-center rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent pointer-coarse:min-h-11 pointer-coarse:px-2.5"
                         >
                             ‹
                         </button>
@@ -865,7 +870,7 @@ export default function Dashboard() {
                             onClick={() => navegarPeriodo(1)}
                             disabled={modoPeriodo === 'historial'}
                             aria-label={t('dashboard.periodos.siguiente')}
-                            className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                            className="flex items-center justify-center rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent pointer-coarse:min-h-11 pointer-coarse:px-2.5"
                         >
                             ›
                         </button>

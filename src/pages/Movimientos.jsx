@@ -8,6 +8,40 @@ import ConfirmModal from '../components/ConfirmModal'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 import { Download } from 'lucide-react'
 
+/*
+ * ==========================================
+ * T12 — vista por tarjetas (pantallas chicas)
+ * ==========================================
+ * La página existe en DOS representaciones: la tabla (≥640px) y la lista de
+ * tarjetas (<640px). Ambas se montan en el DOM y se alternan con
+ * `hidden sm:block` / `sm:hidden`, así que cualquier texto repetido hay que
+ * buscarlo acotado a la tabla o a la lista (`within(...)`), nunca contra la
+ * pantalla completa.
+ *
+ * El estilo por tipo se centraliza aquí para que tabla y tarjetas no puedan
+ * desincronizarse (badge + color del monto).
+ */
+function estiloPorTipo(tipo) {
+    if (tipo === 'Ingreso') {
+        return {
+            badge: 'inline-block rounded-full bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700',
+            monto: 'text-green-600',
+        }
+    }
+
+    if (tipo === 'Ahorro') {
+        return {
+            badge: 'inline-block rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700',
+            monto: 'text-amber-600',
+        }
+    }
+
+    return {
+        badge: 'inline-block rounded-full bg-red-100 px-2.5 py-1 text-sm font-bold text-red-600',
+        monto: 'text-red-600',
+    }
+}
+
 export default function Movimientos() {
     const { t } = useTranslation()
     const [movimientos, setMovimientos] = useState([])
@@ -1005,7 +1039,9 @@ export default function Movimientos() {
 
                     <>
 
-                           <div className="w-full overflow-x-auto">
+                        {/* T12: en pantallas chicas la tabla se sustituye
+                            por la lista de tarjetas de más abajo. */}
+                        <div className="hidden w-full overflow-x-auto sm:block">
 
                              <table className="w-full min-w-[800px]">
                                 <thead>
@@ -1074,13 +1110,9 @@ export default function Movimientos() {
 
                                                     <span
                                                         className={
-                                                            movimiento.tipo ===
-                                                                'Ingreso'
-                                                                ? 'inline-block rounded-full bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700'
-                                                                : movimiento.tipo ===
-                                                                  'Ahorro'
-                                                                    ? 'inline-block rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700'
-                                                                    : 'inline-block rounded-full bg-red-100 px-2.5 py-1 text-sm font-bold text-red-600'
+                                                            estiloPorTipo(
+                                                                movimiento.tipo
+                                                            ).badge
                                                         }
                                                     >
                                                         {movimiento.tipo}
@@ -1157,6 +1189,126 @@ export default function Movimientos() {
                             </table>
 
                         </div>
+
+                        {/* T12: la misma página en pantallas chicas. Cada fila
+                            de la tabla es una tarjeta con la misma información
+                            y las mismas acciones. */}
+                        <ul
+                            aria-label={t('nav.movimientos')}
+                            className="grid gap-3 sm:hidden"
+                        >
+                            {movimientosPagina.map((movimiento) => {
+                                const categoria = categorias.find(
+                                    (c) =>
+                                        c.idCategoria ===
+                                        movimiento.idCategoria
+                                )
+                                const estilo = estiloPorTipo(movimiento.tipo)
+
+                                return (
+                                    <li
+                                        key={movimiento.idMovimiento}
+                                        className="card p-4"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="break-words text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                    {movimiento.descripcion ||
+                                                        '-'}
+                                                </p>
+
+                                                {/* Cada dato en su propio
+                                                    nodo: así `getByText`
+                                                    puede apuntarlo desde los
+                                                    tests sin acotar regex. */}
+                                                <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                                    <span>
+                                                        {categoria?.nombre ||
+                                                            t(
+                                                                'common.sinCategoria'
+                                                            )}
+                                                    </span>
+
+                                                    <span aria-hidden="true">
+                                                        ·
+                                                    </span>
+
+                                                    <span>
+                                                        {formatearFecha(
+                                                            movimiento.fecha
+                                                        )}
+                                                    </span>
+                                                </p>
+                                            </div>
+
+                                            <span className={estilo.badge}>
+                                                {movimiento.tipo}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                            <span
+                                                className={`text-base font-bold ${estilo.monto}`}
+                                            >
+                                                {formatearMoneda(
+                                                    movimiento.monto
+                                                )}
+                                            </span>
+
+                                            <span className="flex flex-wrap items-center gap-x-1.5 text-xs text-gray-500 dark:text-gray-400">
+                                                <span>
+                                                    {nombreDeUsuario(
+                                                        movimiento.idUsuario
+                                                    )}
+                                                </span>
+
+                                                {movimiento.origenEmisora && (
+                                                    <>
+                                                        <span aria-hidden="true">
+                                                            ·
+                                                        </span>
+
+                                                        <span>
+                                                            {
+                                                                movimiento.origenEmisora
+                                                            }
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-3 flex gap-2 border-t border-gray-100 pt-3 dark:border-gray-700">
+                                            <button
+                                                onClick={() =>
+                                                    editarMovimiento(
+                                                        movimiento
+                                                    )
+                                                }
+                                                disabled={procesando}
+                                                className="flex-1 rounded-lg px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                                            >
+                                                {t('common.editar')}
+                                            </button>
+
+                                            <button
+                                                onClick={() =>
+                                                    eliminarMovimiento(
+                                                        movimiento.idMovimiento
+                                                    )
+                                                }
+                                                disabled={procesando}
+                                                className="flex-1 rounded-lg px-3 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950"
+                                            >
+                                                {procesando
+                                                    ? t('common.procesando')
+                                                    : t('common.eliminar')}
+                                            </button>
+                                        </div>
+                                    </li>
+                                )
+                            })}
+                        </ul>
 
                         <div className="px-1 pb-1">
 

@@ -145,9 +145,24 @@ function control(id) {
     return document.getElementById(id)
 }
 
+// T12: la página monta DOS representaciones a la vez (tabla en ≥640px y
+// lista de tarjetas en <640px) y jsdom no aplica media queries, así que
+// ambas conviven en el DOM. Cualquier `screen.getByText` encontraría dos
+// nodos y fallaría con "found multiple elements". Toda aserción de
+// CONTENIDO se acota a la tabla; la vista de tarjetas se cubre en
+// Movimientos.mobile.test.jsx. Las aserciones negativas (`queryByText`)
+// siguen siendo de pantalla completa: son más fuertes así.
+function enTabla(texto) {
+    return within(screen.getByRole('table')).getByText(texto)
+}
+
 async function montar() {
     const vista = render(<Movimientos />)
-    await screen.findByText('supermercado')
+    // `findByText('supermercado')` ya no sirve: el texto existe también en
+    // las tarjetas. Se espera a que la tabla tenga las tres filas.
+    await waitFor(() =>
+        expect(document.querySelectorAll('tbody tr')).toHaveLength(3)
+    )
     return vista
 }
 
@@ -213,9 +228,9 @@ describe('Movimientos — carga', () => {
     it('pide movimientos y categorías al backend y pinta las tres filas', async () => {
         await montar()
 
-        expect(screen.getByText('sueldo mensual')).toBeInTheDocument()
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
-        expect(screen.getByText('transporte urbano')).toBeInTheDocument()
+        expect(enTabla('sueldo mensual')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
+        expect(enTabla('transporte urbano')).toBeInTheDocument()
 
         expect(
             llamadas.some((url) => url.includes('/Movimientos'))
@@ -245,7 +260,7 @@ describe('Movimientos — filtros', () => {
             target: { value: 'supermercado' },
         })
 
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
         expect(screen.queryByText('sueldo mensual')).not.toBeInTheDocument()
         expect(screen.queryByText('transporte urbano')).not.toBeInTheDocument()
     })
@@ -257,7 +272,7 @@ describe('Movimientos — filtros', () => {
             target: { value: 'transferencia' },
         })
 
-        expect(screen.getByText('sueldo mensual')).toBeInTheDocument()
+        expect(enTabla('sueldo mensual')).toBeInTheDocument()
         expect(screen.queryByText('supermercado')).not.toBeInTheDocument()
         expect(screen.queryByText('transporte urbano')).not.toBeInTheDocument()
     })
@@ -269,8 +284,8 @@ describe('Movimientos — filtros', () => {
             target: { value: '2' },
         })
 
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
-        expect(screen.getByText('transporte urbano')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
+        expect(enTabla('transporte urbano')).toBeInTheDocument()
         expect(screen.queryByText('sueldo mensual')).not.toBeInTheDocument()
     })
 
@@ -281,8 +296,8 @@ describe('Movimientos — filtros', () => {
             target: { value: '2026-09-01' },
         })
 
-        expect(screen.getByText('sueldo mensual')).toBeInTheDocument()
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
+        expect(enTabla('sueldo mensual')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
         expect(screen.queryByText('transporte urbano')).not.toBeInTheDocument()
     })
 
@@ -293,7 +308,7 @@ describe('Movimientos — filtros', () => {
             target: { value: '2026-08-31' },
         })
 
-        expect(screen.getByText('transporte urbano')).toBeInTheDocument()
+        expect(enTabla('transporte urbano')).toBeInTheDocument()
         expect(screen.queryByText('sueldo mensual')).not.toBeInTheDocument()
         expect(screen.queryByText('supermercado')).not.toBeInTheDocument()
     })
@@ -305,7 +320,7 @@ describe('Movimientos — filtros', () => {
             target: { value: '300' },
         })
 
-        expect(screen.getByText('sueldo mensual')).toBeInTheDocument()
+        expect(enTabla('sueldo mensual')).toBeInTheDocument()
         expect(screen.queryByText('supermercado')).not.toBeInTheDocument()
         expect(screen.queryByText('transporte urbano')).not.toBeInTheDocument()
     })
@@ -321,7 +336,7 @@ describe('Movimientos — filtros', () => {
             target: { value: '100' },
         })
 
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
         expect(screen.queryByText('transporte urbano')).not.toBeInTheDocument()
         expect(screen.queryByText('sueldo mensual')).not.toBeInTheDocument()
     })
@@ -340,7 +355,7 @@ describe('Movimientos — filtros', () => {
             target: { value: '100' },
         })
 
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
         expect(screen.queryByText('sueldo mensual')).not.toBeInTheDocument()
         expect(screen.queryByText('transporte urbano')).not.toBeInTheDocument()
 
@@ -352,9 +367,9 @@ describe('Movimientos — filtros', () => {
         expect(control('montoMinimo').value).toBe('')
         expect(control('filtroCategoriaMovimientos').value).toBe('')
 
-        expect(screen.getByText('sueldo mensual')).toBeInTheDocument()
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
-        expect(screen.getByText('transporte urbano')).toBeInTheDocument()
+        expect(enTabla('sueldo mensual')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
+        expect(enTabla('transporte urbano')).toBeInTheDocument()
     })
 
     it('muestra el estado vacío cuando nada coincide', async () => {
@@ -396,8 +411,8 @@ describe('Movimientos — atribución', () => {
             target: { value: '16' },
         })
 
-        expect(screen.getByText('sueldo mensual')).toBeInTheDocument()
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
+        expect(enTabla('sueldo mensual')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
         expect(
             screen.queryByText('transporte urbano')
         ).not.toBeInTheDocument()
@@ -407,7 +422,7 @@ describe('Movimientos — atribución', () => {
             target: { value: '' },
         })
 
-        expect(screen.getByText('transporte urbano')).toBeInTheDocument()
+        expect(enTabla('transporte urbano')).toBeInTheDocument()
     })
 })
 
@@ -419,7 +434,7 @@ describe('Movimientos — exportación', () => {
         fireEvent.change(control('busquedaMovimientos'), {
             target: { value: 'supermercado' },
         })
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
 
         fireEvent.click(
             screen.getByRole('button', { name: 'CSV filtrado' })
@@ -456,7 +471,7 @@ describe('Movimientos — exportación', () => {
         fireEvent.change(control('busquedaMovimientos'), {
             target: { value: 'supermercado' },
         })
-        expect(screen.getByText('supermercado')).toBeInTheDocument()
+        expect(enTabla('supermercado')).toBeInTheDocument()
 
         fireEvent.click(
             screen.getByRole('button', { name: 'CSV filtrado' })
