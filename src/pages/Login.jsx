@@ -14,6 +14,11 @@ export default function Login({ onLogin, irRegistro }) {
     const [error, setError] = useState('')
     const [errorCampo, setErrorCampo] = useState('')
     const [cargando, setCargando] = useState(false)
+    // Flujo de restablecimiento: se muestra/oculta como formulario inline en
+    // la misma pantalla, sin window.prompt ni window.alert.
+    const [mostrandoReset, setMostrandoReset] = useState(false)
+    const [correoReset, setCorreoReset] = useState('')
+    const [mensajeReset, setMensajeReset] = useState('')
 
     async function iniciarSesion(e) {
         e.preventDefault()
@@ -48,6 +53,50 @@ export default function Login({ onLogin, irRegistro }) {
             onLogin(datos)
         } catch (err) {
             setError(err.message || t('auth.googleLoginError'))
+        } finally {
+            setCargando(false)
+        }
+    }
+
+    function abrirReset() {
+        setMostrandoReset(true)
+        setError('')
+        setErrorCampo('')
+        setMensajeReset('')
+        setCorreoReset('')
+    }
+
+    function volverAlLogin() {
+        setMostrandoReset(false)
+        setError('')
+        setErrorCampo('')
+        setMensajeReset('')
+        setCorreoReset('')
+    }
+
+    async function solicitarReset(e) {
+        e.preventDefault()
+        setError('')
+        setErrorCampo('')
+        setMensajeReset('')
+
+        if (!correoReset.trim()) {
+            setErrorCampo(t('auth.completeFields'))
+            return
+        }
+        if (!correoReset.trim().toLowerCase().endsWith('@gmail.com')) {
+            setError(t('auth.gmailOnly'))
+            return
+        }
+
+        setCargando(true)
+        try {
+            const datos = await authApi.solicitarReset(correoReset.trim())
+            // Éxito: el backend siempre responde 200 con mensaje genérico.
+            setMensajeReset(datos?.message || t('auth.resetSent'))
+            setCorreoReset('')
+        } catch (err) {
+            setError(err.message || t('auth.resetError'))
         } finally {
             setCargando(false)
         }
@@ -91,12 +140,81 @@ export default function Login({ onLogin, irRegistro }) {
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('auth.tagline')}</p>
                     </div>
 
-                    <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-gray-100">{t('auth.login')}</h2>
-                    <p className="mb-8 text-gray-500 dark:text-gray-400">{t('auth.loginSubtitle')}</p>
-
                     {error && <Notification tipo="error" mensaje={error} onClose={() => setError('')} />}
+                    {mensajeReset && (
+                        <Notification
+                            tipo="success"
+                            mensaje={mensajeReset}
+                            onClose={() => setMensajeReset('')}
+                        />
+                    )}
 
-                    <form onSubmit={iniciarSesion} className="space-y-5">
+                    {mostrandoReset ? (
+                        <>
+                            <h2 id="reset-titulo" className="mb-2 text-2xl font-bold text-gray-800 dark:text-gray-100">
+                                {t('auth.resetTitle')}
+                            </h2>
+                            <p className="mb-8 text-gray-500 dark:text-gray-400">
+                                {t('auth.resetSubtitle')}
+                            </p>
+
+                            {/* FORMULARIO INLINE DE RESTABLECIMIENTO */}
+                            <form onSubmit={solicitarReset} className="space-y-5">
+                                <div>
+                                    <label htmlFor="correo-reset" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        {t('auth.email')}
+                                    </label>
+                                    <div className="relative">
+                                        <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                        <input
+                                            id="correo-reset"
+                                            type="email"
+                                            value={correoReset}
+                                            onChange={(e) => { setCorreoReset(e.target.value); setErrorCampo('') }}
+                                            placeholder="correo@gmail.com"
+                                            autoComplete="email"
+                                            required
+                                            disabled={cargando}
+                                            {...(errorCampo ? { 'aria-invalid': 'true', 'aria-describedby': 'login-error-campo' } : {})}
+                                            className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                                        />
+                                    </div>
+                                </div>
+
+                                {errorCampo && (
+                                    <p id="login-error-campo" role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                                        {errorCampo}
+                                    </p>
+                                )}
+
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <button
+                                        type="submit"
+                                        disabled={cargando}
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-base font-bold text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {cargando && (
+                                            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                                        )}
+                                        {cargando ? t('common.enviando') : t('auth.resetSend')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={volverAlLogin}
+                                        disabled={cargando}
+                                        className="rounded-lg border border-gray-300 bg-white px-6 py-3 text-base font-semibold text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700"
+                                    >
+                                        {t('common.volver')}
+                                    </button>
+                                </div>
+                            </form>
+                        </>
+                    ) : (
+                        <>
+                            <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-gray-100">{t('auth.login')}</h2>
+                            <p className="mb-8 text-gray-500 dark:text-gray-400">{t('auth.loginSubtitle')}</p>
+
+                            <form onSubmit={iniciarSesion} className="space-y-5">
                         {/* Correo */}
                         <div>
                             <label htmlFor="correo" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -160,16 +278,7 @@ export default function Login({ onLogin, irRegistro }) {
                         <div className="flex justify-end">
                             <button
                                 type="button"
-                                onClick={() => {
-                                    const c = window.prompt('Ingresa tu correo electrónico:')
-                                    if (c) {
-                                        fetch('/api/Auth/solicitar-reset', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ correo: c }),
-                                        }).then(() => window.alert('Si el correo existe, recibirás un enlace.'))
-                                    }
-                                }}
+                                onClick={abrirReset}
                                 className="text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400"
                             >
                                 {t('auth.forgot')}
@@ -217,6 +326,8 @@ export default function Login({ onLogin, irRegistro }) {
                             {t('auth.register')}
                         </button>
                     </p>
+                        </>
+                    )}
 
                     {/* Enlace presentación */}
                     <p className="mt-4 text-center">

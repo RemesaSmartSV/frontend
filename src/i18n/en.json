@@ -101,7 +101,12 @@
     "registerSuccess": "Account created successfully. Welcome, {{name}}",
     "registerError": "Could not create your account. Please try again.",
     "passwordTooShort": "Password must be at least 6 characters.",
-    "passwordMismatch": "Passwords do not match."
+    "passwordMismatch": "Passwords do not match.",
+    "resetTitle": "Reset password",
+    "resetSubtitle": "Enter your email and we'll send you a link to create a new password.",
+    "resetSend": "Send link",
+    "resetSent": "If the email exists, you'll receive a link to reset your password.",
+    "resetError": "Could not send the request. Please try again."
   },
   "dashboard": {
     "titulo": "Financial Summary",

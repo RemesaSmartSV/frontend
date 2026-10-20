@@ -147,6 +147,22 @@ export const authApi = {
         return data
     },
 
+    // POST /api/Auth/solicitar-reset: pide el enlace de restablecimiento.
+    // El backend responde SIEMPRE 200 con un mensaje genérico (no revela si
+    // la cuenta existe), por lo que una respuesta con `message` ya es éxito.
+    // Sin headers de auth: es un endpoint AllowAnonymous.
+    async solicitarReset(correo) {
+        const res = await fetch(`${API_URL}/Auth/solicitar-reset`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ correo }),
+        })
+
+        return manejarRespuesta(res)
+    },
+
     async loginConGoogle(idToken, nonce) {
         const res = await fetch(`${API_URL}/Auth/google`, {
             method: 'POST',

@@ -772,7 +772,12 @@
     "registerSuccess": "Cuenta creada correctamente. Bienvenido, {{name}}",
     "registerError": "No se pudo crear la cuenta. Inténtalo nuevamente.",
     "passwordTooShort": "La contraseña debe tener al menos 6 caracteres.",
-    "passwordMismatch": "Las contraseñas no coinciden."
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "resetTitle": "Restablecer contraseña",
+    "resetSubtitle": "Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña.",
+    "resetSend": "Enviar enlace",
+    "resetSent": "Si el correo existe, recibirás un enlace para restablecer tu contraseña.",
+    "resetError": "No se pudo enviar la solicitud. Inténtalo de nuevo."
   },
   "errors": {
     "generico": "Ocurrió un error. Inténtalo de nuevo.",
