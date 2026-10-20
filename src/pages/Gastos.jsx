@@ -5,6 +5,7 @@ import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import FiltrosMenu from '../components/FiltrosMenu'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 
 export default function Gastos() {
@@ -42,6 +43,16 @@ export default function Gastos() {
         montoMaximo: '',
         busqueda: '',
     })
+
+    // T3 — badge del botón "Filtros": criterios con valor, búsqueda incluida
+    // (estrecha la lista aunque la búsqueda viva fuera del panel).
+    const cantidadFiltrosActivos = useMemo(
+        () =>
+            Object.values(filtros).filter(
+                (valor) => String(valor ?? '').trim() !== ''
+            ).length,
+        [filtros]
+    )
 
     // PAGINACIÓN
     const [paginaActual, setPaginaActual] = useState(1)
@@ -624,139 +635,146 @@ export default function Gastos() {
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={limpiarFiltros}
-                        className="w-full rounded-lg bg-gray-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-600 sm:w-auto sm:py-2.5"
+                </div>
+
+                {/* T3 — fila superior: la búsqueda queda SIEMPRE visible
+                    (es el control de mayor uso); los otros cinco controles
+                    viven detrás del botón "Filtros" pero siguen montados en
+                    el DOM: el panel sólo los oculta con la clase `hidden`,
+                    nunca con render condicional. "Limpiar filtros" pasa al
+                    interior del panel vía onLimpiar. */}
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <label className="text-sm font-semibold text-gray-700">
+                            {t('common.buscarDescripcion')}
+                        </label>
+                        <input
+                            type="text"
+                            name="busqueda"
+                            value={filtros.busqueda}
+                            onChange={manejarCambioFiltro}
+                            placeholder={t('expense.searchPlaceholder')}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
+                        />
+                    </div>
+
+                    <FiltrosMenu
+                        cantidadActivos={cantidadFiltrosActivos}
+                        onLimpiar={limpiarFiltros}
                     >
-                        {t('common.limpiarFiltros')}
-                    </button>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-                </div>
+                            {/* FECHA DESDE */}
+                            <div className="flex flex-col gap-2">
 
-                <div className="mb-4 flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-gray-700">
-                        {t('common.buscarDescripcion')}
-                    </label>
-                    <input
-                        type="text"
-                        name="busqueda"
-                        value={filtros.busqueda}
-                        onChange={manejarCambioFiltro}
-                        placeholder={t('expense.searchPlaceholder')}
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400"
-                    />
-                </div>
+                                <label className="text-sm font-semibold text-gray-700">
+                                    {t('common.fechaDesde')}
+                                </label>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                <input
+                                    type="date"
+                                    name="fechaDesde"
+                                    value={filtros.fechaDesde}
+                                    onChange={manejarCambioFiltro}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 sm:py-2.5 sm:text-sm"
+                                />
 
-                    {/* FECHA DESDE */}
-                    <div className="flex flex-col gap-2">
+                            </div>
 
-                        <label className="text-sm font-semibold text-gray-700">
-                            {t('common.fechaDesde')}
-                        </label>
+                            {/* FECHA HASTA */}
+                            <div className="flex flex-col gap-2">
 
-                        <input
-                            type="date"
-                            name="fechaDesde"
-                            value={filtros.fechaDesde}
-                            onChange={manejarCambioFiltro}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
-                        />
+                                <label className="text-sm font-semibold text-gray-700">
+                                    {t('common.fechaHasta')}
+                                </label>
 
-                    </div>
+                                <input
+                                    type="date"
+                                    name="fechaHasta"
+                                    value={filtros.fechaHasta}
+                                    onChange={manejarCambioFiltro}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 sm:py-2.5 sm:text-sm"
+                                />
 
-                    {/* FECHA HASTA */}
-                    <div className="flex flex-col gap-2">
+                            </div>
 
-                        <label className="text-sm font-semibold text-gray-700">
-                            {t('common.fechaHasta')}
-                        </label>
+                            {/* CATEGORÍA */}
+                            <div className="flex flex-col gap-2">
 
-                        <input
-                            type="date"
-                            name="fechaHasta"
-                            value={filtros.fechaHasta}
-                            onChange={manejarCambioFiltro}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
-                        />
+                                <label className="text-sm font-semibold text-gray-700">
+                                    {t('common.categoria')}
+                                </label>
 
-                    </div>
-
-                    {/* CATEGORÍA */}
-                    <div className="flex flex-col gap-2">
-
-                        <label className="text-sm font-semibold text-gray-700">
-                            {t('common.categoria')}
-                        </label>
-
-                        <select
-                            name="idCategoria"
-                            value={filtros.idCategoria}
-                            onChange={manejarCambioFiltro}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10"
-                        >
-                            <option value="">
-                                {t('common.todasCategorias')}
-                            </option>
-
-                            {categorias
-                                .filter(
-                                    (categoria) =>
-                                        categoria.tipo === 'Gasto'
-                                )
-                                .map((categoria) => (
-                                    <option
-                                        key={categoria.idCategoria}
-                                        value={categoria.idCategoria}
-                                    >
-                                        {categoria.nombre}
+                                <select
+                                    name="idCategoria"
+                                    value={filtros.idCategoria}
+                                    onChange={manejarCambioFiltro}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 sm:py-2.5 sm:text-sm"
+                                >
+                                    <option value="">
+                                        {t('common.todasCategorias')}
                                     </option>
-                                ))}
-                        </select>
 
-                    </div>
+                                    {categorias
+                                        .filter(
+                                            (categoria) =>
+                                                categoria.tipo === 'Gasto'
+                                        )
+                                        .map((categoria) => (
+                                            <option
+                                                key={categoria.idCategoria}
+                                                value={categoria.idCategoria}
+                                            >
+                                                {categoria.nombre}
+                                            </option>
+                                        ))}
+                                </select>
 
-                    {/* MONTO MÍNIMO */}
-                    <div className="flex flex-col gap-2">
+                            </div>
 
-                        <label className="text-sm font-semibold text-gray-700">
-                            {t('common.montoMinimo')}
-                        </label>
+                            {/* MONTO MÍNIMO */}
+                            <div className="flex flex-col gap-2">
 
-                        <input
-                            type="number"
-                            name="montoMinimo"
-                            min="0"
-                            step="0.01"
-                            value={filtros.montoMinimo}
-                            onChange={manejarCambioFiltro}
-                            placeholder="Ej. 10.00"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400"
-                        />
+                                <label className="text-sm font-semibold text-gray-700">
+                                    {t('common.montoMinimo')}
+                                </label>
 
-                    </div>
+                                <input
+                                    type="number"
+                                    name="montoMinimo"
+                                    min="0"
+                                    step="0.01"
+                                    value={filtros.montoMinimo}
+                                    onChange={manejarCambioFiltro}
+                                    placeholder="Ej. 10.00"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
+                                />
 
-                    {/* MONTO MÁXIMO */}
-                    <div className="flex flex-col gap-2">
+                            </div>
 
-                        <label className="text-sm font-semibold text-gray-700">
-                            {t('common.montoMaximo')}
-                        </label>
+                            {/* MONTO MÁXIMO */}
+                            <div className="flex flex-col gap-2">
 
-                        <input
-                            type="number"
-                            name="montoMaximo"
-                            min="0"
-                            step="0.01"
-                            value={filtros.montoMaximo}
-                            onChange={manejarCambioFiltro}
-                            placeholder="Ej. 100.00"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400"
-                        />
+                                <label className="text-sm font-semibold text-gray-700">
+                                    {t('common.montoMaximo')}
+                                </label>
 
-                    </div>
+                                <input
+                                    type="number"
+                                    name="montoMaximo"
+                                    min="0"
+                                    step="0.01"
+                                    value={filtros.montoMaximo}
+                                    onChange={manejarCambioFiltro}
+                                    placeholder="Ej. 100.00"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
+                                />
+
+                            </div>
+
+                        </div>
+                    </FiltrosMenu>
 
                 </div>
 
