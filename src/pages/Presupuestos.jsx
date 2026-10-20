@@ -10,6 +10,7 @@ import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import FiltrosMenu from '../components/FiltrosMenu'
 import { formatearMoneda, formatearNumero, formatearFecha } from '../utils/formato'
 
 function Presupuestos() {
@@ -44,6 +45,16 @@ function Presupuestos() {
         montoMaximo: '',
         busqueda: '',
     })
+
+    // T4 — badge del botón "Filtros": criterios con valor, búsqueda incluida
+    // (estrecha la lista aunque la búsqueda viva fuera del panel).
+    const cantidadFiltrosActivos = useMemo(
+        () =>
+            Object.values(filtros).filter(
+                (valor) => String(valor ?? '').trim() !== ''
+            ).length,
+        [filtros]
+    )
 
     const [paginaActual, setPaginaActual] = useState(1)
     const registrosPorPagina = 5
@@ -686,113 +697,17 @@ function Presupuestos() {
                         {t('common.filtros')}
                     </h2>
 
-                    <button
-                        type="button"
-                        onClick={limpiarFiltros}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                    >
-                        {t('common.limpiarFiltros')}
-                    </button>
-
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+                {/* T4 — fila superior: la búsqueda queda SIEMPRE visible
+                    (es el control de mayor uso); los otros cuatro controles
+                    viven detrás del botón "Filtros" pero siguen montados en
+                    el DOM: el panel sólo los oculta con la clase `hidden`,
+                    nunca con render condicional. El texto-link "Limpiar
+                    filtros" pasa al interior del panel vía onLimpiar. */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
 
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            {t('common.categoria')}
-                        </label>
-
-                        <select
-                            name="idCategoria"
-                            value={
-                                filtros.idCategoria
-                            }
-                            onChange={
-                                manejarCambioFiltro
-                            }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                        >
-                            <option value="">
-                                {t('income.all')}
-                            </option>
-
-                            {categorias.map(
-                                (categoria) => (
-                                    <option
-                                        key={
-                                            categoria.idCategoria
-                                        }
-                                        value={
-                                            categoria.idCategoria
-                                        }
-                                    >
-                                        {categoria.nombre}
-                                    </option>
-                                )
-                            )}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            {t('budget.month')}
-                        </label>
-
-                        <input
-                            type="month"
-                            name="mesAnio"
-                            value={
-                                filtros.mesAnio
-                            }
-                            onChange={
-                                manejarCambioFiltro
-                            }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            {t('common.montoMinimo')}
-                        </label>
-
-                        <input
-                            type="number"
-                            name="montoMinimo"
-                            min="0"
-                            step="0.01"
-                            value={
-                                filtros.montoMinimo
-                            }
-                            onChange={
-                                manejarCambioFiltro
-                            }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
-                            {t('common.montoMaximo')}
-                        </label>
-
-                        <input
-                            type="number"
-                            name="montoMaximo"
-                            min="0"
-                            step="0.01"
-                            value={
-                                filtros.montoMaximo
-                            }
-                            onChange={
-                                manejarCambioFiltro
-                            }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                        />
-                    </div>
-
-                    <div>
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
                         <label className="mb-1 block text-sm font-medium text-gray-700">
                             {t('budget.filterSearch')}
                         </label>
@@ -810,6 +725,109 @@ function Presupuestos() {
                             className="w-full rounded-lg border border-gray-300 px-3 py-2"
                         />
                     </div>
+
+                    <FiltrosMenu
+                        cantidadActivos={cantidadFiltrosActivos}
+                        onLimpiar={limpiarFiltros}
+                    >
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                    {t('common.categoria')}
+                                </label>
+
+                                <select
+                                    name="idCategoria"
+                                    value={
+                                        filtros.idCategoria
+                                    }
+                                    onChange={
+                                        manejarCambioFiltro
+                                    }
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                                >
+                                    <option value="">
+                                        {t('income.all')}
+                                    </option>
+
+                                    {categorias.map(
+                                        (categoria) => (
+                                            <option
+                                                key={
+                                                    categoria.idCategoria
+                                                }
+                                                value={
+                                                    categoria.idCategoria
+                                                }
+                                            >
+                                                {categoria.nombre}
+                                            </option>
+                                        )
+                                    )}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                    {t('budget.month')}
+                                </label>
+
+                                <input
+                                    type="month"
+                                    name="mesAnio"
+                                    value={
+                                        filtros.mesAnio
+                                    }
+                                    onChange={
+                                        manejarCambioFiltro
+                                    }
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                    {t('common.montoMinimo')}
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="montoMinimo"
+                                    min="0"
+                                    step="0.01"
+                                    value={
+                                        filtros.montoMinimo
+                                    }
+                                    onChange={
+                                        manejarCambioFiltro
+                                    }
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-gray-700">
+                                    {t('common.montoMaximo')}
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="montoMaximo"
+                                    min="0"
+                                    step="0.01"
+                                    value={
+                                        filtros.montoMaximo
+                                    }
+                                    onChange={
+                                        manejarCambioFiltro
+                                    }
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                                />
+                            </div>
+
+                        </div>
+                    </FiltrosMenu>
 
                 </div>
 
