@@ -3,6 +3,8 @@ import { authApi } from '../services/api'
 import Notification from '../components/Notification'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../components/LanguageSelector'
+import GoogleSignInButton from '../components/GoogleSignInButton'
+import logoBlanco from '../assets/remesa-smart (blanco).png'
 
 export default function Register({ volverLogin, onLogin }) {
     const { t } = useTranslation()
@@ -135,206 +137,227 @@ export default function Register({ volverLogin, onLogin }) {
         }
     }
 
+    // AuthController.google crea la cuenta si no existe: el registro con
+    // Google es la misma llamada que usa Login para entrar.
+    async function registrarConGoogle(idToken, nonce) {
+        setError('')
+        setCargando(true)
+        try {
+            const datos = await authApi.loginConGoogle(idToken, nonce)
+            onLogin(datos)
+        } catch (err) {
+            setError(err.message || t('auth.googleLoginError'))
+        } finally {
+            setCargando(false)
+        }
+    }
+
     return (
-        <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 p-3 font-sans sm:p-6 lg:p-8">
-
-            {/* NOTIFICACIÓN DE ÉXITO */}
-            <Notification
-                tipo="success"
-                mensaje={mensaje}
-                onClose={() => setMensaje('')}
-            />
-
-            {/* NOTIFICACIÓN DE ERROR */}
-            <Notification
-                tipo="error"
-                mensaje={error}
-                onClose={() => setError('')}
-            />
-
-            <section className="w-full max-w-[450px] overflow-hidden rounded-2xl bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.1)] sm:p-8 md:p-10">
-                <div className="mb-4 flex justify-end">
-                    <LanguageSelector />
+        <div className="flex min-h-screen">
+            {/* COLUMNA IZQUIERDA — Branding (solo desktop); misma
+                estructura que Login. El asset blanco es el mismo que usa
+                el Sidebar: la variante en color sería ilegible sobre este
+                fondo. */}
+            <div className="hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:bg-[#123B8F] lg:p-12 lg:text-white">
+                <div>
+                    <h1 className="text-3xl font-extrabold tracking-tight">
+                        <img src={logoBlanco} alt="RemesaSmart SV" className="h-12 w-auto" />
+                    </h1>
+                    <p className="mt-2 text-lg text-blue-100">{t('auth.tagline')}</p>
                 </div>
 
-                {/* ENCABEZADO */}
-                <div className="mb-7 text-center sm:mb-8">
+                <div className="space-y-6">
+                    {[
+                        { icono: '💰', texto: t('auth.benefitTransactions') },
+                        { icono: '🐷', texto: t('auth.benefitSavings') },
+                        { icono: '👨‍👩‍👧', texto: t('auth.benefitFamily') },
+                        { icono: '📊', texto: t('auth.benefitCharts') },
+                    ].map((item, i) => (
+                        <div key={i} className="flex items-center gap-4">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl">{item.icono}</span>
+                            <p className="text-blue-100">{item.texto}</p>
+                        </div>
+                    ))}
+                </div>
 
-                    <h1 className="text-center text-2xl font-extrabold tracking-tight text-blue-600 sm:text-[1.8rem]">
-                        RemesaSmartSV
-                    </h1>
+                <p className="text-sm text-blue-200">{t('auth.copyright')}</p>
+            </div>
 
-                    <h2 className="mb-2 text-2xl font-normal text-gray-900 sm:text-[1.6rem]">
+            {/* COLUMNA DERECHA — Formulario */}
+            <div className="flex w-full flex-col items-center justify-center bg-gray-50 px-4 py-12 dark:bg-slate-900 lg:w-1/2">
+                <div className="w-full max-w-md">
+                    <div className="mb-4 flex justify-end">
+                        <LanguageSelector />
+                    </div>
+
+                    {/* Encabezado móvil */}
+                    <div className="mb-8 text-center lg:hidden">
+                        <h1 className="text-2xl font-extrabold tracking-tight text-[#123B8F] dark:text-blue-400">RemesaSmart SV</h1>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('auth.tagline')}</p>
+                    </div>
+
+                    <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-gray-100">
                         {t('auth.registerTitle')}
                     </h2>
-
-                    <p className="text-sm leading-relaxed text-gray-500 sm:text-base">
+                    <p className="mb-8 text-gray-500 dark:text-gray-400">
                         {t('auth.registerDescription')}
                     </p>
 
-                </div>
+                    {/* NOTIFICACIÓN DE ÉXITO */}
+                    <Notification
+                        tipo="success"
+                        mensaje={mensaje}
+                        onClose={() => setMensaje('')}
+                    />
 
-                {/* FORMULARIO */}
-                <form
-                    onSubmit={registrar}
-                    className="flex min-w-0 flex-col"
-                >
+                    {/* NOTIFICACIÓN DE ERROR */}
+                    <Notification
+                        tipo="error"
+                        mensaje={error}
+                        onClose={() => setError('')}
+                    />
 
-                    {/* NOMBRE */}
-                    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
+                    {/* FORMULARIO */}
+                    <form onSubmit={registrar} className="space-y-5">
 
-                        <label
-                            htmlFor="nombre"
-                            className="text-sm font-semibold text-gray-700 sm:text-base"
-                        >
-                            {t('auth.name')}
-                        </label>
+                        {/* NOMBRE */}
+                        <div>
+                            <label htmlFor="nombre" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                {t('auth.name')}
+                            </label>
+                            <input
+                                id="nombre"
+                                type="text"
+                                name="nombre"
+                                value={formulario.nombre}
+                                onChange={manejarCambio}
+                                placeholder={t('auth.enterName')}
+                                autoComplete="name"
+                                required
+                                disabled={cargando}
+                                {...ariaDe('nombre')}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                            />
+                        </div>
 
-                        <input
-                            id="nombre"
-                            type="text"
-                            name="nombre"
-                            value={formulario.nombre}
-                            onChange={manejarCambio}
-                            placeholder={t('auth.enterName')}
-                            autoComplete="name"
-                            required
-                            disabled={cargando}
-                            {...ariaDe('nombre')}
-                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
-                        />
+                        {/* CORREO */}
+                        <div>
+                            <label htmlFor="correo" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                {t('auth.email')}
+                            </label>
+                            <input
+                                id="correo"
+                                type="email"
+                                name="correo"
+                                value={formulario.correo}
+                                onChange={manejarCambio}
+                                placeholder={t('auth.emailExample')}
+                                autoComplete="email"
+                                required
+                                disabled={cargando}
+                                {...ariaDe('correo')}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                            />
+                        </div>
 
-                    </div>
+                        {/* CONTRASEÑA */}
+                        <div>
+                            <label htmlFor="contrasena" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                {t('auth.password')}
+                            </label>
+                            <input
+                                id="contrasena"
+                                type="password"
+                                name="contrasena"
+                                value={formulario.contrasena}
+                                onChange={manejarCambio}
+                                placeholder={t('auth.passwordMin')}
+                                autoComplete="new-password"
+                                minLength={6}
+                                required
+                                disabled={cargando}
+                                {...ariaDe('contrasena')}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                            />
+                        </div>
 
-                    {/* CORREO */}
-                    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
+                        {/* CONFIRMAR CONTRASEÑA */}
+                        <div>
+                            <label htmlFor="confirmarContrasena" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                {t('auth.confirmPassword')}
+                            </label>
+                            <input
+                                id="confirmarContrasena"
+                                type="password"
+                                name="confirmarContrasena"
+                                value={formulario.confirmarContrasena}
+                                onChange={manejarCambio}
+                                placeholder={t('auth.repeatPassword')}
+                                autoComplete="new-password"
+                                required
+                                disabled={cargando}
+                                {...ariaDe('confirmarContrasena')}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                            />
+                        </div>
 
-                        <label
-                            htmlFor="correo"
-                            className="text-sm font-semibold text-gray-700 sm:text-base"
-                        >
-                            {t('auth.email')}
-                        </label>
-
-                        <input
-                            id="correo"
-                            type="email"
-                            name="correo"
-                            value={formulario.correo}
-                            onChange={manejarCambio}
-                            placeholder={t('auth.emailExample')}
-                            autoComplete="email"
-                            required
-                            disabled={cargando}
-                            {...ariaDe('correo')}
-                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
-                        />
-
-                    </div>
-
-                    {/* CONTRASEÑA */}
-                    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
-
-                        <label
-                            htmlFor="contrasena"
-                            className="text-sm font-semibold text-gray-700 sm:text-base"
-                        >
-                            {t('auth.password')}
-                        </label>
-
-                        <input
-                            id="contrasena"
-                            type="password"
-                            name="contrasena"
-                            value={formulario.contrasena}
-                            onChange={manejarCambio}
-                            placeholder={t('auth.passwordMin')}
-                            autoComplete="new-password"
-                            minLength={6}
-                            required
-                            disabled={cargando}
-                            {...ariaDe('contrasena')}
-                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
-                        />
-
-                    </div>
-
-                    {/* CONFIRMAR CONTRASEÑA */}
-                    <div className="mb-4 flex min-w-0 flex-col gap-2 sm:mb-5">
-
-                        <label
-                            htmlFor="confirmarContrasena"
-                            className="text-sm font-semibold text-gray-700 sm:text-base"
-                        >
-                            {t('auth.confirmPassword')}
-                        </label>
-
-                        <input
-                            id="confirmarContrasena"
-                            type="password"
-                            name="confirmarContrasena"
-                            value={formulario.confirmarContrasena}
-                            onChange={manejarCambio}
-                            placeholder={t('auth.repeatPassword')}
-                            autoComplete="new-password"
-                            required
-                            disabled={cargando}
-                            {...ariaDe('confirmarContrasena')}
-                            className="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
-                        />
-
-                    </div>
-
-                    {/* ERROR DE VALIDACIÓN ASOCIADO A LOS CAMPOS */}
-                    {errorCampo && (
-                        <p
-                            id="registro-error-campo"
-                            role="alert"
-                            className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
-                        >
-                            {errorCampo}
-                        </p>
-                    )}
-
-                    {/* BOTÓN */}
-                    <button
-                        type="submit"
-                        disabled={cargando}
-                        className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-3.5 text-base font-semibold text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-blue-300 disabled:active:scale-100"
-                    >
-
-                        {cargando && (
-                            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+                        {/* ERROR DE VALIDACIÓN ASOCIADO A LOS CAMPOS */}
+                        {errorCampo && (
+                            <p
+                                id="registro-error-campo"
+                                role="alert"
+                                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                            >
+                                {errorCampo}
+                            </p>
                         )}
 
-                        {cargando
-                            ? t('auth.registering')
-                            : t('auth.registerTitle')}
+                        {/* BOTÓN */}
+                        <button
+                            type="submit"
+                            disabled={cargando}
+                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-base font-bold text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {cargando && (
+                                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+                            )}
 
-                    </button>
+                            {cargando
+                                ? t('auth.registering')
+                                : t('auth.registerTitle')}
+                        </button>
 
-                </form>
+                    </form>
 
-                {/* VOLVER AL LOGIN */}
-                <div className="mt-6 border-t border-gray-200 pt-5 text-center sm:mt-7 sm:pt-6">
+                    {/* Separador */}
+                    <div className="my-6 flex items-center">
+                        <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
+                        <span className="px-3 text-sm text-gray-400">{t('auth.or')}</span>
+                        <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
+                    </div>
 
-                    <p className="mb-2.5 text-sm text-gray-500 sm:text-base">
-                        {t('auth.hasAccount')}
+                    {/* Botón oficial de Google Identity Services; no utiliza redirect URI. */}
+                    <GoogleSignInButton
+                        onCredential={registrarConGoogle}
+                        onError={setError}
+                        disabled={cargando}
+                    />
+
+                    {/* VOLVER AL LOGIN */}
+                    <p className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                        {t('auth.hasAccount')}{' '}
+                        <button
+                            type="button"
+                            onClick={volverLogin}
+                            disabled={cargando}
+                            className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
+                        >
+                            {t('auth.login')}
+                        </button>
                     </p>
 
-                    <button
-                        type="button"
-                        onClick={volverLogin}
-                        disabled={cargando}
-                        className="bg-transparent text-base font-semibold text-blue-600 transition hover:text-blue-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {t('auth.login')}
-                    </button>
-
                 </div>
-
-            </section>
-
-        </main>
+            </div>
+        </div>
     )
 }

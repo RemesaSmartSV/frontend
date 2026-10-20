@@ -5,6 +5,7 @@ import { authApi } from '../services/api'
 import Notification from '../components/Notification'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import LanguageSelector from '../components/LanguageSelector'
+import logoBlanco from '../assets/remesa-smart (blanco).png'
 
 export default function Login({ onLogin, irRegistro }) {
     const { t } = useTranslation()
@@ -107,7 +108,11 @@ export default function Login({ onLogin, irRegistro }) {
             {/* COLUMNA IZQUIERDA — Branding (solo desktop) */}
             <div className="hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:bg-[#123B8F] lg:p-12 lg:text-white">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight">RemesaSmart SV</h1>
+                    {/* El asset blanco es el mismo que usa el Sidebar: la
+                        variante en color sería ilegible sobre este fondo. */}
+                    <h1 className="text-3xl font-extrabold tracking-tight">
+                        <img src={logoBlanco} alt="RemesaSmart SV" className="h-12 w-auto" />
+                    </h1>
                     <p className="mt-2 text-lg text-blue-100">{t('auth.tagline')}</p>
                 </div>
 

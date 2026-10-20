@@ -60,7 +60,41 @@ describe('Registro sin campo de familia', () => {
         )
 
         // La validación local corta el request: no hay POST /Auth/register.
-        expect(fetchSpy).not.toHaveBeenCalled()
+        // El botón de Google (nuevo en Register) sí pide su nonce al montar;
+        // esa llamada no cuenta como registro.
+        const llamadasRegistro = fetchSpy.mock.calls.filter(([url]) =>
+            String(url).includes('/Auth/register')
+        )
+        expect(llamadasRegistro).toHaveLength(0)
+    })
+})
+
+describe('Registro con Google', () => {
+    it('monta el botón de Google y pide su nonce al cargar', async () => {
+        // El client ID de GIS viene del entorno de test (backend/.env vía
+        // vite.config), así que el botón montado dispara el flujo de nonce.
+        const fetchSpy = vi.fn(async (url) =>
+            String(url).includes('google-nonce')
+                ? new Response(JSON.stringify({ nonce: 'nonce-de-prueba' }), {
+                      status: 200,
+                      headers: { 'Content-Type': 'application/json' },
+                  })
+                : new Response(JSON.stringify({}), {
+                      status: 200,
+                      headers: { 'Content-Type': 'application/json' },
+                  })
+        )
+        global.fetch = fetchSpy
+
+        render(<Register volverLogin={() => {}} onLogin={() => {}} />)
+
+        await waitFor(() =>
+            expect(
+                fetchSpy.mock.calls.some(([url]) =>
+                    String(url).includes('/api/Auth/google-nonce')
+                )
+            ).toBe(true)
+        )
     })
 })
 

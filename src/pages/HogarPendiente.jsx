@@ -445,7 +445,7 @@ export default function HogarPendiente({ onHogarCreado }) {
 
                 {/* NOMBRE DE LA APLICACIÓN */}
                 <h1 className="text-center text-2xl font-extrabold tracking-tight text-blue-600 sm:text-[1.8rem]">
-                    RemesaSmartSV
+                    RemesaSmart SV
                 </h1>
 
                 {/* TÍTULO */}

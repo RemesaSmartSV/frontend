@@ -114,7 +114,7 @@ export default function Sidebar({
                         
                         <img
                             src={logo}
-                            alt="RemesaSmartSV"
+                            alt="RemesaSmart SV"
                             className="h-40 w-auto object-contain"
                         />
                     </div>
