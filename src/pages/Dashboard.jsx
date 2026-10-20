@@ -25,6 +25,7 @@ import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import LeyendaOrdenada from '../components/LeyendaOrdenada'
 import { formatearMoneda, formatearNumero, formatearFecha, obtenerLocale, parsearFechaLocal, obtenerFechaHoy } from '../utils/formato'
+import { AlertTriangle, PiggyBank } from 'lucide-react'
 
 const COLORES_CATEGORIAS = [
     '#7c3aed',
@@ -1404,8 +1405,9 @@ export default function Dashboard() {
 
             {alertas.length > 0 && (
                 <section className="card mb-8 p-5">
-                    <h2 className="mb-4 text-lg font-bold text-slate-800">
-                        ⚠️ {t('dashboard.alertas')}
+                    <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-800">
+                        <AlertTriangle size={20} className="text-amber-500" aria-hidden="true" />
+                        {t('dashboard.alertas')}
                     </h2>
 
                     <ul className="space-y-3">
@@ -1452,8 +1454,9 @@ export default function Dashboard() {
 
             <section className="card mb-8 p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="text-lg font-bold text-slate-800">
-                        🐷 {t('dashboard.metas')}
+                    <h2 className="flex items-center gap-2 text-lg font-bold text-slate-800">
+                        <PiggyBank size={20} className="text-amber-500" aria-hidden="true" />
+                        {t('dashboard.metas')}
                     </h2>
 
                     <a
