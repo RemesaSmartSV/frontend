@@ -145,7 +145,7 @@ export default function MiPerfil() {
 
     if (cargando) return <Loading />
 
-    const iniciales = (nombre || '?')
+    const iniciales = (nombre || nombreVisible || '?')
         .split(' ')
         .map((p) => p.charAt(0))
         .filter(Boolean)
@@ -177,21 +177,6 @@ export default function MiPerfil() {
                             ) : (
                                 iniciales
                             )}
-                        </div>
-
-                        <div>
-                            <label htmlFor="fotoPerfil" className="mb-1 block text-sm font-medium text-gray-700">
-                                {t('profile.photoUrl')}
-                            </label>
-                            <input
-                                id="fotoPerfil"
-                                type="url"
-                                value={fotoPerfil}
-                                onChange={(e) => setFotoPerfil(e.target.value)}
-                                placeholder="https://example.com/photo.jpg"
-                                className="input py-2 text-sm"
-                            />
-                            <p className="mt-1 text-xs text-gray-500">{t('profile.photoHint')}</p>
                         </div>
                     </div>
 
@@ -355,10 +340,7 @@ export default function MiPerfil() {
                 </div>
             </form>
 
-            {/* SECCIÓN 5: PREFERENCIAS DE NOTIFICACIONES */}
-            <PreferenciasNotificaciones />
-
-            {/* SECCIÓN 6: SEGURIDAD — Cambiar contraseña */}
+            {/* SECCIÓN 5: SEGURIDAD — Cambiar contraseña */}
             <CambiarContrasena />
         </div>
     )
@@ -483,53 +465,6 @@ function CambiarContrasena() {
                     {guardando ? t('security.changing') : t('security.change')}
                 </button>
             </form>
-        </section>
-    )
-}
-
-function PreferenciasNotificaciones() {
-    const { t } = useTranslation()
-    const [prefs, setPrefs] = useState(() => {
-        try {
-            return JSON.parse(localStorage.getItem('notifPrefs') || '{}')
-        } catch { return {} }
-    })
-
-    const opciones = [
-        { key: 'invitaciones', label: t('emailPreferences.invitations'), desc: t('emailPreferences.invitationsDescription') },
-        { key: 'alertasPresupuesto', label: t('emailPreferences.budgetAlerts'), desc: t('emailPreferences.budgetAlertsDescription') },
-        { key: 'seguridad', label: t('emailPreferences.security'), desc: t('emailPreferences.securityDescription') },
-    ]
-
-    function toggle(key) {
-        const nuevos = { ...prefs, [key]: !prefs[key] }
-        setPrefs(nuevos)
-        localStorage.setItem('notifPrefs', JSON.stringify(nuevos))
-    }
-
-    return (
-        <section className="card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('emailPreferences.title')}</h2>
-            <p className="mb-4 text-sm text-gray-500">
-                {t('emailPreferences.description')}
-            </p>
-
-            <div className="space-y-4">
-                {opciones.map((op) => (
-                    <label key={op.key} className="flex items-start gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={prefs[op.key] !== false}
-                            onChange={() => toggle(op.key)}
-                            className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <div>
-                            <span className="text-sm font-medium text-gray-700">{op.label}</span>
-                            <p className="text-xs text-gray-500">{op.desc}</p>
-                        </div>
-                    </label>
-                ))}
-            </div>
         </section>
     )
 }

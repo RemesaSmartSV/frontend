@@ -488,7 +488,6 @@
     "name": "Name",
     "lastName": "Last name",
     "displayName": "Display name",
-    "photoUrl": "Profile photo URL",
     "phone": "Phone",
     "email": "Email",
     "role": "Role",
@@ -497,7 +496,6 @@
     "dark": "Dark",
     "system": "System",
     "photoAlt": "Profile photo",
-    "photoHint": "Paste your image URL. Leave empty to use initials.",
     "displayPlaceholder": "How others see you",
     "optional": "Optional",
     "unassigned": "Unassigned",
@@ -519,16 +517,6 @@
     "tooShort": "The new password must be at least 6 characters.",
     "changeError": "Could not change the password.",
     "changeSuccess": "Password updated successfully."
-  },
-  "emailPreferences": {
-    "title": "Email notifications",
-    "description": "Choose which emails to receive. Invitations always appear in the app.",
-    "invitations": "Family invitations",
-    "invitationsDescription": "Receive an email when invited to a family.",
-    "budgetAlerts": "Budget alerts",
-    "budgetAlertsDescription": "Notifications when a budget reaches 80% or exceeds its limit.",
-    "security": "Security notifications",
-    "securityDescription": "Password changes and suspicious activity."
   },
   "family": {
     "title": "My family",

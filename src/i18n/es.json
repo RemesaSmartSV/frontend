@@ -443,7 +443,6 @@
     "name": "Nombre",
     "lastName": "Apellido",
     "displayName": "Nombre visible",
-    "photoUrl": "URL de foto de perfil",
     "phone": "Teléfono",
     "email": "Correo electrónico",
     "role": "Rol",
@@ -452,7 +451,6 @@
     "dark": "Oscuro",
     "system": "Sistema",
     "photoAlt": "Foto de perfil",
-    "photoHint": "Pega la URL de tu imagen. Deja vacío para usar iniciales.",
     "displayPlaceholder": "Cómo te ven los demás",
     "optional": "Opcional",
     "unassigned": "Sin asignar",
@@ -474,16 +472,6 @@
     "tooShort": "La nueva contraseña debe tener al menos 6 caracteres.",
     "changeError": "No se pudo cambiar la contraseña.",
     "changeSuccess": "Contraseña actualizada correctamente."
-  },
-  "emailPreferences": {
-    "title": "Notificaciones por correo",
-    "description": "Elige qué correos quieres recibir. Las invitaciones siempre se muestran en la aplicación.",
-    "invitations": "Invitaciones familiares",
-    "invitationsDescription": "Recibir correo al ser invitado a una familia.",
-    "budgetAlerts": "Alertas de presupuesto",
-    "budgetAlertsDescription": "Avisos cuando un presupuesto alcanza el 80% o supera el límite.",
-    "security": "Notificaciones de seguridad",
-    "securityDescription": "Cambios de contraseña y actividad sospechosa."
   },
   "family": {
     "title": "Mi familia",
