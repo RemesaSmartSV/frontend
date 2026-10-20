@@ -5,6 +5,7 @@ import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import ConfirmModal from '../components/ConfirmModal'
+import FiltrosMenu from '../components/FiltrosMenu'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 import { Download } from 'lucide-react'
 
@@ -84,6 +85,17 @@ export default function Movimientos() {
         montoMaximo: '',
         busqueda: '',
     })
+
+    // Badge del botón "Filtros": todos los criterios con valor, INCLUIDA la
+    // búsqueda (también estrecha la lista aunque viva fuera del panel, así
+    // que contarla es lo honesto con lo que el usuario ve filtrado).
+    const cantidadFiltrosActivos = useMemo(
+        () =>
+            Object.values(filtros).filter(
+                (valor) => String(valor ?? '').trim() !== ''
+            ).length,
+        [filtros]
+    )
 
     // =========================
     // PAGINACIÓN
@@ -806,13 +818,150 @@ export default function Movimientos() {
 
             <section className="card mb-6 w-full p-4 sm:p-6">
 
-                <div className="mb-5">
+                <h2 className="mb-5 text-xl font-semibold text-slate-900">
+                    {t('transactions.filtersTitle')}
+                </h2>
 
-                    <h2 className="text-xl font-semibold text-slate-900">
-                        {t('transactions.filtersTitle')}
-                    </h2>
+                {/* T1/T2 — fila superior: la búsqueda queda SIEMPRE visible
+                    (es el control de mayor uso); los otros seis controles
+                    viven detrás del botón "Filtros" pero siguen montados en
+                    el DOM: el panel sólo los oculta con la clase `hidden`,
+                    nunca con render condicional, así conservan sus
+                    id/name/label htmlFor y los tests que buscan por id. */}
+                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end">
 
-                    <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <label
+                            htmlFor="busquedaMovimientos"
+                            className="text-sm font-semibold text-gray-700"
+                        >
+                            {t('common.buscarDescripcion')}
+                        </label>
+                        <input
+                            id="busquedaMovimientos"
+                            type="text"
+                            name="busqueda"
+                            value={filtros.busqueda}
+                            onChange={manejarCambioFiltro}
+                            placeholder={t('income.searchPlaceholder')}
+                            className="input py-2.5 text-sm"
+                        />
+                    </div>
+
+                    <FiltrosMenu
+                        cantidadActivos={cantidadFiltrosActivos}
+                        onLimpiar={limpiarFiltros}
+                    >
+                        <p className="mb-4 text-sm text-gray-500">
+                            {t('transactions.filterDescription')}
+                        </p>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="flex min-w-0 flex-col gap-2">
+                                <label htmlFor="fechaDesde" className="text-sm font-semibold text-gray-700">
+                                    {t('common.fechaDesde')}
+                                </label>
+                                <input
+                                    id="fechaDesde"
+                                    type="date"
+                                    name="fechaDesde"
+                                    value={filtros.fechaDesde}
+                                    onChange={manejarCambioFiltro}
+                                    className="input py-2.5 text-sm"
+                                />
+                            </div>
+
+                            <div className="flex min-w-0 flex-col gap-2">
+                                <label htmlFor="fechaHasta" className="text-sm font-semibold text-gray-700">
+                                    {t('common.fechaHasta')}
+                                </label>
+                                <input
+                                    id="fechaHasta"
+                                    type="date"
+                                    name="fechaHasta"
+                                    value={filtros.fechaHasta}
+                                    onChange={manejarCambioFiltro}
+                                    className="input py-2.5 text-sm"
+                                />
+                            </div>
+
+                            <div className="flex min-w-0 flex-col gap-2">
+                                <label htmlFor="filtroCategoriaMovimientos" className="text-sm font-semibold text-gray-700">
+                                    {t('common.categoria')}
+                                </label>
+                                <select
+                                    id="filtroCategoriaMovimientos"
+                                    name="idCategoria"
+                                    value={filtros.idCategoria}
+                                    onChange={manejarCambioFiltro}
+                                    className="input py-2.5 text-sm"
+                                >
+                                    <option value="">{t('transactions.allCategories')}</option>
+                                    {categorias.map((categoria) => (
+                                        <option key={categoria.idCategoria} value={categoria.idCategoria}>
+                                            {categoria.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex min-w-0 flex-col gap-2">
+                                <label htmlFor="montoMinimo" className="text-sm font-semibold text-gray-700">
+                                    {t('common.montoMinimo')}
+                                </label>
+                                <input
+                                    id="montoMinimo"
+                                    type="number"
+                                    name="montoMinimo"
+                                    min="0"
+                                    step="0.01"
+                                    value={filtros.montoMinimo}
+                                    onChange={manejarCambioFiltro}
+                                    placeholder="0.00"
+                                    className="input py-2.5 text-sm"
+                                />
+                            </div>
+
+                            <div className="flex min-w-0 flex-col gap-2">
+                                <label htmlFor="montoMaximo" className="text-sm font-semibold text-gray-700">
+                                    {t('common.montoMaximo')}
+                                </label>
+                                <input
+                                    id="montoMaximo"
+                                    type="number"
+                                    name="montoMaximo"
+                                    min="0"
+                                    step="0.01"
+                                    value={filtros.montoMaximo}
+                                    onChange={manejarCambioFiltro}
+                                    placeholder="0.00"
+                                    className="input py-2.5 text-sm"
+                                />
+                            </div>
+
+                            <div className="flex min-w-0 flex-col gap-2">
+                                <label htmlFor="filtroMiembroMovimientos" className="text-sm font-semibold text-gray-700">
+                                    {t('transactions.member')}
+                                </label>
+                                <select
+                                    id="filtroMiembroMovimientos"
+                                    name="idUsuario"
+                                    value={filtros.idUsuario}
+                                    onChange={manejarCambioFiltro}
+                                    className="input py-2.5 text-sm"
+                                >
+                                    <option value="">{t('transactions.allMembers')}</option>
+                                    {miembros.map((miembro) => (
+                                        <option key={miembro.idUsuario} value={miembro.idUsuario}>
+                                            {nombresPorUsuario.get(miembro.idUsuario)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </FiltrosMenu>
+
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
                         <button
                             type="button"
                             onClick={exportarMovimientosCSV}
@@ -851,148 +1000,6 @@ export default function Movimientos() {
                         </button>
                     </div>
 
-                </div>
-
-                <div className="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5">
-                    <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                        <div>
-                            <h3 className="text-lg font-semibold text-slate-900">
-                                {t('common.filtros')}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                            {t('transactions.filterDescription')}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={limpiarFiltros}
-                            className="w-full rounded-lg bg-gray-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-600 sm:w-auto"
-                        >
-                            {t('common.limpiarFiltros')}
-                        </button>
-                    </div>
-
-                    <div className="mb-4 flex flex-col gap-2">
-                        <label
-                            htmlFor="busquedaMovimientos"
-                            className="text-sm font-semibold text-gray-700"
-                        >
-                            {t('common.buscarDescripcion')}
-                        </label>
-                        <input
-                            id="busquedaMovimientos"
-                            type="text"
-                            name="busqueda"
-                            value={filtros.busqueda}
-                            onChange={manejarCambioFiltro}
-                            placeholder={t('income.searchPlaceholder')}
-                            className="input py-2.5 text-sm"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label htmlFor="fechaDesde" className="text-sm font-semibold text-gray-700">
-                                {t('common.fechaDesde')}
-                            </label>
-                            <input
-                                id="fechaDesde"
-                                type="date"
-                                name="fechaDesde"
-                                value={filtros.fechaDesde}
-                                onChange={manejarCambioFiltro}
-                                className="input py-2.5 text-sm"
-                            />
-                        </div>
-
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label htmlFor="fechaHasta" className="text-sm font-semibold text-gray-700">
-                                {t('common.fechaHasta')}
-                            </label>
-                            <input
-                                id="fechaHasta"
-                                type="date"
-                                name="fechaHasta"
-                                value={filtros.fechaHasta}
-                                onChange={manejarCambioFiltro}
-                                className="input py-2.5 text-sm"
-                            />
-                        </div>
-
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label htmlFor="filtroCategoriaMovimientos" className="text-sm font-semibold text-gray-700">
-                                {t('common.categoria')}
-                            </label>
-                            <select
-                                id="filtroCategoriaMovimientos"
-                                name="idCategoria"
-                                value={filtros.idCategoria}
-                                onChange={manejarCambioFiltro}
-                                className="input py-2.5 text-sm"
-                            >
-                                <option value="">{t('transactions.allCategories')}</option>
-                                {categorias.map((categoria) => (
-                                    <option key={categoria.idCategoria} value={categoria.idCategoria}>
-                                        {categoria.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label htmlFor="montoMinimo" className="text-sm font-semibold text-gray-700">
-                                {t('common.montoMinimo')}
-                            </label>
-                            <input
-                                id="montoMinimo"
-                                type="number"
-                                name="montoMinimo"
-                                min="0"
-                                step="0.01"
-                                value={filtros.montoMinimo}
-                                onChange={manejarCambioFiltro}
-                                placeholder="0.00"
-                                className="input py-2.5 text-sm"
-                            />
-                        </div>
-
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label htmlFor="montoMaximo" className="text-sm font-semibold text-gray-700">
-                                {t('common.montoMaximo')}
-                            </label>
-                            <input
-                                id="montoMaximo"
-                                type="number"
-                                name="montoMaximo"
-                                min="0"
-                                step="0.01"
-                                value={filtros.montoMaximo}
-                                onChange={manejarCambioFiltro}
-                                placeholder="0.00"
-                                className="input py-2.5 text-sm"
-                            />
-                        </div>
-
-                        <div className="flex min-w-0 flex-col gap-2">
-                            <label htmlFor="filtroMiembroMovimientos" className="text-sm font-semibold text-gray-700">
-                                {t('transactions.member')}
-                            </label>
-                            <select
-                                id="filtroMiembroMovimientos"
-                                name="idUsuario"
-                                value={filtros.idUsuario}
-                                onChange={manejarCambioFiltro}
-                                className="input py-2.5 text-sm"
-                            >
-                                <option value="">{t('transactions.allMembers')}</option>
-                                {miembros.map((miembro) => (
-                                    <option key={miembro.idUsuario} value={miembro.idUsuario}>
-                                        {nombresPorUsuario.get(miembro.idUsuario)}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
                 </div>
 
                 {cargando ? (
