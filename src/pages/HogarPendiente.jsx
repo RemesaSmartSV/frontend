@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
     authApi,
@@ -41,6 +41,9 @@ export default function HogarPendiente({ onHogarCreado }) {
     const [solicitando, setSolicitando] = useState(false)
     const [cancelando, setCancelando] = useState(null)
     const [actualizandoSesion, setActualizandoSesion] = useState(false)
+    // T14: un solo intento de refresco automático (ver useEffect más abajo).
+    const refrescoIntentado = useRef(false)
+    const [refrescoAutomaticoOk, setRefrescoAutomaticoOk] = useState(false)
     const [errorBusqueda, setErrorBusqueda] = useState('')
     const [errorSolicitud, setErrorSolicitud] = useState('')
     const [mensaje, setMensaje] = useState('')
@@ -259,6 +262,7 @@ export default function HogarPendiente({ onHogarCreado }) {
             setActualizandoSesion(true)
 
             const datosUsuario = await authApi.refrescarSesion()
+            setRefrescoAutomaticoOk(true)
             onHogarCreado(datosUsuario)
         } catch (err) {
             setErrorSolicitud(
@@ -272,6 +276,21 @@ export default function HogarPendiente({ onHogarCreado }) {
     const solicitudesAceptadas = solicitudes.filter(
         (sol) => sol.estado === 'Aceptada'
     )
+
+    // T14: refresco automático de la sesión al detectar una solicitud
+    // aceptada. El usuario no debería tener que tocar "Actualizar sesión"
+    // para ver la familia que ya le aprobaron. Se intenta UNA sola vez:
+    // `refrescoIntentado` corta el bucle que se produciría porque
+    // actualizarSesion cambia estado y vuelve a evaluar este efecto. Si el
+    // refresco falla, `refrescoAutomaticoOk` sigue en false y queda a la
+    // vista el botón de respaldo.
+    useEffect(() => {
+        if (solicitudesAceptadas.length === 0) return
+        if (refrescoIntentado.current) return
+
+        refrescoIntentado.current = true
+        actualizarSesion()
+    }, [solicitudesAceptadas.length])
 
     async function responderInvitacion(id, accion) {
         setErrorInvitacion('')
@@ -346,8 +365,12 @@ export default function HogarPendiente({ onHogarCreado }) {
         }
     }
 
+    // T13: sin min-h-screen. Esta pantalla vive DENTRO del Layout, que ya
+    // aporta su propia altura; forzar 100vh aquí empujaba el scroll y dejaba
+    // el formulario centrado en un viewport más alto que el visible. Se
+    // centra en horizontal y arranca arriba.
     return (
-        <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 p-3 font-sans sm:p-6 lg:p-8">
+        <main className="flex w-full justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 p-3 font-sans sm:p-6 lg:p-8">
 
             {/* NOTIFICACIÓN DE ERROR */}
             <Notification
@@ -366,8 +389,10 @@ export default function HogarPendiente({ onHogarCreado }) {
             <section className="card w-full max-w-[430px] overflow-hidden p-5 sm:p-8 md:p-10">
                 <div className="mb-4 flex justify-end"><LanguageSelector /></div>
 
-                {/* SOLICITUD ACEPTADA: ACTUALIZAR SESIÓN */}
-                {solicitudesAceptadas.length > 0 && (
+                {/* SOLICITUD ACEPTADA: el refresco se intenta SOLO, al
+                    montar. Este bloque es el respaldo: queda mientras no
+                    haya un refresco exitoso (con el error, si lo hubo). */}
+                {solicitudesAceptadas.length > 0 && !refrescoAutomaticoOk && (
                     <div
                         role="status"
                         className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4"

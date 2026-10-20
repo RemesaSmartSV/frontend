@@ -9,7 +9,7 @@ vi.mock('react-i18next', () => {
         'pendingHome.invitationHint': 'Puedes aceptar la invitación o crear tu propia familia.',
         'pendingHome.sentToEmail': 'Invitación enviada a tu correo.',
         'pendingHome.createTitle': 'Crea tu familia',
-        'pendingHome.createDescription': 'Para empezar a administrar las finanzas de tu hogar, crea primero tu familia.',
+        'pendingHome.createDescription': 'Crea tu familia para administrar las finanzas de tu hogar, o únete a una existente cuando quieras.',
         'pendingHome.name': 'Nombre familiar',
         'pendingHome.namePlaceholder': 'Ej. Familia Duarte',
         'pendingHome.nameRequired': 'Completa el nombre de tu familia.',
@@ -35,7 +35,7 @@ vi.mock('react-i18next', () => {
         'pendingHome.requestDate': 'Solicitada {{date}}',
         'pendingHome.cancelSuccess': 'Solicitud cancelada.',
         'pendingHome.cancelError': 'No se pudo cancelar la solicitud.',
-        'pendingHome.acceptedNotice': 'Tu solicitud para unirte a una familia fue aceptada. Actualiza tu sesión para acceder a ella.',
+        'pendingHome.acceptedNotice': '¡Tu solicitud fue aceptada! Ya eres parte de la familia; actualiza tu sesión para verla.',
         'pendingHome.refreshSession': 'Actualizar sesión',
         'pendingHome.refreshingSession': 'Actualizando sesión...',
         'pendingHome.refreshError': 'No se pudo actualizar la sesión.',
@@ -97,11 +97,19 @@ function fetchPendiente({
     coincidencias = [],
     solicitudStatus = null,
     solicitudMessage = '',
+    refrescarStatus = null,
 } = {}) {
     return vi.fn(async (url, opciones = {}) => {
         const destino = String(url)
 
         if (destino.includes('/Auth/refrescar-sesion')) {
+            if (refrescarStatus) {
+                return respuesta(
+                    { message: 'No se pudo actualizar la sesión.' },
+                    refrescarStatus
+                )
+            }
+
             return respuesta({
                 token: 'token-nuevo',
                 idUsuario: 1,
@@ -174,6 +182,29 @@ function fetchPendiente({
 
 const CODIGO_VALIDO = 'RS-FAM-ABCDEF23456789XY'
 const CODIGO_DIGITOS = '048293'
+
+// Solicitud cuya aprobación deja al usuario SIN idHogar en el token viejo:
+// es el caso que dispara el refresco de sesión (T14).
+const SOLICITUD_ACEPTADA = {
+    idSolicitud: 5,
+    codigoPublico: CODIGO_VALIDO,
+    nombreFamilia: 'Familia Duarte',
+    estado: 'Aceptada',
+    fechaSolicitud: '2026-02-01T00:00:00Z',
+    fechaRespuesta: '2026-02-02T00:00:00Z',
+}
+
+const AVISO_ACEPTADA =
+    '¡Tu solicitud fue aceptada! Ya eres parte de la familia; actualiza tu sesión para verla.'
+
+// POST /Auth/refrescar-sesion registrados por el stub.
+function intentosDeRefresco(fetchMock) {
+    return fetchMock.mock.calls.filter(
+        ([url, opciones]) =>
+            String(url).includes('/Auth/refrescar-sesion') &&
+            opciones?.method === 'POST'
+    )
+}
 
 describe('HogarPendiente', () => {
     it('valida el formato del código en el cliente antes de buscar', async () => {
@@ -309,44 +340,64 @@ describe('HogarPendiente', () => {
         expect(llamada).toBeDefined()
     })
 
-    it('ofrece actualizar la sesión cuando una solicitud fue aceptada', async () => {
+    it('refresca la sesión solo, al montar, cuando una solicitud fue aceptada', async () => {
         const onHogarCreado = vi.fn()
         const fetchMock = fetchPendiente({
-            solicitudes: [
-                {
-                    idSolicitud: 5,
-                    codigoPublico: CODIGO_VALIDO,
-                    nombreFamilia: 'Familia Duarte',
-                    estado: 'Aceptada',
-                    fechaSolicitud: '2026-02-01T00:00:00Z',
-                    fechaRespuesta: '2026-02-02T00:00:00Z',
-                },
-            ],
+            solicitudes: [SOLICITUD_ACEPTADA],
         })
         global.fetch = fetchMock
 
         render(<HogarPendiente onHogarCreado={onHogarCreado} />)
 
-        expect(
-            await screen.findByText('Tu solicitud para unirte a una familia fue aceptada. Actualiza tu sesión para acceder a ella.')
-        ).toBeInTheDocument()
-
-        fireEvent.click(screen.getByRole('button', { name: 'Actualizar sesión' }))
-
+        // El refresco es automático: nadie tocó ningún botón.
         await waitFor(() =>
             expect(onHogarCreado).toHaveBeenCalledWith(
-                expect.objectContaining({ token: 'token-nuevo', idHogar: 42, rol: 'Miembro' })
+                expect.objectContaining({
+                    token: 'token-nuevo',
+                    idHogar: 42,
+                    rol: 'Miembro',
+                })
             )
         )
 
-        const llamada = fetchMock.mock.calls.find(([url, opciones]) =>
-            String(url).includes('/Auth/refrescar-sesion') && opciones?.method === 'POST'
-        )
-        expect(llamada).toBeDefined()
+        expect(intentosDeRefresco(fetchMock)).toHaveLength(1)
 
-        // refrescarSesion persiste el LoginResponse con las claves de authApi.login.
+        // refrescarSesion persiste el LoginResponse con las claves de
+        // authApi.login.
         expect(localStorage.getItem('token')).toBe('token-nuevo')
         expect(JSON.parse(localStorage.getItem('usuario')).idHogar).toBe(42)
+
+        // Con la sesión refrescada, el respaldo deja de ofrecerse.
+        expect(screen.queryByText(AVISO_ACEPTADA)).not.toBeInTheDocument()
+    })
+
+    it('muestra el botón de respaldo cuando el refresco automático falla', async () => {
+        const onHogarCreado = vi.fn()
+        const fetchMock = fetchPendiente({
+            solicitudes: [SOLICITUD_ACEPTADA],
+            refrescarStatus: 500,
+        })
+        global.fetch = fetchMock
+
+        render(<HogarPendiente onHogarCreado={onHogarCreado} />)
+
+        await waitFor(() => expect(intentosDeRefresco(fetchMock)).toHaveLength(1))
+
+        // El intento automático no pasó: queda el aviso con el botón y el
+        // error del backend (manejarRespuesta propaga `message`).
+        expect(await screen.findByText(AVISO_ACEPTADA)).toBeInTheDocument()
+        expect(
+            await screen.findByText('No se pudo actualizar la sesión.')
+        ).toBeInTheDocument()
+        expect(onHogarCreado).not.toHaveBeenCalled()
+
+        // El usuario puede reintentar: un segundo POST, mismo resultado.
+        fireEvent.click(
+            await screen.findByRole('button', { name: 'Actualizar sesión' })
+        )
+
+        await waitFor(() => expect(intentosDeRefresco(fetchMock)).toHaveLength(2))
+        expect(onHogarCreado).not.toHaveBeenCalled()
     })
 
     it('muestra el estado vacío de solicitudes', async () => {

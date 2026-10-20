@@ -263,6 +263,33 @@ describe('Rutas sin familia', () => {
         ).toBe(false)
     })
 
+    it('no repite el banner de cuenta sin familia dentro de /hogar', async () => {
+        window.history.pushState({}, '', '/hogar')
+
+        render(<App />)
+
+        // /hogar ES el flujo de creación/búsqueda de familia: el aviso del
+        // Layout repetiría la misma promesa justo encima del formulario.
+        const encabezado = await screen.findByRole(
+            'heading',
+            { level: 1, name: 'RemesaSmart SV' },
+            { timeout: 15000 }
+        )
+        expect(encabezado).toBeInTheDocument()
+
+        expect(
+            screen.queryByText(
+                'Aún no tienes una familia. Puedes usar la app y crear o unirte cuando quieras.'
+            )
+        ).not.toBeInTheDocument()
+
+        // El Layout sigue montado (menú y navegación): lo que se oculta es
+        // SOLO el banner, no la estructura de la app.
+        expect(document.querySelectorAll('a[href]').length).toBeGreaterThanOrEqual(
+            8
+        )
+    })
+
     it.each(['/categorias', '/ahorro'])(
         '%s muestra su estado vacío en lugar de un error',
         async (ruta) => {

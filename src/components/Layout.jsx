@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
 import { alertasApi, notificacionesApi, invitacionesApi } from '../services/api'
@@ -13,6 +13,7 @@ export default function Layout({
 }) {
     const { t } = useTranslation()
     const navigate = useNavigate()
+    const location = useLocation()
     const [menuAbierto, setMenuAbierto] = useState(false)
     const [alertas, setAlertas] = useState([])
     const [cargandoAlertas, setCargandoAlertas] = useState(true)
@@ -179,8 +180,10 @@ export default function Layout({
             <main className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:ml-64">
                 {/* CUENTA SIN FAMILIA: recordatorio no bloqueante. El flujo de
                     creación/búsqueda vive en /hogar, así que el resto de la app
-                    sigue siendo usable sin familia. */}
-                {!usuario?.idHogar && (
+                    sigue siendo usable sin familia. En /hogar se OMITE: allí el
+                    usuario ya está dentro de ese flujo y el aviso duplicaría la
+                    misma promesa. */}
+                {!usuario?.idHogar && location.pathname !== '/hogar' && (
                     <div
                         role="status"
                         className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3"

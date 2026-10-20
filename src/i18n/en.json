@@ -607,7 +607,7 @@
     "invitationHint": "You can accept the invitation or create your own family.",
     "sentToEmail": "Invitation sent to your email.",
     "createTitle": "Create your family",
-    "createDescription": "To start managing your household finances, create your family first.",
+    "createDescription": "Create your family to manage your household finances, or join an existing one whenever you want.",
     "name": "Family name",
     "namePlaceholder": "E.g. Duarte family",
     "nameRequired": "Enter your family name.",
@@ -633,7 +633,7 @@
     "requestDate": "Requested {{date}}",
     "cancelSuccess": "Request cancelled.",
     "cancelError": "Could not cancel the request.",
-    "acceptedNotice": "Your request to join a family was accepted. Refresh your session to access it.",
+    "acceptedNotice": "Your request was accepted! You're now part of the family; refresh your session to see it.",
     "refreshSession": "Refresh session",
     "refreshingSession": "Refreshing session...",
     "refreshError": "Could not refresh the session."

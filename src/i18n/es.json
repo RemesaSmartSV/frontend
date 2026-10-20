@@ -562,7 +562,7 @@
     "invitationHint": "Puedes aceptar la invitación o crear tu propia familia.",
     "sentToEmail": "Invitación enviada a tu correo.",
     "createTitle": "Crea tu familia",
-    "createDescription": "Para empezar a administrar las finanzas de tu hogar, crea primero tu familia.",
+    "createDescription": "Crea tu familia para administrar las finanzas de tu hogar, o únete a una existente cuando quieras.",
     "name": "Nombre familiar",
     "namePlaceholder": "Ej. Familia Duarte",
     "nameRequired": "Completa el nombre de tu familia.",
@@ -588,7 +588,7 @@
     "requestDate": "Solicitada {{date}}",
     "cancelSuccess": "Solicitud cancelada.",
     "cancelError": "No se pudo cancelar la solicitud.",
-    "acceptedNotice": "Tu solicitud para unirte a una familia fue aceptada. Actualiza tu sesión para acceder a ella.",
+    "acceptedNotice": "¡Tu solicitud fue aceptada! Ya eres parte de la familia; actualiza tu sesión para verla.",
     "refreshSession": "Actualizar sesión",
     "refreshingSession": "Actualizando sesión...",
     "refreshError": "No se pudo actualizar la sesión."
