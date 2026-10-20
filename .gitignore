@@ -7,3 +7,4 @@ dist/
 .idea/
 npm-debug.log*
 .vs/
+.codegraph/
