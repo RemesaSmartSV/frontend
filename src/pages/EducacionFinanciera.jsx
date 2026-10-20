@@ -247,7 +247,7 @@ export default function EducacionFinanciera() {
                                 {/* CATEGORÍA */}
                                 <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
 
-                                    <span className="text-sm text-gray-400">
+                                    <span className="text-sm text-gray-500">
                                         {t('education.category')}
                                     </span>
 

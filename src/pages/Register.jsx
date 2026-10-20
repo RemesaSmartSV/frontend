@@ -337,7 +337,7 @@ export default function Register({ volverLogin, onLogin }) {
                     {/* Separador */}
                     <div className="my-6 flex items-center">
                         <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
-                        <span className="px-3 text-sm text-gray-400">{t('auth.or')}</span>
+                        <span className="px-3 text-sm text-gray-500">{t('auth.or')}</span>
                         <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
                     </div>
 

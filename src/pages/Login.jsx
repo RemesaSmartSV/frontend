@@ -318,7 +318,7 @@ export default function Login({ onLogin, irRegistro }) {
                     {/* Separador */}
                     <div className="my-6 flex items-center">
                         <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
-                        <span className="px-3 text-sm text-gray-400">{t('auth.or')}</span>
+                        <span className="px-3 text-sm text-gray-500">{t('auth.or')}</span>
                         <div className="flex-1 border-t border-gray-200 dark:border-gray-700" />
                     </div>
 
@@ -346,13 +346,13 @@ export default function Login({ onLogin, irRegistro }) {
 
                     {/* Enlace presentación */}
                     <p className="mt-4 text-center">
-                        <a href="/presentacion" className="text-xs text-gray-400 hover:text-gray-600 dark:text-gray-500">
+                        <a href="/presentacion" className="text-xs text-gray-500 hover:text-gray-600">
                             {t('auth.learnMore')}
                         </a>
                     </p>
 
                     {/* Enlaces legales */}
-                    <nav aria-label={t('shell.legalLinks')} className="mt-6 flex justify-center gap-x-4 text-xs text-gray-400 dark:text-gray-500">
+                    <nav aria-label={t('shell.legalLinks')} className="mt-6 flex justify-center gap-x-4 text-xs text-gray-500">
                         <a href="/politica-de-privacidad" className="hover:text-gray-600">{t('shell.privacy')}</a>
                         <a href="/terminos-y-condiciones" className="hover:text-gray-600">{t('shell.terms')}</a>
                         <a href="/politica-de-cookies" className="hover:text-gray-600">{t('shell.cookies')}</a>

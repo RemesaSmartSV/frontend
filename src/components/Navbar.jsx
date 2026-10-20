@@ -260,7 +260,7 @@ export default function Navbar({
                 </div>
 
                 <div className="hidden text-right sm:block">
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                         {t('shell.hello')}
                     </p>
 
@@ -268,7 +268,7 @@ export default function Navbar({
                         {usuario?.nombre || t('shell.unknownUser')}
                     </p>
 
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                         {usuario?.rol === 'Admin' ? t('family.admin') : t('family.member')}
                     </p>
                 </div>

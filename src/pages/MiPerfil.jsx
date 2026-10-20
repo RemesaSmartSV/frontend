@@ -191,7 +191,7 @@ export default function MiPerfil() {
                                 placeholder="https://example.com/photo.jpg"
                                 className="input py-2 text-sm"
                             />
-                            <p className="mt-1 text-xs text-gray-400">{t('profile.photoHint')}</p>
+                            <p className="mt-1 text-xs text-gray-500">{t('profile.photoHint')}</p>
                         </div>
                     </div>
 
@@ -276,7 +276,7 @@ export default function MiPerfil() {
                         </div>
                     </div>
 
-                    <p className="mt-3 text-xs text-gray-400">
+                    <p className="mt-3 text-xs text-gray-500">
                         {t('profile.readonlyHint')}
                     </p>
                 </section>
@@ -525,7 +525,7 @@ function PreferenciasNotificaciones() {
                         />
                         <div>
                             <span className="text-sm font-medium text-gray-700">{op.label}</span>
-                            <p className="text-xs text-gray-400">{op.desc}</p>
+                            <p className="text-xs text-gray-500">{op.desc}</p>
                         </div>
                     </label>
                 ))}
