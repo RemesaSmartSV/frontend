@@ -117,7 +117,9 @@
   },
   "shell": {
     "tagline": "Tus finanzas",
-    "workspace": "TU ESPACIO",
+    "groupFinance": "FINANZAS",
+    "groupFamily": "FAMILIA",
+    "groupAccount": "CUENTA",
     "navLabel": "Navegación principal",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",

@@ -84,6 +84,34 @@ export default function Sidebar({
         },
     ]
 
+    // Grupos del menú: Finanzas / Familia / Cuenta. Inicio queda suelto
+    // arriba de todo porque es la vista general, no una categoría.
+    const grupos = [
+        {
+            titulo: t('shell.groupFinance'),
+            enlaces: enlaces.filter((e) =>
+                [
+                    '/movimientos',
+                    '/categorias',
+                    '/remesas',
+                    '/ingresos',
+                    '/gastos',
+                    '/presupuestos',
+                    '/ahorro',
+                    '/educacion-financiera',
+                ].includes(e.to)
+            ),
+        },
+        {
+            titulo: t('shell.groupFamily'),
+            enlaces: enlaces.filter((e) => e.to === '/hogar'),
+        },
+        {
+            titulo: t('shell.groupAccount'),
+            enlaces: enlaces.filter((e) => e.to === '/perfil'),
+        },
+    ]
+
     function cerrarMenuMovil() {
         setMenuAbierto(false)
     }
@@ -108,14 +136,14 @@ export default function Sidebar({
             >
 
                 {/* LOGO */}
-                <div className="shrink-0 -mt-6 text-center">
+                <div className="shrink-0 -mt-2 text-center">
 
                     <div className="flex justify-center">
                         
                         <img
                             src={logo}
                             alt="RemesaSmart SV"
-                            className="h-40 w-auto object-contain"
+                            className="h-16 w-auto object-contain"
                         />
                     </div>
 
@@ -123,68 +151,118 @@ export default function Sidebar({
 
                         
 
-                    <p className="-mt-15 text-sm font-medium text-white/80 text-center">
+                    <p className="mt-1 text-sm font-medium text-white/80 text-center">
                         {t('shell.tagline')}
                     </p>
 
                 
 
-                {/* TÍTULO DEL MENÚ */}
-                <div className="mb-4 mt-8">
-
-                    <p className="px-4 text-xs font-bold tracking-[0.15em] text-blue-200">
-                        {t('shell.workspace')}
-                    </p>
-
-                </div>
-
-
-                {/* ENLACES */}
+                {/* ENLACES AGRUPADOS */}
                 <nav
                     aria-label={t('shell.navLabel')}
-                    className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0"
+                    className="mt-6 flex-1 overflow-y-auto pr-1"
                 >
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-5">
 
-                        {enlaces.map((enlace) => {
+                        {/* Inicio: vista general, fuera de grupos */}
+                        <div className="flex flex-col gap-2">
 
-                            const Icono = enlace.icono
+                            {enlaces
+                                .filter((enlace) => enlace.to === '/')
+                                .map((enlace) => {
+                                    const Icono = enlace.icono
 
-                            return (
-                                <NavLink
-                                    key={enlace.to}
-                                    to={enlace.to}
-                                    end={enlace.to === '/'}
-                                    onClick={cerrarMenuMovil}
-                                    className={({ isActive }) =>
-                                        `
-                                        flex items-center gap-4
-                                        rounded-xl
-                                        px-4 py-3
-                                        text-sm font-semibold
-                                        transition
+                                    return (
+                                        <NavLink
+                                            key={enlace.to}
+                                            to={enlace.to}
+                                            end
+                                            onClick={cerrarMenuMovil}
+                                            className={({ isActive }) =>
+                                                `
+                                                flex items-center gap-4
+                                                rounded-xl
+                                                px-4 py-3
+                                                text-sm font-semibold
+                                                transition
 
-                                        ${isActive
-                                            ? 'bg-[#0B2E6B] text-white shadow-sm'
-                                            : 'text-white/85 hover:bg-[#1D4FA3] hover:text-white'
-                                        }
-                                        `
-                                    }
-                                >
+                                                ${isActive
+                                                    ? 'bg-[#0B2E6B] text-white shadow-sm'
+                                                    : 'text-white/85 hover:bg-[#1D4FA3] hover:text-white'
+                                                }
+                                                `
+                                            }
+                                        >
 
-                                    <Icono
-                                        size={21}
-                                        strokeWidth={1.8}
-                                    />
+                                            <Icono
+                                                size={21}
+                                                strokeWidth={1.8}
+                                            />
 
-                                    <span>
-                                        {enlace.nombre}
-                                    </span>
+                                            <span>
+                                                {enlace.nombre}
+                                            </span>
 
-                                </NavLink>
-                            )
-                        })}
+                                        </NavLink>
+                                    )
+                                })}
+
+                        </div>
+
+                        {grupos.map((grupo) => (
+
+                            <div key={grupo.titulo}>
+
+                                <p className="mb-2 px-4 text-xs font-bold tracking-[0.15em] text-blue-200">
+                                    {grupo.titulo}
+                                </p>
+
+                                <div className="flex flex-col gap-2">
+
+                                    {grupo.enlaces.map((enlace) => {
+
+                                        const Icono = enlace.icono
+
+                                        return (
+                                            <NavLink
+                                                key={enlace.to}
+                                                to={enlace.to}
+                                                onClick={cerrarMenuMovil}
+                                                className={({ isActive }) =>
+                                                    `
+                                                    flex items-center gap-4
+                                                    rounded-xl
+                                                    px-4 py-3
+                                                    text-sm font-semibold
+                                                    transition
+
+                                                    ${isActive
+                                                        ? 'bg-[#0B2E6B] text-white shadow-sm'
+                                                        : 'text-white/85 hover:bg-[#1D4FA3] hover:text-white'
+                                                    }
+                                                    `
+                                                }
+                                            >
+
+                                                <Icono
+                                                    size={21}
+                                                    strokeWidth={1.8}
+                                                />
+
+                                                <span>
+                                                    {enlace.nombre}
+                                                </span>
+
+                                            </NavLink>
+                                        )
+                                    })}
+
+                                </div>
+
+                            </div>
+
+                        ))}
 
                     </div>
 
