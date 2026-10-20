@@ -174,26 +174,35 @@ afterEach(() => {
 })
 
 describe('Movimientos — panel de filtros (T2)', () => {
-    it('la búsqueda queda visible en la fila superior junto a Filtros y las acciones', async () => {
+    it('la búsqueda y Filtros quedan en la fila; las acciones se agrupan junto al título', async () => {
         await montar()
 
         const botonFiltros = screen.getByRole('button', { name: 'Filtros' })
         // FiltrosMenu monta su contenedor `relative` dentro de la fila.
         const fila = botonFiltros.parentElement.parentElement
+        // La fila vive dentro de la card (section) de filtros.
+        const seccion = fila.parentElement
 
         expect(
             fila.contains(control('busquedaMovimientos'))
         ).toBe(true)
-        expect(
-            fila.contains(
-                screen.getByRole('button', { name: 'CSV filtrado' })
-            )
-        ).toBe(true)
-        expect(
-            fila.contains(
-                screen.getByRole('button', { name: 'Actualizar' })
-            )
-        ).toBe(true)
+
+        // El botón "Filtros" queda al FINAL de la fila: los botones de
+        // exportar/actualizar ya no lo empujan hacia la izquierda, que es
+        // lo que el anclaje `right-0` del panel necesita para no desbordar.
+        expect(fila.lastElementChild).toBe(botonFiltros.parentElement)
+
+        const botonCSVFiltrado = screen.getByRole('button', {
+            name: 'CSV filtrado',
+        })
+        const botonActualizar = screen.getByRole('button', {
+            name: 'Actualizar',
+        })
+
+        expect(seccion.contains(botonCSVFiltrado)).toBe(true)
+        expect(seccion.contains(botonActualizar)).toBe(true)
+        expect(fila.contains(botonCSVFiltrado)).toBe(false)
+        expect(fila.contains(botonActualizar)).toBe(false)
     })
 
     it('los controles del panel siguen respondiendo por id con el panel cerrado', async () => {

@@ -818,9 +818,54 @@ export default function Movimientos() {
 
             <section className="card mb-6 w-full p-4 sm:p-6">
 
-                <h2 className="mb-5 text-xl font-semibold text-slate-900">
-                    {t('transactions.filtersTitle')}
-                </h2>
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-xl font-semibold text-slate-900">
+                        {t('transactions.filtersTitle')}
+                    </h2>
+
+                    {/* Acciones de la vista: movidas desde la fila de filtros
+                        para dejar el botón "Filtros" al FINAL de esa fila
+                        (borde derecho de la card), que es lo que necesita el
+                        anclaje `right-0` del panel flotante. */}
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                        <button
+                            type="button"
+                            onClick={exportarMovimientosCSV}
+                            disabled={
+                                cargando ||
+                                procesando ||
+                                movimientosFiltrados.length === 0
+                            }
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-green-200 px-4 py-2.5 font-semibold text-green-700 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            <Download size={17} aria-hidden="true" />
+                            {t('transactions.csvFiltered')}
+                        </button>
+                        <button
+                            onClick={() => exportarMovimientosRemotos('csv')}
+                            disabled={cargando || procesando}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            <Download size={17} aria-hidden="true" />
+                            {t('transactions.csv')}
+                        </button>
+                        <button
+                            onClick={() => exportarMovimientosRemotos('json')}
+                            disabled={cargando || procesando}
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            <Download size={17} aria-hidden="true" />
+                            {t('transactions.json')}
+                        </button>
+                        <button
+                            onClick={cargarDatos}
+                            disabled={cargando || procesando}
+                            className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            {cargando ? t('common.cargando') : t('common.actualizar')}
+                        </button>
+                    </div>
+                </div>
 
                 {/* T1/T2 — fila superior: la búsqueda queda SIEMPRE visible
                     (es el control de mayor uso); los otros seis controles
@@ -960,45 +1005,6 @@ export default function Movimientos() {
                             </div>
                         </div>
                     </FiltrosMenu>
-
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                        <button
-                            type="button"
-                            onClick={exportarMovimientosCSV}
-                            disabled={
-                                cargando ||
-                                procesando ||
-                                movimientosFiltrados.length === 0
-                            }
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-green-200 px-4 py-2.5 font-semibold text-green-700 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            <Download size={17} aria-hidden="true" />
-                            {t('transactions.csvFiltered')}
-                        </button>
-                        <button
-                            onClick={() => exportarMovimientosRemotos('csv')}
-                            disabled={cargando || procesando}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            <Download size={17} aria-hidden="true" />
-                            {t('transactions.csv')}
-                        </button>
-                        <button
-                            onClick={() => exportarMovimientosRemotos('json')}
-                            disabled={cargando || procesando}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            <Download size={17} aria-hidden="true" />
-                            {t('transactions.json')}
-                        </button>
-                        <button
-                            onClick={cargarDatos}
-                            disabled={cargando || procesando}
-                            className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            {cargando ? t('common.cargando') : t('common.actualizar')}
-                        </button>
-                    </div>
 
                 </div>
 

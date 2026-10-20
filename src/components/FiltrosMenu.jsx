@@ -125,18 +125,24 @@ export default function FiltrosMenu({
             </button>
 
             {/* PANEL FLOTANTE
-                Anclado bajo el botón (`top-full`). En mobile se alinea a la
-                derecha para no desbordar el viewport (el contenedor ocupa todo
-                el ancho); desde `sm` el contenedor ya sólo mide lo que el
-                botón, así que se alinea a la IZQUIERDA del botón: hacia la
-                derecha quedan los botones de exportar/actualizar y un panel
-                anclado a la derecha se metería debajo del sidebar. */}
+                Anclado bajo el botón (`top-full`) y SIEMPRE alineado a su
+                borde derecho (`right-0`), de modo que crece hacia la IZQUIERDA
+                y por construcción no puede desbordar por el borde derecho de
+                la ventana. En mobile el contenedor es full-width (el botón
+                tiene `w-full`), así que el borde derecho del panel coincide
+                con el borde derecho de la card. En desktop el contenedor sólo
+                mide lo que el botón, que queda al FINAL de la fila de filtros
+                (pegado al borde derecho de la card): el panel se despliega
+                hacia adentro, por sobre la búsqueda — nunca hacia el borde de
+                la ventana. `max-w-[calc(100vw-2rem)]` sigue protegiendo el
+                caso extremo; `max-h-[70vh]` + `overflow-y-auto` evitan que
+                crezca más que el viewport. */}
 
             <div
                 id={idPanel}
                 role="group"
                 aria-labelledby={idBoton}
-                className={`card absolute right-0 top-full z-30 mt-2 max-h-[70vh] w-[20rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-4 sm:left-0 sm:right-auto sm:w-[32rem] sm:p-5 ${abierto ? '' : 'hidden'}`}
+                className={`card absolute right-0 top-full z-30 mt-2 max-h-[70vh] w-[20rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-4 sm:w-[32rem] sm:p-5 ${abierto ? '' : 'hidden'}`}
             >
                 {children}
 
