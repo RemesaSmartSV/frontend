@@ -778,6 +778,7 @@
   },
   "filtros": {
     "titulo": "Filtros",
-    "conContador": "Filtros ({{cantidad}} activos)"
+    "conContador_one": "Filtros ({{count}} activo)",
+    "conContador_other": "Filtros ({{count}} activos)"
   }
 }

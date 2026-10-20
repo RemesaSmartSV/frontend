@@ -101,7 +101,7 @@ export default function FiltrosMenu({
                 aria-label={
                     cantidadActivos > 0
                         ? t('filtros.conContador', {
-                            cantidad: cantidadActivos,
+                            count: cantidadActivos,
                         })
                         : t('filtros.titulo')
                 }

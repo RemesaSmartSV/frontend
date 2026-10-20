@@ -10,20 +10,31 @@ import FiltrosMenu from './FiltrosMenu'
 vi.mock('react-i18next', () => {
     const map = {
         'filtros.titulo': 'Filtros',
-        'filtros.conContador': 'Filtros ({{cantidad}} activos)',
+        'filtros.conContador_one': 'Filtros ({{count}} activo)',
+        'filtros.conContador_other': 'Filtros ({{count}} activos)',
         'common.limpiarFiltros': 'Limpiar filtros',
     }
 
     return {
         useTranslation: () => ({
-            t: (clave, opciones) =>
-                (map[clave] ?? clave).replace(
+            // i18next resuelve la variante plural (clave_one / clave_other) a
+            // partir de la opción `count`; el mock replica esa resolución.
+            t: (clave, opciones) => {
+                const clavePlural =
+                    opciones?.count === undefined
+                        ? clave
+                        : `${clave}_${opciones.count === 1 ? 'one' : 'other'}`
+
+                const plantilla = map[clavePlural] ?? map[clave] ?? clave
+
+                return plantilla.replace(
                     /\{\{(\w+)\}\}/g,
                     (marca, variable) =>
                         opciones && opciones[variable] !== undefined
                             ? String(opciones[variable])
                             : marca
-                ),
+                )
+            },
             i18n: { changeLanguage: () => {} },
         }),
     }
@@ -117,7 +128,7 @@ describe('FiltrosMenu — badge de filtros activos', () => {
     })
 
     it('muestra el número y anuncia la cantidad en el aria-label con 1 o más activos', () => {
-        render(
+        const { unmount } = render(
             <FiltrosMenu cantidadActivos={3}>{controles()}</FiltrosMenu>
         )
 
@@ -132,6 +143,17 @@ describe('FiltrosMenu — badge de filtros activos', () => {
         expect(
             boton.querySelector('span[aria-hidden="true"]')
         ).not.toBeNull()
+
+        unmount()
+
+        // Con 1 activo i18next elige la variante singular.
+        render(
+            <FiltrosMenu cantidadActivos={1}>{controles()}</FiltrosMenu>
+        )
+
+        expect(
+            screen.getByRole('button', { name: 'Filtros (1 activo)' })
+        ).toBeInTheDocument()
     })
 })
 
