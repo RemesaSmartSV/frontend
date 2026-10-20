@@ -893,7 +893,7 @@ export default function Dashboard() {
                     (y su % sobre los ingresos), con la aclaración de que el
                     ahorro ya está descontado del balance. */}
 
-                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="card p-5">
 
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                         <h2 className="text-lg font-bold text-slate-800">
@@ -960,7 +960,7 @@ export default function Dashboard() {
 
                 {/* Aportes por meta del período */}
 
-                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="card p-5">
 
                     <h2 className="mb-4 text-lg font-bold text-slate-800">
                         {t('dashboard.periodos.aportesPorMeta')}
@@ -1030,7 +1030,7 @@ export default function Dashboard() {
             ================================= */}
 
             {periodoVacio ? (
-                <section className="mb-8 rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+                <section className="card p-8 text-center">
                     <p className="text-sm text-slate-500">
                         {t('dashboard.periodos.sinDatos', {
                             periodo: etiquetaActiva,
@@ -1147,7 +1147,7 @@ export default function Dashboard() {
 
                 {/* GRÁFICA INGRESOS VS GASTOS (adaptativa por granularidad) */}
 
-                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="card p-5">
 
                     <div className="mb-5">
                         <h2 className="text-lg font-bold text-slate-800">
@@ -1312,7 +1312,7 @@ export default function Dashboard() {
 
                 {/* GRÁFICA GASTOS POR CATEGORÍA */}
 
-                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="card p-5">
 
                     <div className="mb-5">
                         <h2 className="text-lg font-bold text-slate-800">
@@ -1403,7 +1403,7 @@ export default function Dashboard() {
             ================================= */}
 
             {alertas.length > 0 && (
-                <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <section className="card mb-8 p-5">
                     <h2 className="mb-4 text-lg font-bold text-slate-800">
                         ⚠️ {t('dashboard.alertas')}
                     </h2>
@@ -1450,7 +1450,7 @@ export default function Dashboard() {
                 METAS DE AHORRO
             ================================= */}
 
-            <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="card mb-8 p-5">
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <h2 className="text-lg font-bold text-slate-800">
                         🐷 {t('dashboard.metas')}
@@ -1590,7 +1590,7 @@ export default function Dashboard() {
                 MOVIMIENTOS RECIENTES
             ================================= */}
 
-            <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <section className="card">
 
                 <div className="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
 

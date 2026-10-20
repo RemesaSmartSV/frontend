@@ -363,7 +363,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                 onClose={() => setMensaje('')}
             />
 
-            <section className="w-full max-w-[430px] overflow-hidden rounded-2xl bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] sm:p-8 md:p-10">
+            <section className="card w-full max-w-[430px] overflow-hidden p-5 sm:p-8 md:p-10">
                 <div className="mb-4 flex justify-end"><LanguageSelector /></div>
 
                 {/* SOLICITUD ACEPTADA: ACTUALIZAR SESIÓN */}
@@ -487,7 +487,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                             required
                             disabled={cargando}
                             {...ariaError}
-                            className="w-full min-w-0 rounded-[9px] border border-gray-300 bg-white px-3.5 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
+                            className="input min-w-0"
                         />
 
                     </div>
@@ -659,7 +659,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                             autoComplete="off"
                             disabled={buscandoPorNombre || solicitandoAHogar !== null}
                             aria-invalid={errorBusquedaNombre ? 'true' : undefined}
-                            className="w-full min-w-0 rounded-[9px] border border-gray-300 bg-white px-3.5 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100"
+                            className="input min-w-0"
                         />
                     </div>
 

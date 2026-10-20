@@ -553,7 +553,7 @@ export default function Movimientos() {
 
             {/* FORMULARIO */}
 
-            <section className="mb-6 w-full rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+            <section className="card mb-6 w-full p-4 sm:mb-8 sm:p-6">
 
                 <h2 className="mb-5 text-xl font-semibold text-slate-900">
                     {editandoId
@@ -582,7 +582,7 @@ export default function Movimientos() {
                                 value={formulario.tipo}
                                 onChange={manejarCambio}
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                                className="input"
                             >
                                 <option value="Ingreso">
                                     {t('transactions.incomeOrRemittance')}
@@ -612,7 +612,7 @@ export default function Movimientos() {
                                 value={formulario.idCategoria}
                                 onChange={manejarCambio}
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                                className="input"
                             >
                                 <option value="">
                                     {t('common.seleccionaCategoria')}
@@ -657,7 +657,7 @@ export default function Movimientos() {
                                 onChange={manejarCambio}
                                 placeholder="0.00"
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                                className="input"
                             />
 
                         </div>
@@ -680,7 +680,7 @@ export default function Movimientos() {
                                 value={formulario.fecha}
                                 onChange={manejarCambio}
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
+                                className="input"
                             />
 
                         </div>
@@ -704,7 +704,7 @@ export default function Movimientos() {
                                 onChange={manejarCambio}
                                 placeholder={t('transactions.sourceExample')}
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                                className="input"
                             />
 
                         </div>
@@ -728,7 +728,7 @@ export default function Movimientos() {
                                 onChange={manejarCambio}
                                 placeholder={t('transactions.descriptionPlaceholder')}
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                                className="input"
                             />
 
                         </div>
@@ -770,7 +770,7 @@ export default function Movimientos() {
 
             {/* FILTROS */}
 
-            <section className="mb-6 w-full rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+            <section className="card mb-6 w-full p-4 sm:p-6">
 
                 <div className="mb-5">
 
@@ -852,7 +852,7 @@ export default function Movimientos() {
                             value={filtros.busqueda}
                             onChange={manejarCambioFiltro}
                             placeholder={t('income.searchPlaceholder')}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                            className="input py-2.5 text-sm"
                         />
                     </div>
 
@@ -867,7 +867,7 @@ export default function Movimientos() {
                                 name="fechaDesde"
                                 value={filtros.fechaDesde}
                                 onChange={manejarCambioFiltro}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                                className="input py-2.5 text-sm"
                             />
                         </div>
 
@@ -881,7 +881,7 @@ export default function Movimientos() {
                                 name="fechaHasta"
                                 value={filtros.fechaHasta}
                                 onChange={manejarCambioFiltro}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                                className="input py-2.5 text-sm"
                             />
                         </div>
 
@@ -894,7 +894,7 @@ export default function Movimientos() {
                                 name="idCategoria"
                                 value={filtros.idCategoria}
                                 onChange={manejarCambioFiltro}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                                className="input py-2.5 text-sm"
                             >
                                 <option value="">{t('transactions.allCategories')}</option>
                                 {categorias.map((categoria) => (
@@ -918,7 +918,7 @@ export default function Movimientos() {
                                 value={filtros.montoMinimo}
                                 onChange={manejarCambioFiltro}
                                 placeholder="0.00"
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                                className="input py-2.5 text-sm"
                             />
                         </div>
 
@@ -935,7 +935,7 @@ export default function Movimientos() {
                                 value={filtros.montoMaximo}
                                 onChange={manejarCambioFiltro}
                                 placeholder="0.00"
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400"
+                                className="input py-2.5 text-sm"
                             />
                         </div>
 
@@ -948,7 +948,7 @@ export default function Movimientos() {
                                 name="idUsuario"
                                 value={filtros.idUsuario}
                                 onChange={manejarCambioFiltro}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                                className="input py-2.5 text-sm"
                             >
                                 <option value="">{t('transactions.allMembers')}</option>
                                 {miembros.map((miembro) => (

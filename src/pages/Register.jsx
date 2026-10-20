@@ -236,7 +236,7 @@ export default function Register({ volverLogin, onLogin }) {
                                 required
                                 disabled={cargando}
                                 {...ariaDe('nombre')}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                                className="input"
                             />
                         </div>
 
@@ -257,7 +257,7 @@ export default function Register({ volverLogin, onLogin }) {
                                 disabled={cargando}
                                 aria-invalid={camposConError.includes('correo') ? 'true' : undefined}
                                 aria-describedby={camposConError.includes('correo') ? 'registro-error-campo' : 'correo-ayuda'}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                                className="input"
                             />
                             {/* La política @gmail.com se avisa siempre, no como error tardío. */}
                             <p id="correo-ayuda" className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
@@ -282,7 +282,7 @@ export default function Register({ volverLogin, onLogin }) {
                                 required
                                 disabled={cargando}
                                 {...ariaDe('contrasena')}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                                className="input"
                             />
                         </div>
 
@@ -302,7 +302,7 @@ export default function Register({ volverLogin, onLogin }) {
                                 required
                                 disabled={cargando}
                                 {...ariaDe('confirmarContrasena')}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-gray-400 disabled:cursor-not-allowed disabled:bg-gray-100 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                                className="input"
                             />
                         </div>
 

@@ -166,7 +166,7 @@ export default function MiPerfil() {
 
             <form onSubmit={guardarPerfil} className="space-y-6">
                 {/* SECCIÓN 1: INFORMACIÓN PERSONAL */}
-                <section className="rounded-xl bg-white p-6 shadow-sm">
+                <section className="card p-6">
                     <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.personal')}</h2>
 
                     {/* AVATAR */}
@@ -189,7 +189,7 @@ export default function MiPerfil() {
                                 value={fotoPerfil}
                                 onChange={(e) => setFotoPerfil(e.target.value)}
                                 placeholder="https://example.com/photo.jpg"
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                                className="input py-2 text-sm"
                             />
                             <p className="mt-1 text-xs text-gray-400">{t('profile.photoHint')}</p>
                         </div>
@@ -207,7 +207,7 @@ export default function MiPerfil() {
                                 onChange={(e) => setNombre(e.target.value)}
                                 required
                                 maxLength={100}
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                                className="input py-2"
                             />
                         </div>
 
@@ -221,7 +221,7 @@ export default function MiPerfil() {
                                 value={apellido}
                                 onChange={(e) => setApellido(e.target.value)}
                                 maxLength={100}
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                                className="input py-2"
                             />
                         </div>
 
@@ -236,7 +236,7 @@ export default function MiPerfil() {
                                 onChange={(e) => setNombreVisible(e.target.value)}
                                 maxLength={100}
                                 placeholder={t('profile.displayPlaceholder')}
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                                className="input py-2"
                             />
                         </div>
 
@@ -251,14 +251,14 @@ export default function MiPerfil() {
                                 onChange={(e) => setTelefono(e.target.value)}
                                 maxLength={20}
                                 placeholder={t('profile.optional')}
-                                className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                                className="input py-2"
                             />
                         </div>
                     </div>
                 </section>
 
                 {/* SECCIÓN 2: CUENTA (solo lectura) */}
-                <section className="rounded-xl bg-white p-6 shadow-sm">
+                <section className="card p-6">
                     <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.account')}</h2>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -282,7 +282,7 @@ export default function MiPerfil() {
                 </section>
 
                 {/* SECCIÓN 3: APARIENCIA */}
-                <section className="rounded-xl bg-white p-6 shadow-sm">
+                <section className="card p-6">
                     <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.appearance')}</h2>
 
                     <div className="flex gap-3">
@@ -309,7 +309,7 @@ export default function MiPerfil() {
                 </section>
 
                 {/* SECCIÓN 4: IDIOMA */}
-                <section className="rounded-xl bg-white p-6 shadow-sm">
+                <section className="card p-6">
                     <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.language')}</h2>
 
                     <div className="flex gap-3">
@@ -419,7 +419,7 @@ function CambiarContrasena() {
     }
 
     return (
-        <section className="rounded-xl bg-white p-6 shadow-sm">
+        <section className="card p-6">
             <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('security.title')}</h2>
 
             {exito && <Notification tipo="success" mensaje={exito} onClose={() => setExito('')} />}
@@ -437,7 +437,7 @@ function CambiarContrasena() {
                         onChange={(e) => setActual(e.target.value)}
                         required
                         autoComplete="current-password"
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                        className="input py-2"
                     />
                 </div>
 
@@ -454,7 +454,7 @@ function CambiarContrasena() {
                             required
                             minLength={6}
                             autoComplete="new-password"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                            className="input py-2"
                         />
                     </div>
 
@@ -470,7 +470,7 @@ function CambiarContrasena() {
                             required
                             minLength={6}
                             autoComplete="new-password"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+                            className="input py-2"
                         />
                     </div>
                 </div>
@@ -508,7 +508,7 @@ function PreferenciasNotificaciones() {
     }
 
     return (
-        <section className="rounded-xl bg-white p-6 shadow-sm">
+        <section className="card p-6">
             <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('emailPreferences.title')}</h2>
             <p className="mb-4 text-sm text-gray-500">
                 {t('emailPreferences.description')}
