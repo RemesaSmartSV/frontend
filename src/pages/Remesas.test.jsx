@@ -12,7 +12,7 @@ import Remesas from './Remesas'
 vi.mock('react-i18next', () => {
     const map = {
         'remesas.titulo': 'Remesas',
-        'remesas.descripcion': 'Ledger de remesas del hogar.',
+        'remesas.descripcion': 'Registro de remesas del hogar.',
         'remesas.anio': 'Año',
         'remesas.totalEnviado': 'Total enviado',
         'remesas.totalRecibido': 'Total recibido',
@@ -125,7 +125,7 @@ describe('Remesas', () => {
             })
         ).toBeInTheDocument()
 
-        // Prueba de que el estado quedó cableado a los dos GET del ledger.
+        // Prueba de que el estado quedó cableado a los dos GET del registro de remesas.
         await waitFor(() => {
             expect(
                 llamadas.some((url) => url.includes('/api/Remesas/resumen'))

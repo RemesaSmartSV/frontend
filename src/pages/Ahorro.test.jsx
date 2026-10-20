@@ -13,7 +13,6 @@ vi.mock('react-i18next', () => {
         'ahorro.totalAhorrado': 'Total ahorrado',
         'ahorro.totalObjetivo': 'Total objetivo',
         'ahorro.progresoGlobal': 'Progreso global',
-        'ahorro.crearMeta': 'Crear meta de ahorro',
         'ahorro.editarMeta': 'Editar meta',
         'ahorro.tituloMeta': 'Título',
         'ahorro.montoObjetivo': 'Monto objetivo',

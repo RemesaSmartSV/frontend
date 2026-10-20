@@ -349,7 +349,7 @@ export default function Remesas() {
                     </p>
                 </div>
 
-                {/* TOTAL DE COMISIONES: el dato estrella del ledger, destacado
+                {/* TOTAL DE COMISIONES: el dato estrella del registro de remesas, destacado
                     con un anillo para separarlo visualmente del resto. */}
                 <div className="flex min-w-0 flex-col rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm ring-2 ring-amber-300">
                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">

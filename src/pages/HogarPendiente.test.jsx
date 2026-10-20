@@ -22,7 +22,7 @@ vi.mock('react-i18next', () => {
         'pendingHome.codeLabel': 'Código de la familia',
         'pendingHome.codePlaceholder': '123456',
         'pendingHome.codeRequired': 'Ingresa el código de la familia.',
-        'pendingHome.codeInvalid': 'Introduce el código de 6 dígitos de tu familia.',
+        'pendingHome.codeInvalid': 'Ingresa el código de 6 dígitos de tu familia.',
         'pendingHome.search': 'Buscar familia',
         'pendingHome.familyFound': 'Familia encontrada',
         'pendingHome.joinRequest': 'Solicitar unirse',
@@ -219,7 +219,7 @@ describe('HogarPendiente', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Buscar familia' }))
 
         expect(
-            await screen.findByText('Introduce el código de 6 dígitos de tu familia.')
+            await screen.findByText('Ingresa el código de 6 dígitos de tu familia.')
         ).toBeInTheDocument()
 
         // No llegó a tocar el backend.
@@ -245,7 +245,7 @@ describe('HogarPendiente', () => {
 
         // Pasó la validación de formato: jamás se mostró el error de código.
         expect(
-            screen.queryByText('Introduce el código de 6 dígitos de tu familia.')
+            screen.queryByText('Ingresa el código de 6 dígitos de tu familia.')
         ).not.toBeInTheDocument()
     })
 

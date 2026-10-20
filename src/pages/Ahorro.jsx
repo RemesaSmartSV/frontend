@@ -341,7 +341,7 @@ function Ahorro() {
             {/* FORMULARIO META */}
             <div className="rounded-xl bg-white p-6 shadow-sm">
                 <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                    {editando ? t('ahorro.editarMeta') : t('ahorro.crearMeta')}
+                    {editando ? t('ahorro.editarMeta') : t('ahorro.createGoal')}
                 </h2>
 
                 <form onSubmit={manejarSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
