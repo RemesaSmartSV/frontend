@@ -71,8 +71,9 @@ describe('Registro sin campo de familia', () => {
 
 describe('Registro con Google', () => {
     it('monta el botón de Google y pide su nonce al cargar', async () => {
-        // El client ID de GIS viene del entorno de test (backend/.env vía
-        // vite.config), así que el botón montado dispara el flujo de nonce.
+        // El client ID de GIS en modo Vitest es el placeholder determinista de
+        // vite.config (sin depender de backend/.env ni de secretos), así que el
+        // botón montado dispara el flujo de nonce.
         const fetchSpy = vi.fn(async (url) =>
             String(url).includes('google-nonce')
                 ? new Response(JSON.stringify({ nonce: 'nonce-de-prueba' }), {

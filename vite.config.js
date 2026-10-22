@@ -10,7 +10,13 @@ export default defineConfig(({ mode }) => {
     // In dev, reuse only the public Google Client ID from backend/.env.
     // No SMTP/JWT values are exposed to the browser bundle.
     const backendEnv = loadEnv(mode, resolve(process.cwd(), '../backend'), '')
-    const googleClientId = process.env.VITE_GOOGLE_CLIENT_ID || backendEnv.GOOGLE_CLIENT_ID || ''
+    // Under Vitest the client ID must be deterministic and env-independent:
+    // the tests mock GIS entirely and CI has no backend/.env, so a placeholder
+    // keeps the component on its real code path without developer secrets.
+    const isVitest = !!process.env.VITEST
+    const googleClientId = isVitest
+        ? (process.env.VITE_GOOGLE_CLIENT_ID || 'client-id-de-prueba')
+        : (process.env.VITE_GOOGLE_CLIENT_ID || backendEnv.GOOGLE_CLIENT_ID || '')
 
     return {
         define: {
