@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Bell, Sun, Moon } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { useTranslation } from 'react-i18next'
+import logo from '../assets/logo-blanco-trimmed.png'
 
 export default function Navbar({
     usuario,
@@ -65,8 +66,18 @@ export default function Navbar({
                     {menuAbierto ? '✕' : '☰'}
                 </button>
 
+                {/* ANCLA DE MARCA — el sidebar está off-canvas en mobile,
+                    así que el Navbar es el único lugar donde la marca
+                    permanece visible. Chip azul + logo trimmed blanco:
+                    legible tanto en light (navbar blanco) como en dark
+                    (surface oscuro). Solo hasta lg; el desktop ya tiene
+                    el logo grande del sidebar. */}
+                <span className="mr-3 flex shrink-0 items-center rounded-lg bg-[#123B8F] p-1.5 lg:hidden">
+                    <img src={logo} alt="RemesaSmart SV" className="h-6 w-auto" />
+                </span>
+
                 {/* NOMBRE EN CELULAR */}
-                <p className="text-base font-bold text-[#123B8F] lg:hidden">
+                <p className="hidden min-w-0 flex-1 truncate text-base font-bold text-[#123B8F] sm:block lg:hidden">
                     {t('shell.familyPrefix', { name: nombreHogar })}
                 </p>
 

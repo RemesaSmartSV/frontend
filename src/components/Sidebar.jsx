@@ -15,7 +15,7 @@ import {
     LogOut
 } from 'lucide-react'
 
-import logo from '../assets/remesa-smart (blanco).png'
+import logo from '../assets/logo-blanco-trimmed.png'
 import LanguageSelector from './LanguageSelector'
 
 export default function Sidebar({
@@ -135,27 +135,23 @@ export default function Sidebar({
                     }`}
             >
 
-                {/* LOGO */}
-                <div className="shrink-0 -mt-2 text-center">
-
+                {/* LOGO — el asset trimmed mide 5:1 (wordmark completo);
+                    se dimensiona por ancho (w-48 ≈ 192px) porque forzar
+                    h-20 estiraría el wordmark a 400px y desbordaría el
+                    sidebar de 256px. */}
+                <div className="shrink-0 pt-3 text-center">
                     <div className="flex justify-center">
-                        
                         <img
                             src={logo}
                             alt="RemesaSmart SV"
-                            className="h-16 w-auto object-contain"
+                            className="h-auto w-48 max-w-full object-contain"
                         />
                     </div>
 
-                    </div>
-
-                        
-
-                    <p className="mt-1 text-sm font-medium text-white/80 text-center">
+                    <p className="mt-2 text-sm font-medium text-white/80">
                         {t('shell.tagline')}
                     </p>
-
-                
+                </div>
 
                 {/* ENLACES AGRUPADOS */}
                 <nav

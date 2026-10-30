@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import { ArrowLeftRight, PiggyBank, Users, LineChart } from 'lucide-react'
 import { authApi } from '../services/api'
 import Notification from '../components/Notification'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../components/LanguageSelector'
 import GoogleSignInButton from '../components/GoogleSignInButton'
-import logoBlanco from '../assets/remesa-smart (blanco).png'
+import logoBlanco from '../assets/logo-blanco-trimmed.png'
 
 export default function Register({ volverLogin, onLogin }) {
     const { t } = useTranslation()
@@ -155,46 +156,61 @@ export default function Register({ volverLogin, onLogin }) {
     return (
         <div className="flex min-h-screen">
             {/* COLUMNA IZQUIERDA — Branding (solo desktop); misma
-                estructura que Login. El asset blanco es el mismo que usa
-                el Sidebar: la variante en color sería ilegible sobre este
-                fondo. */}
-            <div className="hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:bg-[#123B8F] lg:p-12 lg:text-white">
+                estructura que Login. Gradiente arbitrario dentro de la
+                paleta de marca: no es bg-gradient-to-br, así que la
+                variante dark global no lo pisa y el panel conserva la
+                identidad en ambos temas. */}
+            <div className="hidden lg:flex lg:w-1/2 lg:flex-col lg:bg-[linear-gradient(135deg,#123B8F_0%,#1D4FA3_55%,#0B2E6B_100%)] lg:p-12 lg:text-white">
+                {/* Hero de marca: logo trimmed + tagline agrupados arriba */}
                 <div>
+                    {/* El asset trimmed es el mismo que usa el Sidebar: la
+                        variante en color sería ilegible sobre este fondo. */}
                     <h1 className="text-3xl font-extrabold tracking-tight">
-                        <img src={logoBlanco} alt="RemesaSmart SV" className="h-12 w-auto" />
+                        <img src={logoBlanco} alt="RemesaSmart SV" className="h-16 w-auto" />
                     </h1>
-                    <p className="mt-2 text-lg text-blue-100">{t('auth.tagline')}</p>
+                    <p className="mt-3 text-lg text-blue-100">{t('auth.tagline')}</p>
                 </div>
 
-                <div className="space-y-6">
+                {/* Beneficios con iconos lucide en tiles bg-white/10 */}
+                <div className="mt-12 space-y-5">
                     {[
-                        { icono: '💰', texto: t('auth.benefitTransactions') },
-                        { icono: '🐷', texto: t('auth.benefitSavings') },
-                        { icono: '👨‍👩‍👧', texto: t('auth.benefitFamily') },
-                        { icono: '📊', texto: t('auth.benefitCharts') },
-                    ].map((item, i) => (
+                        { Icono: ArrowLeftRight, texto: t('auth.benefitTransactions') },
+                        { Icono: PiggyBank, texto: t('auth.benefitSavings') },
+                        { Icono: Users, texto: t('auth.benefitFamily') },
+                        { Icono: LineChart, texto: t('auth.benefitCharts') },
+                    ].map(({ Icono, texto }, i) => (
                         <div key={i} className="flex items-center gap-4">
-                            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-2xl">{item.icono}</span>
-                            <p className="text-blue-100">{item.texto}</p>
+                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                                <Icono size={22} strokeWidth={1.8} />
+                            </span>
+                            <p className="text-blue-100">{texto}</p>
                         </div>
                     ))}
                 </div>
 
-                <p className="text-sm text-blue-200">{t('auth.copyright')}</p>
+                {/* Copyright anclado abajo sin vacíos justify-between */}
+                <p className="mt-auto pt-12 text-sm text-blue-200">{t('auth.copyright')}</p>
             </div>
 
-            {/* COLUMNA DERECHA — Formulario */}
-            <div className="flex w-full flex-col items-center justify-center bg-gray-50 px-4 py-12 dark:bg-slate-900 lg:w-1/2">
+            {/* COLUMNA DERECHA — Formulario sobre gradiente de marca */}
+            <div className="flex w-full flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 px-4 py-12 lg:w-1/2">
                 <div className="w-full max-w-md">
                     <div className="mb-4 flex justify-end">
                         <LanguageSelector />
                     </div>
 
-                    {/* Encabezado móvil */}
-                    <div className="mb-8 text-center lg:hidden">
-                        <h1 className="text-2xl font-extrabold tracking-tight text-[#123B8F] dark:text-blue-400">RemesaSmart SV</h1>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('auth.tagline')}</p>
+                    {/* Logo móvil: imagen real (asset trimmed) sobre chip de
+                        marca, visible en light y dark; solo texto no ancla la
+                        marca en pantallas pequeñas. */}
+                    <div className="mb-6 flex flex-col items-center text-center lg:hidden">
+                        <span className="inline-flex rounded-2xl bg-[#123B8F] px-5 py-3.5">
+                            <img src={logoBlanco} alt="RemesaSmart SV" className="h-8 w-auto" />
+                        </span>
+                        <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{t('auth.tagline')}</p>
                     </div>
+
+                    {/* Tarjeta elevada: ancla visual del formulario */}
+                    <div className="rounded-2xl bg-white p-8 shadow-xl">
 
                     <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-gray-100">
                         {t('auth.registerTitle')}
@@ -361,6 +377,7 @@ export default function Register({ volverLogin, onLogin }) {
                         </button>
                     </p>
 
+                    </div>
                 </div>
             </div>
         </div>
