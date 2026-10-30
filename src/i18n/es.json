@@ -498,7 +498,7 @@
     "resendError": "No se pudo reenviar.",
     "cancelError": "No se pudo cancelar.",
     "remove": "Retirar",
-    "removeMember": "¿Retirar a {{name}} de la familia?",
+    "removeMember": "¿Retirar a {{name}} de la familia? Saldrá de la familia, pero su historial de movimientos permanecerá visible para todos.",
     "memberRemoved": "{{name}} fue retirado de la familia.",
     "removeError": "No se pudo retirar al miembro.",
     "roleOf": "Rol de {{name}}",

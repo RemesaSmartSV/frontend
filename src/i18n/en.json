@@ -543,7 +543,7 @@
     "resendError": "Could not resend the invitation.",
     "cancelError": "Could not cancel the invitation.",
     "remove": "Remove",
-    "removeMember": "Remove {{name}} from the family?",
+    "removeMember": "Remove {{name}} from the family? They will leave the family, but their transaction history will remain visible to everyone.",
     "memberRemoved": "{{name}} was removed from the family.",
     "removeError": "Could not remove the member.",
     "roleOf": "Role for {{name}}",

@@ -48,9 +48,10 @@ export default function MiHogar() {
         esAdmin = false
     }
 
-    // Si la lista ya cargó y solo queda una persona, abandonar elimina la
-    // familia entera (el backend la borra en cascada). Se exige !cargando
-    // para no mostrar la advertencia destructiva mientras miembros sigue [].
+    // Si la lista ya cargó y solo queda una persona, se muestra una
+    // advertencia más fuerte al abandonar o cambiar de familia (el hogar y
+    // sus datos financieros se conservan, §6.3). Se exige !cargando para no
+    // contar a miembros mientras la lista sigue [].
     const esUltimoMiembro = !cargando && miembros.length === 1
 
     const cargarDatos = useCallback(async () => {
@@ -158,9 +159,9 @@ export default function MiHogar() {
     }
 
     // Switch family: leave the current one under the same rule as "leave"
-    // (the last member deletes the family together with its data) and drop
-    // the user on /hogar, where HogarPendiente offers creating or searching
-    // for another family.
+    // (the household and its financial data are preserved, even for the last
+    // member — §6.3) and drop the user on /hogar, where HogarPendiente
+    // offers creating or searching for another family.
     async function cambiarDeFamilia() {
         setError('')
         setMensaje('')
@@ -512,8 +513,9 @@ export default function MiHogar() {
                             if (!window.confirm(aviso)) return
                             try {
                                 // El backend responde un LoginResponse refrescado
-                                // SIN hogar; si éste era el último miembro, además
-                                // borró la familia entera con sus datos financieros.
+                                // SIN hogar; el hogar y sus datos financieros se
+                                // conservan (§6.3 Caso A), incluso si era el
+                                // último miembro.
                                 const datosUsuario = await usuariosApi.abandonarFamilia()
                                 localStorage.setItem('token', datosUsuario.token)
                                 localStorage.setItem('usuario', JSON.stringify(datosUsuario))

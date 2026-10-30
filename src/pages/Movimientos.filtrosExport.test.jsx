@@ -26,9 +26,10 @@ import Movimientos from './Movimientos'
 // 2. Hay TRES botones de exportar: "CSV filtrado" (genera el archivo en el
 //    cliente a partir de las filas visibles) y "CSV"/"JSON" (van al endpoint
 //    /Movimientos/exportar). Se prueban los tres, porque son rutas distintas.
-// 3. La columna "Registrado por" resuelve idUsuario → nombre con /Usuarios
-//    en el NAVEGADOR (el API devuelve la entidad cruda). El filtro por
-//    miembro es también client-side, igual que el resto del panel.
+// 3. La columna "Registrado por" prefiere nombreAutor del backend (DTO
+//    superset); el join idUsuario → nombre con /Usuarios en el NAVEGADOR es
+//    el fallback, y "Desconocido" el último recurso. El filtro por miembro
+//    es también client-side, igual que el resto del panel.
 
 const MOVIMIENTOS = [
     {

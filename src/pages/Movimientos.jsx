@@ -339,9 +339,13 @@ export default function Movimientos() {
         return map
     }, [miembros])
 
-    function nombreDeUsuario(idUsuario) {
+    // Orden de preferencia del nombre del autor: nombreAutor del backend
+    // (resuelto en el servidor, cubre también a miembros removidos de la
+    // familia) → join con los miembros actuales → "Desconocido".
+    function nombreDeUsuario(movimiento) {
         return (
-            nombresPorUsuario.get(idUsuario) ||
+            movimiento.nombreAutor ||
+            nombresPorUsuario.get(movimiento.idUsuario) ||
             t('transactions.unknownUser')
         )
     }
@@ -472,7 +476,7 @@ export default function Movimientos() {
                     movimiento.origenEmisora || ''
 
                 const registradoPor =
-                    nombreDeUsuario(movimiento.idUsuario)
+                    nombreDeUsuario(movimiento)
 
                 return [
                     fecha,
@@ -1155,7 +1159,7 @@ export default function Movimientos() {
                                                 </td>
 
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                                    {nombreDeUsuario(movimiento.idUsuario)}
+                                                    {nombreDeUsuario(movimiento)}
                                                 </td>
 
                                                 <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
@@ -1271,7 +1275,7 @@ export default function Movimientos() {
                                             <span className="flex flex-wrap items-center gap-x-1.5 text-xs text-gray-500 dark:text-gray-400">
                                                 <span>
                                                     {nombreDeUsuario(
-                                                        movimiento.idUsuario
+                                                        movimiento
                                                     )}
                                                 </span>
 
