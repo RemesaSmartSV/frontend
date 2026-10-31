@@ -24,6 +24,11 @@ import {
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import LeyendaOrdenada from '../components/LeyendaOrdenada'
+import { ChipIcono } from '../components/ui/ChipIcono'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { TarjetaKpi } from '../components/ui/TarjetaKpi'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { CLASE_TARJETA } from '../components/ui/estilos'
 import { formatearMoneda, formatearNumero, formatearFecha, obtenerLocale, parsearFechaLocal, obtenerFechaHoy } from '../utils/formato'
 import {
     AlertTriangle,
@@ -34,7 +39,6 @@ import {
     ArrowLeftRight,
     BarChart3,
     PieChart as IconoPieChart,
-    Inbox,
     List,
 } from 'lucide-react'
 
@@ -303,120 +307,6 @@ function llenarBucketsPor(buckets, movimientos, claveDeFecha) {
     })
 
     return buckets
-}
-
-/*
- * ==========================================
- * PIEZAS PRESENTACIONALES (sin lógica de datos)
- * ==========================================
- */
-
-// Tintes de marca para chips de icono. Se usa bg-yellow-100 (y no amber-100)
-// porque Index.css solo define el override dark para bg-yellow-100.
-const TONOS = {
-    verde: 'bg-green-100 text-green-700',
-    ambar: 'bg-yellow-100 text-amber-700',
-    rojo: 'bg-red-100 text-red-700',
-    azul: 'bg-blue-100 text-blue-700',
-    violeta: 'bg-violet-100 text-violet-700',
-}
-
-// Tarjeta elevada base del tablero, en el lenguaje del login (rounded-2xl +
-// sombra sutil). bg-white y border-slate-100 tienen overrides dark globales.
-const CLASE_TARJETA =
-    'rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_3px_12px_rgba(0,0,0,0.08)]'
-
-function ChipIcono({ Icono, tono, className = '' }) {
-    return (
-        <span
-            aria-hidden="true"
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${TONOS[tono]} ${className}`}
-        >
-            <Icono size={18} strokeWidth={2} />
-        </span>
-    )
-}
-
-// Encabezado de sección: chip de icono + título (h2) + subtítulo opcional +
-// slot extra a la derecha (enlace, badge, botón).
-function EncabezadoSeccion({ Icono, tono, titulo, subtitulo, extra }) {
-    return (
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-                <ChipIcono
-                    Icono={Icono}
-                    tono={tono}
-                    className="h-9 w-9 rounded-lg"
-                />
-
-                <div className="min-w-0">
-                    <h2 className="truncate text-base font-bold text-slate-800 sm:text-lg">
-                        {titulo}
-                    </h2>
-
-                    {subtitulo && (
-                        <p className="mt-0.5 text-sm text-slate-500">
-                            {subtitulo}
-                        </p>
-                    )}
-                </div>
-            </div>
-
-            {extra}
-        </div>
-    )
-}
-
-// Tarjeta KPI: chip de icono en tinte de marca, etiqueta, valor grande con
-// tabular-nums para escaneo instantáneo y nota de contexto opcional.
-function TarjetaKpi({ Icono, tono, etiqueta, valor, colorValor, nota }) {
-    return (
-        <div className="flex min-w-0 flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
-            <div className="flex items-center gap-3">
-                <ChipIcono
-                    Icono={Icono}
-                    tono={tono}
-                    className="h-9 w-9 rounded-lg"
-                />
-
-                <p className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    {etiqueta}
-                </p>
-            </div>
-
-            <p
-                className={`mt-3 truncate text-2xl font-semibold tabular-nums ${colorValor}`}
-            >
-                {valor}
-            </p>
-
-            {nota && (
-                <p className="mt-1 truncate text-xs text-slate-500">
-                    {nota}
-                </p>
-            )}
-        </div>
-    )
-}
-
-// Empty state tipográfico y centrado, reutilizando las claves i18n existentes.
-function EstadoVacio({ Icono = Inbox, texto, className = '' }) {
-    return (
-        <div
-            className={`flex flex-col items-center justify-center gap-3 px-4 text-center ${className}`}
-        >
-            <span
-                aria-hidden="true"
-                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500"
-            >
-                <Icono size={22} strokeWidth={1.8} />
-            </span>
-
-            <p className="max-w-sm text-sm leading-6 text-slate-500">
-                {texto}
-            </p>
-        </div>
-    )
 }
 
 export default function Dashboard() {
