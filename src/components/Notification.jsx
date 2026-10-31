@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Check, Info, TriangleAlert, X } from 'lucide-react'
 
 export default function Notification({ tipo = 'success', mensaje, onClose }) {
     const { t } = useTranslation()
@@ -11,11 +12,13 @@ export default function Notification({ tipo = 'success', mensaje, onClose }) {
     }
 
     const iconos = {
-        success: '✓',
-        error: '✕',
-        warning: '⚠',
-        info: 'ℹ',
+        success: Check,
+        error: X,
+        warning: TriangleAlert,
+        info: Info,
     }
+
+    const Icono = iconos[tipo]
 
     useEffect(() => {
         if (!mensaje || tipo !== 'success' || !onClose) {
@@ -33,9 +36,11 @@ export default function Notification({ tipo = 'success', mensaje, onClose }) {
             role="alert"
             className={`fixed right-5 bottom-5 z-50 flex w-80 items-center gap-3 rounded-lg border-l-4 p-4 shadow-lg ${estilos[tipo]}`}
         >
-            <span className="text-xl font-bold" aria-hidden="true">
-                {iconos[tipo]}
-            </span>
+            {Icono && (
+                <span className="shrink-0" aria-hidden="true">
+                    <Icono size={20} strokeWidth={2.5} />
+                </span>
+            )}
 
             <p className="flex-1 text-sm font-medium">
                 {mensaje}

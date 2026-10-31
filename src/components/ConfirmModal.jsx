@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { TriangleAlert } from 'lucide-react'
 
 export default function ConfirmModal({
     abierto,
@@ -45,8 +46,8 @@ export default function ConfirmModal({
                 className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-2xl">
-                    ⚠️
+                <div className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                    <TriangleAlert size={24} className="text-red-600" aria-hidden="true" />
                 </div>
 
                 <h3

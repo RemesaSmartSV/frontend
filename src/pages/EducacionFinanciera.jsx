@@ -1,8 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+    BookOpen,
+    ClipboardList,
+    HandCoins,
+    Heart,
+    Lightbulb,
+    Library,
+    TrendingUp,
+    TriangleAlert,
+} from 'lucide-react'
 import { educacionApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { ChipIcono } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA } from '../components/ui/estilos'
 
 export default function EducacionFinanciera() {
     const { t } = useTranslation()
@@ -73,19 +86,19 @@ export default function EducacionFinanciera() {
             />
 
             {/* ENCABEZADO */}
-            <section className="overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-5 text-white shadow-lg sm:p-8">
+            <section className="overflow-hidden rounded-2xl bg-gradient-to-r from-[#123B8F] via-[#1D4FA3] to-[#0B2E6B] p-5 text-white shadow-lg sm:p-8">
 
                 <div className="max-w-3xl">
 
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-sm sm:h-14 sm:w-14 sm:text-3xl">
-                        💡
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm sm:h-14 sm:w-14">
+                        <Lightbulb size={28} strokeWidth={2} aria-hidden="true" />
                     </div>
 
                     <h1 className="text-2xl font-bold sm:text-3xl md:text-4xl">
                         {t('education.title')}
                     </h1>
 
-                    <p className="mt-3 text-sm leading-relaxed text-emerald-50 sm:text-base md:text-lg">
+                    <p className="mt-3 text-sm leading-relaxed text-blue-100 sm:text-base md:text-lg">
                         {t('education.description')}
                     </p>
 
@@ -94,56 +107,38 @@ export default function EducacionFinanciera() {
             </section>
 
             {/* INTRODUCCIÓN */}
-            <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+            <section className={CLASE_TARJETA}>
 
-                <div className="flex items-start gap-3 sm:gap-4">
+                <EncabezadoSeccion
+                    Icono={BookOpen}
+                    tono="azul"
+                    titulo={t('education.introTitle')}
+                />
 
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xl sm:h-12 sm:w-12 sm:text-2xl">
-                        📚
-                    </div>
-
-                    <div className="min-w-0">
-
-                        <h2 className="text-lg font-bold text-gray-800 sm:text-xl">
-                            {t('education.introTitle')}
-                        </h2>
-
-                        <p className="mt-2 text-sm leading-relaxed text-gray-600 sm:text-base">
-                            {t('education.introText')}
-                        </p>
-
-                    </div>
-
-                </div>
+                <p className="text-sm leading-relaxed text-gray-600 sm:text-base">
+                    {t('education.introText')}
+                </p>
 
             </section>
 
             {/* TÍTULO DE CONSEJOS */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-                <div className="min-w-0">
-
-                    <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
-                        {t('education.tips')}
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-500 sm:text-base">
-                        {t('education.recommendations')}
-                    </p>
-
-                </div>
-
-                <button
-                    onClick={actualizarTips}
-                    disabled={cargando || procesando}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
-                >
-                    {procesando
-                        ? t('common.procesando')
-                        : t('common.actualizar')}
-                </button>
-
-            </div>
+            <EncabezadoSeccion
+                Icono={ClipboardList}
+                tono="ambar"
+                titulo={t('education.tips')}
+                subtitulo={t('education.recommendations')}
+                extra={
+                    <button
+                        onClick={actualizarTips}
+                        disabled={cargando || procesando}
+                        className="w-full rounded-lg bg-blue-100 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
+                    >
+                        {procesando
+                            ? t('common.procesando')
+                            : t('common.actualizar')}
+                    </button>
+                }
+            />
 
             {/* CARGANDO */}
             {cargando && (
@@ -156,8 +151,8 @@ export default function EducacionFinanciera() {
 
                     <div className="flex items-start gap-3 sm:gap-4">
 
-                        <div className="shrink-0 text-2xl">
-                            ⚠️
+                        <div className="shrink-0 text-red-700">
+                            <TriangleAlert size={24} aria-hidden="true" />
                         </div>
 
                         <div className="min-w-0 flex-1">
@@ -189,10 +184,10 @@ export default function EducacionFinanciera() {
 
             {/* SIN TIPS */}
             {!cargando && !error && tips.length === 0 && (
-                <div className="rounded-2xl bg-white p-6 text-center shadow-sm sm:p-10">
+                <div className={`${CLASE_TARJETA} text-center sm:py-10`}>
 
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
-                        📖
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 sm:h-16 sm:w-16">
+                        <Library size={26} className="text-slate-500" aria-hidden="true" />
                     </div>
 
                     <h3 className="mt-4 text-lg font-bold text-gray-800 sm:text-xl">
@@ -213,22 +208,24 @@ export default function EducacionFinanciera() {
                     {tips.map((tip) => (
                         <article
                             key={tip.idTip}
-                            className="group relative overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                            className={`group relative overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl ${CLASE_TARJETA}`}
                         >
 
                             {/* BARRA SUPERIOR */}
-                            <div className="h-2 bg-gradient-to-r from-emerald-500 to-teal-400" />
+                            <div className="-mx-6 -mt-6 h-2 bg-gradient-to-r from-[#123B8F] to-[#1D4FA3]" />
 
-                            <div className="p-5 sm:p-6">
+                            <div className="mt-5 sm:mt-6">
 
                                 {/* ICONO */}
                                 <div className="mb-5 flex items-center justify-between gap-3">
 
-                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-xl transition group-hover:scale-110 sm:h-12 sm:w-12 sm:text-2xl">
-                                        💰
-                                    </div>
+                                    <ChipIcono
+                                        Icono={HandCoins}
+                                        tono="azul"
+                                        className="transition group-hover:scale-110"
+                                    />
 
-                                    <span className="whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                    <span className="whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                                         {t('education.tip')}
                                     </span>
 
@@ -243,19 +240,6 @@ export default function EducacionFinanciera() {
                                 <p className="mt-3 break-words text-sm leading-relaxed text-gray-600 sm:text-base">
                                     {tip.contenido}
                                 </p>
-
-                                {/* CATEGORÍA */}
-                                <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
-
-                                    <span className="text-sm text-gray-500">
-                                        {t('education.category')}
-                                    </span>
-
-                                    <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                                        #{tip.idCategoria}
-                                    </span>
-
-                                </div>
 
                             </div>
 
@@ -273,8 +257,9 @@ export default function EducacionFinanciera() {
 
                         <div className="min-w-0">
 
-                            <h3 className="text-base font-bold sm:text-lg">
-                                💚 {t('education.footerTitle')}
+                            <h3 className="flex items-center gap-2 text-base font-bold sm:text-lg">
+                                <Heart size={18} className="text-green-400" aria-hidden="true" />
+                                {t('education.footerTitle')}
                             </h3>
 
                             <p className="mt-1 text-sm leading-relaxed text-gray-300">
@@ -283,8 +268,8 @@ export default function EducacionFinanciera() {
 
                         </div>
 
-                        <div className="self-end text-3xl sm:self-auto">
-                            📈
+                        <div className="self-end text-green-400 sm:self-auto">
+                            <TrendingUp size={28} aria-hidden="true" />
                         </div>
 
                     </div>

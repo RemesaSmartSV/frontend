@@ -44,7 +44,7 @@ class ErrorBoundary extends Component {
                 <button
                     type="button"
                     onClick={() => window.location.reload()}
-                    className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                    className="rounded-lg bg-[#123B8F] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#0B2E6B] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#123B8F] focus-visible:ring-offset-2"
                 >
                     {this.props.t('errorBoundary.reload')}
                 </button>

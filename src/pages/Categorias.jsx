@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Pencil, Plus, Tags } from 'lucide-react'
 import { categoriasApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import ConfirmModal from '../components/ConfirmModal'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 
 export default function Categorias() {
     const { t } = useTranslation()
@@ -158,26 +163,30 @@ export default function Categorias() {
             />
 
             {/* ENCABEZADO */}
-            <div className="mb-6 sm:mb-8">
+            <div className="mb-6">
 
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                     {t('nav.categorias')}
                 </h1>
 
-                <p className="text-gray-500">
+                <p className="mt-1 text-sm text-slate-500">
                     {t('categories.description')}
                 </p>
 
             </div>
 
             {/* FORMULARIO */}
-            <section className="mb-6 rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+            <section className={CLASE_TARJETA}>
 
-                <h2 className="mb-5 text-xl font-semibold text-slate-900">
-                    {editandoId
-                        ? t('categories.edit')
-                        : t('categories.create')}
-                </h2>
+                <EncabezadoSeccion
+                    Icono={editandoId ? Pencil : Plus}
+                    tono={editandoId ? 'ambar' : 'azul'}
+                    titulo={
+                        editandoId
+                            ? t('categories.edit')
+                            : t('categories.create')
+                    }
+                />
 
                 <form onSubmit={guardarCategoria}>
 
@@ -257,7 +266,7 @@ export default function Categorias() {
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="w-full rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                            className="w-full rounded-lg bg-[#123B8F] px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-[#0B2E6B] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             {procesando
                                 ? t('categories.saving')
@@ -271,7 +280,7 @@ export default function Categorias() {
                                 type="button"
                                 onClick={limpiarFormulario}
                                 disabled={procesando}
-                                className="w-full rounded-lg bg-gray-500 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                className="w-full rounded-lg bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:-translate-y-px hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                             >
                                 {t('common.cancelar')}
                             </button>
@@ -284,31 +293,25 @@ export default function Categorias() {
             </section>
 
             {/* CATEGORÍAS REGISTRADAS */}
-            <section className="mb-8 overflow-hidden rounded-[14px] bg-white p-4 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:p-6">
+            <section className={CLASE_TARJETA}>
 
-                <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-
-                    <div>
-                        <h2 className="text-xl font-semibold text-slate-900">
-                            {t('categories.registered')}
-                        </h2>
-
-                        <p className="mt-1 text-sm text-gray-500">
-                            {t('categories.available')}
-                        </p>
-                    </div>
-
-                    <button
-                        onClick={cargarCategorias}
-                        disabled={cargando || procesando}
-                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                    >
-                        {cargando
-                            ? 'Cargando...'
-                            : t('common.actualizar')}
-                    </button>
-
-                </div>
+                <EncabezadoSeccion
+                    Icono={Tags}
+                    tono="azul"
+                    titulo={t('categories.registered')}
+                    subtitulo={t('categories.available')}
+                    extra={
+                        <button
+                            onClick={cargarCategorias}
+                            disabled={cargando || procesando}
+                            className="w-full rounded-lg bg-blue-100 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:-translate-y-px hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                        >
+                            {cargando
+                                ? t('common.cargando')
+                                : t('common.actualizar')}
+                        </button>
+                    }
+                />
 
                 {cargando ? (
 
@@ -316,17 +319,11 @@ export default function Categorias() {
 
                 ) : categorias.length === 0 ? (
 
-                    <div className="p-8 text-center">
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">
-                            🏷️
-                        </div>
-                        <p className="mt-4 font-medium text-gray-700">
-                            {t('categories.empty')}
-                        </p>
-                        <p className="mt-1 text-sm text-gray-500">
-                            {t('categories.emptyHint')}
-                        </p>
-                    </div>
+                    <EstadoVacio
+                        Icono={Tags}
+                        texto={`${t('categories.empty')} ${t('categories.emptyHint')}`}
+                        className="py-8"
+                    />
 
                 ) : (
 
@@ -337,19 +334,19 @@ export default function Categorias() {
                             <thead>
                                 <tr>
 
-                                    <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                    <th className={`${CLASE_TH} px-3 py-3 sm:px-3.5`}>
                                         {t('categories.name')}
                                     </th>
 
-                                    <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                    <th className={`${CLASE_TH} px-3 py-3 sm:px-3.5`}>
                                         {t('categories.type')}
                                     </th>
 
-                                    <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                    <th className={`${CLASE_TH} px-3 py-3 sm:px-3.5`}>
                                         {t('categories.icon')}
                                     </th>
 
-                                    <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                    <th className={`${CLASE_TH} px-3 py-3 sm:px-3.5`}>
                                         {t('common.acciones')}
                                     </th>
 
@@ -408,9 +405,9 @@ export default function Categorias() {
                                                         )
                                                     }
                                                     disabled={procesando}
-                                                    className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition hover:bg-yellow-200 disabled:cursor-not-allowed disabled:opacity-50 ${TONOS.ambar}`}
                                                 >
-                                                    Editar
+                                                    {t('common.editar')}
                                                 </button>
 
                                                 <button
@@ -420,7 +417,7 @@ export default function Categorias() {
                                                         )
                                                     }
                                                     disabled={procesando}
-                                                    className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    className={`rounded-lg px-3 py-2 text-sm font-semibold transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 ${TONOS.rojo}`}
                                                 >
                                                     {procesando
                                                         ? t('common.procesando')

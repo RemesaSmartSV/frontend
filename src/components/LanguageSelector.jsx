@@ -55,7 +55,7 @@ export default function LanguageSelector({ className = '' }) {
                     type="button"
                     onClick={() => seleccionarIdioma(language.code)}
                     aria-pressed={currentLanguage === language.code}
-                    className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${currentLanguage === language.code ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                    className={`rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${currentLanguage === language.code ? 'bg-[#123B8F] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
                     {language.code.toUpperCase()}
                 </button>

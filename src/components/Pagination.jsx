@@ -43,7 +43,7 @@ const Pagination = memo(function Pagination({
                         onClick={() => cambiarPagina(pagina)}
                         aria-label={t('common.pageNumber', { page: pagina })}
                         className={`flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-sm font-semibold transition ${pagina === paginaActual
-                                ? 'bg-blue-600 text-white shadow-sm'
+                                ? 'bg-[#123B8F] text-white shadow-sm'
                                 : 'bg-white text-gray-700 hover:bg-gray-100'
                             }`}
                     >
