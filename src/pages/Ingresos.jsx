@@ -6,6 +6,11 @@ import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import FiltrosMenu from '../components/FiltrosMenu'
+import { Pencil, Plus, SearchX, TrendingUp, Wallet } from 'lucide-react'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 
 function Ingresos() {
@@ -428,11 +433,11 @@ function Ingresos() {
     return (
         <div className="space-y-6">
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                     {t('nav.ingresos')}
                 </h1>
 
-                <p className="text-gray-500">
+                <p className="mt-1 text-sm text-slate-500">
                     {t('income.description')}
                 </p>
             </div>
@@ -453,12 +458,16 @@ function Ingresos() {
                 />
             )}
 
-            <section className="mb-6 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
-                <h2 className="mb-4 text-xl font-semibold text-slate-900">
-                    {editandoId
-                        ? t('income.edit')
-                        : t('income.create')}
-                </h2>
+            <section className={`${CLASE_TARJETA} mb-6`}>
+                <EncabezadoSeccion
+                    Icono={editandoId ? Pencil : Plus}
+                    tono={editandoId ? 'ambar' : 'azul'}
+                    titulo={
+                        editandoId
+                            ? t('income.edit')
+                            : t('income.create')
+                    }
+                />
 
                 <form
                     onSubmit={guardarIngreso}
@@ -550,7 +559,7 @@ function Ingresos() {
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-lg bg-[#123B8F] px-5 py-2.5 font-semibold text-white transition hover:bg-[#0B2E6B] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {procesando
                                 ? t('common.guardando')
@@ -564,7 +573,7 @@ function Ingresos() {
                                 type="button"
                                 onClick={limpiarFormulario}
                                 disabled={procesando}
-                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-lg bg-slate-100 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {t('common.cancelar')}
                             </button>
@@ -573,38 +582,39 @@ function Ingresos() {
                 </form>
             </section>
 
-            <section className="rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
-                <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <h2 className="text-xl font-semibold text-slate-900">
-                            {t('income.registered')}
-                        </h2>
+            <section className={CLASE_TARJETA}>
+                <EncabezadoSeccion
+                    Icono={Wallet}
+                    tono="verde"
+                    titulo={t('income.registered')}
+                    extra={
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                            <button
+                                type="button"
+                                onClick={exportarIngresos}
+                                disabled={
+                                    cargando ||
+                                    procesando ||
+                                    ingresosFiltradosPorUI.length ===
+                                    0
+                                }
+                                className={`w-full rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.verde} hover:bg-green-200`}
+                            >
+                                {t('common.exportar')}
+                            </button>
 
-                        <button
-                            type="button"
-                            onClick={exportarIngresos}
-                            disabled={
-                                cargando ||
-                                procesando ||
-                                ingresosFiltradosPorUI.length ===
-                                0
-                            }
-                            className="w-full rounded-lg bg-green-600 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            {t('common.exportar')}
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={cargarDatos}
-                        disabled={
-                            cargando || procesando
-                        }
-                        className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                    >
-                        {cargando ? t('common.cargando') : t('common.actualizar')}
-                    </button>
-                </div>
+                            <button
+                                onClick={cargarDatos}
+                                disabled={
+                                    cargando || procesando
+                                }
+                                className={`w-full rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.azul} hover:bg-blue-200`}
+                            >
+                                {cargando ? t('common.cargando') : t('common.actualizar')}
+                            </button>
+                        </div>
+                    }
+                />
 
                 <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -774,22 +784,24 @@ function Ingresos() {
                 {cargando ? (
                     <Loading />
                 ) : ingresos.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center">
-                        <p className="text-slate-600">
-                            {t('income.empty')}
-                        </p>
-                    </div>
+                    <EstadoVacio
+                        Icono={TrendingUp}
+                        texto={t('income.empty')}
+                        className="py-8"
+                    />
                 ) : ingresosFiltradosPorUI.length ===
                     0 ? (
-                    <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center">
-                        <p className="text-slate-600">
-                            {t('income.emptyFiltered')}
-                        </p>
+                    <div className="text-center">
+                        <EstadoVacio
+                            Icono={SearchX}
+                            texto={t('income.emptyFiltered')}
+                            className="py-8"
+                        />
 
                         <button
                             type="button"
                             onClick={limpiarFiltros}
-                            className="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                            className="mt-3 rounded-lg bg-[#123B8F] px-4 py-2 font-semibold text-white transition hover:bg-[#0B2E6B]"
                         >
                             {t('common.limpiarFiltros')}
                         </button>
@@ -800,23 +812,23 @@ function Ingresos() {
                             <table className="w-full min-w-[700px] border-collapse">
                                 <thead>
                                     <tr className="border-b border-slate-200 text-left">
-                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+                                        <th className={`${CLASE_TH} px-4 py-3`}>
                                             {t('common.fecha')}
                                         </th>
 
-                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+                                        <th className={`${CLASE_TH} px-4 py-3`}>
                                             {t('common.categoria')}
                                         </th>
 
-                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+                                        <th className={`${CLASE_TH} px-4 py-3`}>
                                             {t('common.monto')}
                                         </th>
 
-                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+                                        <th className={`${CLASE_TH} px-4 py-3`}>
                                             {t('common.descripcion')}
                                         </th>
 
-                                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+                                        <th className={`${CLASE_TH} px-4 py-3`}>
                                             {t('common.acciones')}
                                         </th>
                                     </tr>
@@ -862,7 +874,7 @@ function Ingresos() {
                                                             disabled={
                                                                 procesando
                                                             }
-                                                            className="rounded-lg bg-blue-100 px-3 py-1.5 text-sm font-semibold text-blue-700 hover:bg-blue-200 disabled:opacity-50"
+                                                            className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:opacity-50 ${TONOS.azul} hover:bg-blue-200`}
                                                         >
                                                             {t('common.editar')}
                                                         </button>
@@ -877,7 +889,7 @@ function Ingresos() {
                                                             disabled={
                                                                 procesando
                                                             }
-                                                            className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50"
+                                                            className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:opacity-50 ${TONOS.rojo} hover:bg-red-200`}
                                                         >
                                                             {t('common.eliminar')}
                                                         </button>

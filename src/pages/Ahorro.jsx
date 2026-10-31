@@ -7,6 +7,12 @@ import Notification from '../components/Notification'
 import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
+import { HandCoins, Pencil, PiggyBank, Plus, Target, TrendingUp, Wallet } from 'lucide-react'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { TarjetaKpi } from '../components/ui/TarjetaKpi'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA } from '../components/ui/estilos'
 
 function Ahorro() {
     const { t } = useTranslation()
@@ -288,15 +294,15 @@ function Ahorro() {
             {/* ENCABEZADO */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">{t('ahorro.titulo')}</h1>
-                    <p className="text-gray-500">{t('ahorro.subtitulo')}</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">{t('ahorro.titulo')}</h1>
+                    <p className="mt-1 text-sm text-slate-500">{t('ahorro.subtitulo')}</p>
                 </div>
 
                 <div className="flex gap-2">
                     <button
                         type="button"
                         onClick={cargarDatos}
-                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        className={`rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-blue-200 ${TONOS.azul}`}
                     >
                         {t('common.actualizar')}
                     </button>
@@ -314,35 +320,42 @@ function Ahorro() {
 
             {/* TARJETAS RESUMEN */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div className="rounded-xl bg-white p-5 shadow-sm">
-                    <p className="text-sm text-gray-500">{t('ahorro.totalAhorrado')}</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-800">
-                        {formatearMoneda(totalAhorro)}
-                    </p>
-                </div>
+                <TarjetaKpi
+                    Icono={Wallet}
+                    tono="verde"
+                    etiqueta={t('ahorro.totalAhorrado')}
+                    valor={formatearMoneda(totalAhorro)}
+                    colorValor="text-green-700"
+                />
 
-                <div className="rounded-xl bg-white p-5 shadow-sm">
-                    <p className="text-sm text-gray-500">{t('ahorro.totalObjetivo')}</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-800">
-                        {formatearMoneda(totalObjetivo)}
-                    </p>
-                </div>
+                <TarjetaKpi
+                    Icono={Target}
+                    tono="azul"
+                    etiqueta={t('ahorro.totalObjetivo')}
+                    valor={formatearMoneda(totalObjetivo)}
+                    colorValor="text-blue-700"
+                />
 
-                <div className="rounded-xl bg-white p-5 shadow-sm">
-                    <p className="text-sm text-gray-500">{t('ahorro.progresoGlobal')}</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-800">
-                        {totalObjetivo > 0
+                <TarjetaKpi
+                    Icono={TrendingUp}
+                    tono="ambar"
+                    etiqueta={t('ahorro.progresoGlobal')}
+                    valor={
+                        totalObjetivo > 0
                             ? `${formatearNumero((totalAhorro / totalObjetivo) * 100, { maximumFractionDigits: 0 })}%`
-                            : '0%'}
-                    </p>
-                </div>
+                            : '0%'
+                    }
+                    colorValor="text-amber-700"
+                />
             </div>
 
             {/* FORMULARIO META */}
-            <div className="rounded-xl bg-white p-6 shadow-sm">
-                <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                    {editando ? t('ahorro.editarMeta') : t('ahorro.createGoal')}
-                </h2>
+            <div className={CLASE_TARJETA}>
+                <EncabezadoSeccion
+                    Icono={editando ? Pencil : Plus}
+                    tono={editando ? 'ambar' : 'azul'}
+                    titulo={editando ? t('ahorro.editarMeta') : t('ahorro.createGoal')}
+                />
 
                 <form onSubmit={manejarSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
@@ -399,7 +412,7 @@ function Ahorro() {
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                            className="rounded-lg bg-[#123B8F] px-5 py-2 font-medium text-white transition hover:bg-[#0B2E6B] disabled:opacity-50"
                         >
                             {procesando
                                 ? t('ahorro.saving')
@@ -412,7 +425,7 @@ function Ahorro() {
                             <button
                                 type="button"
                                 onClick={limpiarFormulario}
-                                className="rounded-lg border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50"
+                                className="rounded-lg bg-slate-100 px-5 py-2 font-medium text-slate-700 transition hover:bg-slate-200"
                             >
                                 {t('common.cancelar')}
                             </button>
@@ -423,10 +436,14 @@ function Ahorro() {
 
             {/* LISTADO DE METAS */}
             {metas.length === 0 ? (
-                <div className="rounded-xl bg-white p-10 text-center shadow-sm">
-                    <p className="text-4xl">🐷</p>
-                    <p className="mt-2 font-semibold text-gray-800">{t('ahorro.sinMetas')}</p>
-                    <p className="text-sm text-gray-500">
+                <div className={CLASE_TARJETA}>
+                    <EstadoVacio
+                        Icono={PiggyBank}
+                        texto={t('ahorro.sinMetas')}
+                        className="py-6"
+                    />
+
+                    <p className="text-center text-sm text-gray-500">
                         {t('ahorro.firstGoalHint')}
                     </p>
                 </div>
@@ -436,7 +453,7 @@ function Ahorro() {
                         const progreso = calcularProgreso(meta)
 
                         return (
-                            <div key={meta.idMeta} className="rounded-xl bg-white p-6 shadow-sm">
+                            <div key={meta.idMeta} className={CLASE_TARJETA}>
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <h3 className="font-semibold text-gray-800">
@@ -451,8 +468,8 @@ function Ahorro() {
                                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
                                             String(meta.estado || '').toLowerCase() ===
                                             'completada'
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-blue-100 text-blue-700'
+                                                ? TONOS.verde
+                                                : TONOS.azul
                                         }`}
                                     >
                                         {String(meta.estado || '').toLowerCase() === 'completada' ? t('ahorro.metaAlcanzada') : t('ahorro.inProgress')}
@@ -488,7 +505,7 @@ function Ahorro() {
                                     <button
                                         type="button"
                                         onClick={() => abrirDetalle(meta)}
-                                        className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                                        className={`rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-blue-200 ${TONOS.azul}`}
                                     >
                                         {metaDetalle && Number(metaDetalle.idMeta) === Number(meta.idMeta)
                                             ? t('ahorro.contributionRegistered')
@@ -498,7 +515,7 @@ function Ahorro() {
                                     <button
                                         type="button"
                                         onClick={() => editarMeta(meta)}
-                                        className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                                        className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200"
                                     >
                                         {t('common.editar')}
                                     </button>
@@ -506,7 +523,7 @@ function Ahorro() {
                                     <button
                                         type="button"
                                         onClick={() => solicitarEliminarMeta(meta.idMeta)}
-                                        className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200"
+                                        className={`rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-red-200 ${TONOS.rojo}`}
                                     >
                                         {t('common.eliminar')}
                                     </button>
@@ -528,24 +545,25 @@ function Ahorro() {
 
             {/* DETALLE / APORTES */}
             {metaDetalle && (
-                <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-gray-800">
-                            {t('ahorro.contributionsFor', { title: metaDetalle.titulo })}
-                        </h2>
-
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setMetaDetalle(null)
-                                setAportes([])
-                                setAporteIdempotencyKey(null)
-                            }}
-                            className="rounded-lg border border-gray-300 px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        >
-                            {t('common.cerrar')}
-                        </button>
-                    </div>
+                <div className={CLASE_TARJETA}>
+                    <EncabezadoSeccion
+                        Icono={HandCoins}
+                        tono="azul"
+                        titulo={t('ahorro.contributionsFor', { title: metaDetalle.titulo })}
+                        extra={
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setMetaDetalle(null)
+                                    setAportes([])
+                                    setAporteIdempotencyKey(null)
+                                }}
+                                className="rounded-lg bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+                            >
+                                {t('common.cerrar')}
+                            </button>
+                        }
+                    />
 
                     <form onSubmit={registrarAporte} className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div>
@@ -585,7 +603,7 @@ function Ahorro() {
                             <button
                                 type="submit"
                                 disabled={procesando}
-                                className="rounded-lg bg-green-600 px-5 py-2 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                                className="rounded-lg bg-[#123B8F] px-5 py-2 font-medium text-white transition hover:bg-[#0B2E6B] disabled:opacity-50"
                             >
                                 {procesando ? t('common.cargando') : t('ahorro.registrarAporte')}
                             </button>
@@ -595,9 +613,11 @@ function Ahorro() {
                     {cargandoAportes ? (
                         <Loading />
                     ) : aportes.length === 0 ? (
-                        <p className="py-6 text-center text-sm text-gray-500">
-                            {t('ahorro.noContributions')}
-                        </p>
+                        <EstadoVacio
+                            Icono={HandCoins}
+                            texto={t('ahorro.noContributions')}
+                            className="py-6"
+                        />
                     ) : (
                         <ul className="divide-y divide-gray-100">
                             {aportes.map((aporte) => (
@@ -614,7 +634,7 @@ function Ahorro() {
                                     <button
                                         type="button"
                                         onClick={() => solicitarEliminarAporte(aporte.idAporte)}
-                                        className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
+                                        className={`rounded-lg px-3 py-1 text-sm font-medium transition hover:bg-red-200 ${TONOS.rojo}`}
                                     >
                                         {t('common.eliminar')}
                                     </button>

@@ -11,6 +11,10 @@ import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import FiltrosMenu from '../components/FiltrosMenu'
+import { Filter, Pencil, Plus } from 'lucide-react'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import { formatearMoneda, formatearNumero, formatearFecha } from '../utils/formato'
 
 function Presupuestos() {
@@ -519,11 +523,11 @@ function Presupuestos() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-800">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                         {t('nav.presupuestos')}
                     </h1>
 
-                    <p className="text-gray-500">
+                    <p className="mt-1 text-sm text-slate-500">
                         {t('budget.description')}
                     </p>
                 </div>
@@ -533,7 +537,7 @@ function Presupuestos() {
                     <button
                         type="button"
                         onClick={exportarCSV}
-                        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                        className={`rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-green-200 ${TONOS.verde}`}
                     >
                         {t('common.exportar')}
                     </button>
@@ -541,7 +545,7 @@ function Presupuestos() {
                     <button
                         type="button"
                         onClick={cargarDatos}
-                        className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        className={`rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-blue-200 ${TONOS.azul}`}
                     >
                         {t('common.actualizar')}
                     </button>
@@ -570,13 +574,17 @@ function Presupuestos() {
 
             {/* FORMULARIO */}
 
-            <div className="rounded-xl bg-white p-6 shadow-sm">
+            <div className={CLASE_TARJETA}>
 
-                <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                    {editando
-                        ? t('budget.edit')
-                        : t('budget.create')}
-                </h2>
+                <EncabezadoSeccion
+                    Icono={editando ? Pencil : Plus}
+                    tono={editando ? 'ambar' : 'azul'}
+                    titulo={
+                        editando
+                            ? t('budget.edit')
+                            : t('budget.create')
+                    }
+                />
 
                 <form
                     onSubmit={manejarSubmit}
@@ -660,7 +668,7 @@ function Presupuestos() {
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                            className="rounded-lg bg-[#123B8F] px-5 py-2 font-medium text-white transition hover:bg-[#0B2E6B] disabled:opacity-50"
                         >
                             {procesando
                                 ? t('common.guardando')
@@ -675,7 +683,7 @@ function Presupuestos() {
                                 onClick={
                                     limpiarFormulario
                                 }
-                                className="rounded-lg border border-gray-300 px-5 py-2 font-medium text-gray-700 hover:bg-gray-50"
+                                className="rounded-lg bg-slate-100 px-5 py-2 font-medium text-slate-700 transition hover:bg-slate-200"
                             >
                                 {t('common.cancelar')}
                             </button>
@@ -689,15 +697,13 @@ function Presupuestos() {
 
             {/* FILTROS */}
 
-            <div className="rounded-xl bg-white p-6 shadow-sm">
+            <div className={CLASE_TARJETA}>
 
-                <div className="mb-4 flex items-center justify-between">
-
-                    <h2 className="text-lg font-semibold text-gray-800">
-                        {t('common.filtros')}
-                    </h2>
-
-                </div>
+                <EncabezadoSeccion
+                    Icono={Filter}
+                    tono="azul"
+                    titulo={t('common.filtros')}
+                />
 
                 {/* T4 — fila superior: la búsqueda queda SIEMPRE visible
                     (es el control de mayor uso); los otros cuatro controles
@@ -835,33 +841,33 @@ function Presupuestos() {
 
             {/* TABLA */}
 
-            <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+            <div className={`${CLASE_TARJETA} overflow-hidden`}>
 
                 <div className="overflow-x-auto">
 
                     <table className="w-full min-w-[800px]">
 
-                        <thead className="bg-gray-50">
+                        <thead>
 
                             <tr>
 
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                <th className={`${CLASE_TH} px-6 py-4`}>
                                     {t('common.categoria')}
                                 </th>
 
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                <th className={`${CLASE_TH} px-6 py-4`}>
                                     {t('budget.month')}
                                 </th>
 
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                <th className={`${CLASE_TH} px-6 py-4`}>
                                     {t('budget.limit')}
                                 </th>
 
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                <th className={`${CLASE_TH} px-6 py-4`}>
                                     {t('budget.progress')}
                                 </th>
 
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                                <th className={`${CLASE_TH} px-6 py-4`}>
                                     {t('common.acciones')}
                                 </th>
 
@@ -976,7 +982,7 @@ function Presupuestos() {
                                                                     presupuesto
                                                                 )
                                                             }
-                                                            className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                                                            className={`rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-blue-200 ${TONOS.azul}`}
                                                         >
                                                             {t('common.editar')}
                                                         </button>
@@ -988,7 +994,7 @@ function Presupuestos() {
                                                                     presupuesto.idPresupuesto
                                                                 )
                                                             }
-                                                            className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200"
+                                                            className={`rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-red-200 ${TONOS.rojo}`}
                                                         >
                                                             {t('common.eliminar')}
                                                         </button>
@@ -1011,7 +1017,7 @@ function Presupuestos() {
                 </div>
 
                 {totalPaginas > 1 && (
-                    <div className="border-t border-gray-100 p-4">
+                    <div className="mt-5">
 
                         <Pagination
                             paginaActual={

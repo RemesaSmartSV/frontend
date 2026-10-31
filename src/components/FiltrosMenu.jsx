@@ -117,7 +117,7 @@ export default function FiltrosMenu({
                 {cantidadActivos > 0 && (
                     <span
                         aria-hidden="true"
-                        className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 text-xs font-bold text-white dark:bg-blue-500"
+                        className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#123B8F] px-1.5 text-xs font-bold text-white dark:bg-blue-500"
                     >
                         {cantidadActivos}
                     </span>

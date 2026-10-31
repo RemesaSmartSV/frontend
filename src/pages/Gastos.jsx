@@ -6,6 +6,11 @@ import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import FiltrosMenu from '../components/FiltrosMenu'
+import { Banknote, Filter, Pencil, Plus, Receipt } from 'lucide-react'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 
 export default function Gastos() {
@@ -460,11 +465,11 @@ export default function Gastos() {
 
                 <div className="min-w-0">
 
-                    <h1 className="text-2xl font-bold text-gray-800">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                     {t('nav.gastos')}
                     </h1>
 
-                    <p className="text-gray-500">
+                    <p className="mt-1 text-sm text-slate-500">
                         {t('expense.description')}
                     </p>
 
@@ -473,7 +478,7 @@ export default function Gastos() {
                 <button
                     onClick={cargarDatos}
                     disabled={cargando || procesando}
-                    className="w-full rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
+                    className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5 ${TONOS.azul} hover:bg-blue-200`}
                 >
                     {cargando ? t('common.cargando') : t('common.actualizar')}
                 </button>
@@ -481,13 +486,17 @@ export default function Gastos() {
             </div>
 
             {/* FORMULARIO */}
-            <section className="mb-6 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+            <section className={`${CLASE_TARJETA} mb-6 sm:mb-8`}>
 
-                <h2 className="mb-5 text-lg font-semibold text-slate-900 sm:text-xl">
-                    {editandoId
-                        ? t('expense.edit')
-                        : t('expense.create')}
-                </h2>
+                <EncabezadoSeccion
+                    Icono={editandoId ? Pencil : Plus}
+                    tono={editandoId ? 'ambar' : 'azul'}
+                    titulo={
+                        editandoId
+                            ? t('expense.edit')
+                            : t('expense.create')
+                    }
+                />
 
                 <form onSubmit={guardarGasto}>
 
@@ -505,7 +514,7 @@ export default function Gastos() {
                                 value={formulario.idCategoria}
                                 onChange={manejarCambio}
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             >
                                 <option value="">
                                     {t('common.seleccionaCategoria')}
@@ -544,7 +553,7 @@ export default function Gastos() {
                                 onChange={manejarCambio}
                                 placeholder="0.00"
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
 
                         </div>
@@ -562,7 +571,7 @@ export default function Gastos() {
                                 value={formulario.fecha}
                                 onChange={manejarCambio}
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 disabled:bg-gray-100"
                             />
 
                         </div>
@@ -581,7 +590,7 @@ export default function Gastos() {
                                 onChange={manejarCambio}
                                 placeholder={t('expense.searchPlaceholder')}
                                 disabled={procesando}
-                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 disabled:bg-gray-100"
                             />
 
                         </div>
@@ -594,7 +603,7 @@ export default function Gastos() {
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="w-full rounded-lg bg-red-600 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
+                            className="w-full rounded-lg bg-[#123B8F] px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-[#0B2E6B] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                         >
                             {procesando
                                 ? t('common.guardando')
@@ -606,7 +615,7 @@ export default function Gastos() {
                         {editandoId && (
                             <button
                                 type="button"
-                                className="w-full rounded-lg bg-gray-500 px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
+                                className="w-full rounded-lg bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:-translate-y-px hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                                 onClick={limpiarFormulario}
                                 disabled={procesando}
                             >
@@ -621,21 +630,14 @@ export default function Gastos() {
             </section>
 
             {/* FILTROS */}
-            <section className="mb-6 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8 sm:p-6">
+            <section className={`${CLASE_TARJETA} mb-6 sm:mb-8`}>
 
-                <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-
-                    <div>
-                        <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                            {t('expense.filterTitle')}
-                        </h2>
-
-                        <p className="mt-1 text-sm text-gray-500">
-                            {t('expense.filterDescription')}
-                        </p>
-                    </div>
-
-                </div>
+                <EncabezadoSeccion
+                    Icono={Filter}
+                    tono="azul"
+                    titulo={t('expense.filterTitle')}
+                    subtitulo={t('expense.filterDescription')}
+                />
 
                 {/* T3 — fila superior: la búsqueda queda SIEMPRE visible
                     (es el control de mayor uso); los otros cinco controles
@@ -655,7 +657,7 @@ export default function Gastos() {
                             value={filtros.busqueda}
                             onChange={manejarCambioFiltro}
                             placeholder={t('expense.searchPlaceholder')}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
                         />
                     </div>
 
@@ -677,7 +679,7 @@ export default function Gastos() {
                                     name="fechaDesde"
                                     value={filtros.fechaDesde}
                                     onChange={manejarCambioFiltro}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 sm:py-2.5 sm:text-sm"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 sm:py-2.5 sm:text-sm"
                                 />
 
                             </div>
@@ -694,7 +696,7 @@ export default function Gastos() {
                                     name="fechaHasta"
                                     value={filtros.fechaHasta}
                                     onChange={manejarCambioFiltro}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 sm:py-2.5 sm:text-sm"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 sm:py-2.5 sm:text-sm"
                                 />
 
                             </div>
@@ -710,7 +712,7 @@ export default function Gastos() {
                                     name="idCategoria"
                                     value={filtros.idCategoria}
                                     onChange={manejarCambioFiltro}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 sm:py-2.5 sm:text-sm"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 sm:py-2.5 sm:text-sm"
                                 >
                                     <option value="">
                                         {t('common.todasCategorias')}
@@ -748,7 +750,7 @@ export default function Gastos() {
                                     value={filtros.montoMinimo}
                                     onChange={manejarCambioFiltro}
                                     placeholder="Ej. 10.00"
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
                                 />
 
                             </div>
@@ -768,7 +770,7 @@ export default function Gastos() {
                                     value={filtros.montoMaximo}
                                     onChange={manejarCambioFiltro}
                                     placeholder="Ej. 100.00"
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
                                 />
 
                             </div>
@@ -790,74 +792,54 @@ export default function Gastos() {
             </section>
 
             {/* LISTA DE GASTOS */}
-            <section className="mb-6 overflow-hidden rounded-[14px] bg-white shadow-[0_3px_12px_rgba(0,0,0,0.08)] sm:mb-8">
+            <section className={`${CLASE_TARJETA} mb-6 overflow-hidden sm:mb-8`}>
 
-                <div className="flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center sm:p-6">
+                <EncabezadoSeccion
+                    Icono={Receipt}
+                    tono="rojo"
+                    titulo={t('expense.registered')}
+                    subtitulo={t(gastosFiltrados.length === 1 ? 'expense.found_one' : 'expense.found_other', { count: gastosFiltrados.length })}
+                    extra={
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
 
-                    <div>
+                            {/* EXPORTAR */}
+                            <button
+                                type="button"
+                                onClick={exportarGastos}
+                                disabled={
+                                    cargando ||
+                                    procesando ||
+                                    gastosFiltrados.length === 0
+                                }
+                                className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5 ${TONOS.verde} hover:bg-green-200`}
+                            >
+                                {t('expense.export')}
+                            </button>
 
-                        <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                            {t('expense.registered')}
-                        </h2>
+                            {/* ACTUALIZAR */}
+                            <button
+                                onClick={cargarDatos}
+                                disabled={cargando || procesando}
+                                className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5 ${TONOS.azul} hover:bg-blue-200`}
+                            >
+                                {cargando ? t('common.cargando') : t('common.actualizar')}
+                            </button>
 
-                        <p className="mt-1 text-sm text-gray-500">
-                            {t(gastosFiltrados.length === 1 ? 'expense.found_one' : 'expense.found_other', { count: gastosFiltrados.length })}
-                        </p>
-
-                    </div>
-
-                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-
-                        {/* EXPORTAR */}
-                        <button
-                            type="button"
-                            onClick={exportarGastos}
-                            disabled={
-                                cargando ||
-                                procesando ||
-                                gastosFiltrados.length === 0
-                            }
-                            className="w-full rounded-lg bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
-                        >
-                            {t('expense.export')}
-                        </button>
-
-                        {/* ACTUALIZAR */}
-                        <button
-                            onClick={cargarDatos}
-                            disabled={cargando || procesando}
-                            className="w-full rounded-lg bg-gray-700 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
-                        >
-                            {cargando ? t('common.cargando') : t('common.actualizar')}
-                        </button>
-
-                    </div>
-
-                </div>
+                        </div>
+                    }
+                />
 
                 {cargando ? (
 
-                    <div className="px-5 pb-6 sm:px-6">
-                        <Loading mensaje={t('common.cargando')} />
-                    </div>
+                    <Loading mensaje={t('common.cargando')} />
 
                 ) : gastosFiltrados.length === 0 ? (
 
-                    <div className="px-5 pb-8 pt-2 text-center sm:px-6">
-
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">
-                            💸
-                        </div>
-
-                        <p className="mt-4 font-medium text-gray-700">
-                            {t('expense.empty')}
-                        </p>
-
-                        <p className="mt-1 text-sm text-gray-500">
-                            {t('expense.emptyHint')}
-                        </p>
-
-                    </div>
+                    <EstadoVacio
+                        Icono={Banknote}
+                        texto={`${t('expense.empty')} ${t('expense.emptyHint')}`}
+                        className="py-8"
+                    />
 
                 ) : (
 
@@ -871,23 +853,23 @@ export default function Gastos() {
 
                                     <tr>
 
-                                        <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                             {t('common.fecha')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                             {t('common.categoria')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                             {t('common.monto')}
                                         </th>
 
-                                        <th className="bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                        <th className={`${CLASE_TH} px-3.5 py-3`}>
                                             {t('common.descripcion')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-gray-50 px-3.5 py-3 text-left text-sm font-bold text-gray-700">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                             {t('common.acciones')}
                                         </th>
 
@@ -901,7 +883,7 @@ export default function Gastos() {
 
                                         <tr
                                             key={gasto.idMovimiento}
-                                            className="transition hover:bg-red-50"
+                                            className="transition hover:bg-slate-50"
                                         >
 
                                             <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
@@ -931,7 +913,7 @@ export default function Gastos() {
                                                             editarGasto(gasto)
                                                         }
                                                         disabled={procesando}
-                                                        className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        className={`rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${TONOS.ambar} hover:bg-yellow-200`}
                                                     >
                                                         {t('common.editar')}
                                                     </button>
@@ -943,7 +925,7 @@ export default function Gastos() {
                                                             )
                                                         }
                                                         disabled={procesando}
-                                                        className="rounded-lg bg-red-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        className={`rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${TONOS.rojo} hover:bg-red-200`}
                                                     >
                                                         {procesando
                                                             ? t('common.procesando')
@@ -965,7 +947,7 @@ export default function Gastos() {
                         </div>
 
                         {/* PAGINACIÓN */}
-                        <div className="px-5 pb-6 sm:px-6">
+                        <div className="mt-5">
 
                             <Pagination
                                 paginaActual={paginaActual}
