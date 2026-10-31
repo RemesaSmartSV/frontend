@@ -387,7 +387,13 @@ export default function Categorias() {
 
                                         {/* ICONO */}
                                         <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                            {categoria.icono || '-'}
+                                            {categoria.icono ? (
+                                                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-3xl leading-none">
+                                                    {categoria.icono}
+                                                </span>
+                                            ) : (
+                                                '-'
+                                            )}
                                         </td>
 
                                         {/* ACCIONES */}
