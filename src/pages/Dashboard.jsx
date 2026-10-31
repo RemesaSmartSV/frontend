@@ -25,7 +25,18 @@ import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import LeyendaOrdenada from '../components/LeyendaOrdenada'
 import { formatearMoneda, formatearNumero, formatearFecha, obtenerLocale, parsearFechaLocal, obtenerFechaHoy } from '../utils/formato'
-import { AlertTriangle, PiggyBank } from 'lucide-react'
+import {
+    AlertTriangle,
+    PiggyBank,
+    TrendingUp,
+    TrendingDown,
+    Wallet,
+    ArrowLeftRight,
+    BarChart3,
+    PieChart as IconoPieChart,
+    Inbox,
+    List,
+} from 'lucide-react'
 
 const COLORES_CATEGORIAS = [
     '#7c3aed',
@@ -292,6 +303,120 @@ function llenarBucketsPor(buckets, movimientos, claveDeFecha) {
     })
 
     return buckets
+}
+
+/*
+ * ==========================================
+ * PIEZAS PRESENTACIONALES (sin lógica de datos)
+ * ==========================================
+ */
+
+// Tintes de marca para chips de icono. Se usa bg-yellow-100 (y no amber-100)
+// porque Index.css solo define el override dark para bg-yellow-100.
+const TONOS = {
+    verde: 'bg-green-100 text-green-700',
+    ambar: 'bg-yellow-100 text-amber-700',
+    rojo: 'bg-red-100 text-red-700',
+    azul: 'bg-blue-100 text-blue-700',
+    violeta: 'bg-violet-100 text-violet-700',
+}
+
+// Tarjeta elevada base del tablero, en el lenguaje del login (rounded-2xl +
+// sombra sutil). bg-white y border-slate-100 tienen overrides dark globales.
+const CLASE_TARJETA =
+    'rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_3px_12px_rgba(0,0,0,0.08)]'
+
+function ChipIcono({ Icono, tono, className = '' }) {
+    return (
+        <span
+            aria-hidden="true"
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${TONOS[tono]} ${className}`}
+        >
+            <Icono size={18} strokeWidth={2} />
+        </span>
+    )
+}
+
+// Encabezado de sección: chip de icono + título (h2) + subtítulo opcional +
+// slot extra a la derecha (enlace, badge, botón).
+function EncabezadoSeccion({ Icono, tono, titulo, subtitulo, extra }) {
+    return (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+                <ChipIcono
+                    Icono={Icono}
+                    tono={tono}
+                    className="h-9 w-9 rounded-lg"
+                />
+
+                <div className="min-w-0">
+                    <h2 className="truncate text-base font-bold text-slate-800 sm:text-lg">
+                        {titulo}
+                    </h2>
+
+                    {subtitulo && (
+                        <p className="mt-0.5 text-sm text-slate-500">
+                            {subtitulo}
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            {extra}
+        </div>
+    )
+}
+
+// Tarjeta KPI: chip de icono en tinte de marca, etiqueta, valor grande con
+// tabular-nums para escaneo instantáneo y nota de contexto opcional.
+function TarjetaKpi({ Icono, tono, etiqueta, valor, colorValor, nota }) {
+    return (
+        <div className="flex min-w-0 flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
+            <div className="flex items-center gap-3">
+                <ChipIcono
+                    Icono={Icono}
+                    tono={tono}
+                    className="h-9 w-9 rounded-lg"
+                />
+
+                <p className="truncate text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {etiqueta}
+                </p>
+            </div>
+
+            <p
+                className={`mt-3 truncate text-2xl font-semibold tabular-nums ${colorValor}`}
+            >
+                {valor}
+            </p>
+
+            {nota && (
+                <p className="mt-1 truncate text-xs text-slate-500">
+                    {nota}
+                </p>
+            )}
+        </div>
+    )
+}
+
+// Empty state tipográfico y centrado, reutilizando las claves i18n existentes.
+function EstadoVacio({ Icono = Inbox, texto, className = '' }) {
+    return (
+        <div
+            className={`flex flex-col items-center justify-center gap-3 px-4 text-center ${className}`}
+        >
+            <span
+                aria-hidden="true"
+                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500"
+            >
+                <Icono size={22} strokeWidth={1.8} />
+            </span>
+
+            <p className="max-w-sm text-sm leading-6 text-slate-500">
+                {texto}
+            </p>
+        </div>
+    )
 }
 
 export default function Dashboard() {
@@ -804,10 +929,10 @@ export default function Dashboard() {
                 ENCABEZADO
             ================================= */}
 
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                         {t('dashboard.titulo')}
                     </h1>
 
@@ -817,11 +942,12 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    {/* Granularidad: Día | Semana | Mes | Año | Historial */}
+                    {/* Granularidad: Día | Semana | Mes | Año | Historial,
+                        como control segmentado tipo pill. */}
                     <div
                         role="group"
                         aria-label={t('dashboard.periodos.grupo')}
-                        className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-white p-1"
+                        className="flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1"
                     >
                         {/* T12: objetivo táctil ≥44px. Se decide por el
                             PUNTERO, no por el ancho: una tablet en horizontal
@@ -838,10 +964,10 @@ export default function Dashboard() {
                                 aria-pressed={
                                     modoPeriodo === modo
                                 }
-                                className={`flex items-center justify-center rounded-md px-2.5 py-1 text-sm font-semibold transition pointer-coarse:min-h-11 pointer-coarse:px-3 ${
+                                className={`flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-semibold transition pointer-coarse:min-h-11 pointer-coarse:px-4 ${
                                     modoPeriodo === modo
-                                        ? 'bg-blue-600 text-white'
-                                        : 'text-slate-700 hover:bg-slate-100'
+                                        ? 'bg-[#123B8F] text-white shadow-sm'
+                                        : 'text-slate-600 hover:bg-white dark:hover:bg-slate-700'
                                 }`}
                             >
                                 {t(`dashboard.periodos.${modo}`)}
@@ -850,18 +976,18 @@ export default function Dashboard() {
                     </div>
 
                     {/* Navegación ‹ › del período activo (inactiva en Historial) */}
-                    <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+                    <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
                         <button
                             type="button"
                             onClick={() => navegarPeriodo(-1)}
                             disabled={modoPeriodo === 'historial'}
                             aria-label={t('dashboard.periodos.anterior')}
-                            className="flex items-center justify-center rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent pointer-coarse:min-h-11 pointer-coarse:px-2.5"
+                            className="flex items-center justify-center rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent pointer-coarse:min-h-11 pointer-coarse:px-2.5"
                         >
                             ‹
                         </button>
 
-                        <span className="min-w-[9rem] px-2 text-center text-sm font-semibold text-slate-700">
+                        <span className="min-w-[9rem] px-2 text-center text-sm font-semibold text-slate-800">
                             {etiquetaActiva}
                         </span>
 
@@ -870,7 +996,7 @@ export default function Dashboard() {
                             onClick={() => navegarPeriodo(1)}
                             disabled={modoPeriodo === 'historial'}
                             aria-label={t('dashboard.periodos.siguiente')}
-                            className="flex items-center justify-center rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent pointer-coarse:min-h-11 pointer-coarse:px-2.5"
+                            className="flex items-center justify-center rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent pointer-coarse:min-h-11 pointer-coarse:px-2.5"
                         >
                             ›
                         </button>
@@ -880,7 +1006,7 @@ export default function Dashboard() {
                         type="button"
                         onClick={actualizarDashboard}
                         disabled={procesando}
-                        className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="btn-primary"
                     >
                         {procesando
                             ? t('common.procesando')
@@ -889,61 +1015,148 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* Ritmo vertical unificado del tablero */}
+            <div className="space-y-6">
+
+            {/* ================================
+                TARJETAS KPI
+                (si el período está vacío se muestra un empty state claro
+                en lugar de montos en $0.00)
+            ================================= */}
+
+            {periodoVacio ? (
+                <section className="rounded-2xl border border-slate-100 bg-white p-2 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
+                    <EstadoVacio
+                        texto={t('dashboard.periodos.sinDatos', {
+                            periodo: etiquetaActiva,
+                        })}
+                        className="py-8"
+                    />
+                </section>
+            ) : (
+                <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+
+                    {/* INGRESOS */}
+
+                    <TarjetaKpi
+                        Icono={TrendingUp}
+                        tono="verde"
+                        etiqueta={t('dashboard.ingresos')}
+                        valor={formatearMoneda(ingresos)}
+                        colorValor="text-green-700"
+                    />
+
+                    {/* REMESAS */}
+
+                    <TarjetaKpi
+                        Icono={ArrowLeftRight}
+                        tono="violeta"
+                        etiqueta={t('dashboard.remesas')}
+                        valor={formatearMoneda(remesas)}
+                        colorValor="text-violet-700"
+                    />
+
+                    {/* AHORRO: el flujo del periodo, el mismo que descuenta el
+                        balance. Con período activo el subtítulo muestra los
+                        aportes a metas del período; en historial, el saldo
+                        consolidado de las metas. */}
+
+                    <TarjetaKpi
+                        Icono={PiggyBank}
+                        tono="ambar"
+                        etiqueta={t('dashboard.ahorro')}
+                        valor={formatearMoneda(ahorro)}
+                        colorValor="text-amber-700"
+                        nota={
+                            hayFiltroPeriodo
+                                ? `${t('dashboard.periodos.aportesPorMeta')}: ${formatearMoneda(aportesTotal)}`
+                                : `${t('dashboard.ahorroSaldoMetas')}: ${formatearMoneda(ahorroTotal)}`
+                        }
+                    />
+
+                    {/* GASTOS */}
+
+                    <TarjetaKpi
+                        Icono={TrendingDown}
+                        tono="rojo"
+                        etiqueta={t('dashboard.gastos')}
+                        valor={formatearMoneda(gastos)}
+                        colorValor="text-red-700"
+                    />
+
+                    {/* BALANCE */}
+
+                    <TarjetaKpi
+                        Icono={Wallet}
+                        tono={balance >= 0 ? 'azul' : 'rojo'}
+                        etiqueta={t('dashboard.balance')}
+                        valor={formatearMoneda(balance)}
+                        colorValor={
+                            balance >= 0
+                                ? 'text-blue-700'
+                                : 'text-red-700'
+                        }
+                    />
+                </section>
+            )}
+
             {/* ================================
                 ENLACE INGRESOS ↔ AHORRO
             ================================= */}
 
-            <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
                 {/* Enlace del período: ingresos (y cuánto de Salario) vs ahorro
                     (y su % sobre los ingresos), con la aclaración de que el
                     ahorro ya está descontado del balance. */}
 
-                <div className="card p-5">
+                <div className={CLASE_TARJETA}>
 
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                        <h2 className="text-lg font-bold text-slate-800">
-                            {t('dashboard.periodos.enlaceTitulo')}
-                        </h2>
-
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                            {etiquetaActiva}
-                        </span>
-                    </div>
+                    <EncabezadoSeccion
+                        Icono={ArrowLeftRight}
+                        tono="verde"
+                        titulo={t('dashboard.periodos.enlaceTitulo')}
+                        extra={
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                {etiquetaActiva}
+                            </span>
+                        }
+                    />
 
                     {periodoVacio ? (
-                        <p className="py-4 text-center text-sm text-slate-500">
-                            {t('dashboard.periodos.sinDatos', {
+                        <EstadoVacio
+                            texto={t('dashboard.periodos.sinDatos', {
                                 periodo: etiquetaActiva,
                             })}
-                        </p>
+                            className="py-6"
+                        />
                     ) : (
                         <div className="space-y-4">
-                            <div className="rounded-lg border border-green-100 bg-green-50 p-4">
+                            <div className="rounded-xl bg-green-50 p-4">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
                                     {t('dashboard.periodos.ingresosPeriodo')}
                                 </p>
 
-                                <p className="mt-1 text-2xl font-bold tabular-nums text-green-700">
+                                <p className="mt-1 text-2xl font-semibold tabular-nums text-green-700">
                                     {formatearMoneda(ingresos)}
                                 </p>
 
-                                <p className="mt-1 text-sm text-green-700/80">
+                                <p className="mt-1 text-sm text-green-700">
                                     {t('dashboard.periodos.deSalario')}:{' '}
                                     {formatearMoneda(ingresosSalario)}
                                 </p>
                             </div>
 
-                            <div className="rounded-lg border border-amber-100 bg-amber-50 p-4">
+                            <div className="rounded-xl bg-amber-50 p-4">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
                                     {t('dashboard.periodos.ahorroPeriodo')}
                                 </p>
 
-                                <p className="mt-1 text-2xl font-bold tabular-nums text-amber-700">
+                                <p className="mt-1 text-2xl font-semibold tabular-nums text-amber-700">
                                     {formatearMoneda(ahorro)}
                                 </p>
 
-                                <p className="mt-1 text-sm text-amber-700/80">
+                                <p className="mt-1 text-sm text-amber-700">
                                     {porcentajeAhorro === null
                                         ? t('dashboard.periodos.sinIngresos')
                                         : t('dashboard.periodos.porcentajeIngresos', {
@@ -966,24 +1179,28 @@ export default function Dashboard() {
 
                 {/* Aportes por meta del período */}
 
-                <div className="card p-5">
+                <div className={CLASE_TARJETA}>
 
-                    <h2 className="mb-4 text-lg font-bold text-slate-800">
-                        {t('dashboard.periodos.aportesPorMeta')}
-                    </h2>
+                    <EncabezadoSeccion
+                        Icono={PiggyBank}
+                        tono="ambar"
+                        titulo={t('dashboard.periodos.aportesPorMeta')}
+                    />
 
                     {periodoVacio ? (
-                        <p className="py-4 text-center text-sm text-slate-500">
-                            {t('dashboard.periodos.sinDatos', {
+                        <EstadoVacio
+                            texto={t('dashboard.periodos.sinDatos', {
                                 periodo: etiquetaActiva,
                             })}
-                        </p>
+                            className="py-6"
+                        />
                     ) : aportesPeriodo.length === 0 ? (
-                        <p className="py-4 text-center text-sm text-slate-500">
-                            {t('dashboard.periodos.sinAportes', {
+                        <EstadoVacio
+                            texto={t('dashboard.periodos.sinAportes', {
                                 periodo: etiquetaActiva,
                             })}
-                        </p>
+                            className="py-6"
+                        />
                     ) : (
                         <ul className="space-y-3">
                             {aportesPeriodo.map((aporte) => {
@@ -1001,14 +1218,14 @@ export default function Dashboard() {
                                 return (
                                     <li
                                         key={aporte.idMeta}
-                                        className="rounded-lg border border-slate-100 p-3"
+                                        className="rounded-xl border border-slate-100 p-3"
                                     >
                                         <div className="flex items-center justify-between gap-3">
                                             <p className="truncate text-sm font-medium text-slate-800">
                                                 {aporte.titulo}
                                             </p>
 
-                                            <p className="text-sm font-bold tabular-nums text-amber-700">
+                                            <p className="text-sm font-semibold tabular-nums text-amber-700">
                                                 {formatearMoneda(monto)}
                                             </p>
                                         </div>
@@ -1030,153 +1247,37 @@ export default function Dashboard() {
             </section>
 
             {/* ================================
-                TARJETAS RESUMEN
-                (si el período está vacío se muestra un empty state claro
-                en lugar de montos en $0.00)
-            ================================= */}
-
-            {periodoVacio ? (
-                <section className="card p-8 text-center">
-                    <p className="text-sm text-slate-500">
-                        {t('dashboard.periodos.sinDatos', {
-                            periodo: etiquetaActiva,
-                        })}
-                    </p>
-                </section>
-            ) : (
-                <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-
-                    {/* INGRESOS */}
-
-                    <div className="flex min-w-0 flex-col rounded-xl border border-green-100 bg-green-50 p-5 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
-                            {t('dashboard.ingresos')}
-                        </p>
-
-                        <p className="mt-2 text-2xl font-bold tabular-nums text-green-700">
-                            {formatearMoneda(
-                                ingresos
-                            )}
-                        </p>
-                    </div>
-
-                    {/* REMESAS */}
-
-                    <div className="flex min-w-0 flex-col rounded-xl border border-violet-100 bg-violet-50 p-5 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
-                            {t('dashboard.remesas')}
-                        </p>
-
-                        <p className="mt-2 text-2xl font-bold tabular-nums text-violet-700">
-                            {formatearMoneda(
-                                remesas
-                            )}
-                        </p>
-                    </div>
-
-                    {/* AHORRO: el flujo del periodo, el mismo que descuenta el
-                        balance. Con período activo el subtítulo muestra los
-                        aportes a metas del período; en historial, el saldo
-                        consolidado de las metas. */}
-
-                    <div className="flex min-w-0 flex-col rounded-xl border border-amber-100 bg-amber-50 p-5 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                            {t('dashboard.ahorro')}
-                        </p>
-
-                        <p className="mt-2 text-2xl font-bold tabular-nums text-amber-700">
-                            {formatearMoneda(
-                                ahorro
-                            )}
-                        </p>
-
-                        <p className="mt-1 truncate text-xs text-amber-700/80">
-                            {hayFiltroPeriodo
-                                ? `${t('dashboard.periodos.aportesPorMeta')}: ${formatearMoneda(aportesTotal)}`
-                                : `${t('dashboard.ahorroSaldoMetas')}: ${formatearMoneda(ahorroTotal)}`}
-                        </p>
-                    </div>
-
-                    {/* GASTOS */}
-
-                    <div className="flex min-w-0 flex-col rounded-xl border border-red-100 bg-red-50 p-5 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
-                            {t('dashboard.gastos')}
-                        </p>
-
-                        <p className="mt-2 text-2xl font-bold tabular-nums text-red-700">
-                            {formatearMoneda(
-                                gastos
-                            )}
-                        </p>
-                    </div>
-
-                    {/* BALANCE */}
-
-                    <div
-                        className={`flex min-w-0 flex-col rounded-xl border p-5 shadow-sm ${
-                            balance >= 0
-                                ? 'border-blue-100 bg-blue-50'
-                                : 'border-red-100 bg-red-50'
-                        }`}
-                    >
-                        <p
-                            className={`text-xs font-semibold uppercase tracking-wide ${
-                                balance >= 0
-                                    ? 'text-blue-700'
-                                    : 'text-red-700'
-                            }`}
-                        >
-                            {t('dashboard.balance')}
-                        </p>
-
-                        <p
-                            className={`mt-2 text-2xl font-bold tabular-nums ${
-                                balance >= 0
-                                    ? 'text-blue-700'
-                                    : 'text-red-700'
-                            }`}
-                        >
-                            {formatearMoneda(
-                                balance
-                            )}
-                        </p>
-                    </div>
-                </section>
-            )}
-
-            {/* ================================
                 GRÁFICAS
             ================================= */}
 
-            <section className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
                 {/* GRÁFICA INGRESOS VS GASTOS (adaptativa por granularidad) */}
 
-                <div className="card p-5">
+                <div className={CLASE_TARJETA}>
 
-                    <div className="mb-5">
-                        <h2 className="text-lg font-bold text-slate-800">
-                            {t('dashboard.flujoMensual')}
-                        </h2>
-
-                        <p className="text-sm text-slate-500">
-                            {hayFiltroPeriodo
+                    <EncabezadoSeccion
+                        Icono={BarChart3}
+                        tono="azul"
+                        titulo={t('dashboard.flujoMensual')}
+                        subtitulo={
+                            hayFiltroPeriodo
                                 ? t('dashboard.periodos.flujoPeriodoSubtitulo')
-                                : t('dashboard.lastMonths')}
-                        </p>
-                    </div>
+                                : t('dashboard.lastMonths')
+                        }
+                    />
 
                     {modoPeriodo === 'dia' ? (
                         /* Día: sin gráfica de barras; se muestra un estado
                            simple con los totales del día (la lista de
                            movimientos ya está más abajo). */
                         periodoVacio ? (
-                            <div className="flex h-72 items-center justify-center px-4 text-center text-sm text-slate-500">
-                                {t('dashboard.periodos.sinDatos', {
+                            <EstadoVacio
+                                texto={t('dashboard.periodos.sinDatos', {
                                     periodo: etiquetaActiva,
                                 })}
-                            </div>
+                                className="h-72"
+                            />
                         ) : (
                             <div className="flex h-72 flex-col items-center justify-center gap-5">
                                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -1216,19 +1317,23 @@ export default function Dashboard() {
                     ) : periodoVacio ||
                       (hayFiltroPeriodo &&
                           (listaVacia || graficaSinBarras)) ? (
-                        <div className="flex h-72 items-center justify-center px-4 text-center text-sm text-slate-500">
-                            {periodoVacio
-                                ? t('dashboard.periodos.sinDatos', {
-                                      periodo: etiquetaActiva,
-                                  })
-                                : t('dashboard.periodos.sinMovimientos', {
-                                      periodo: etiquetaActiva,
-                                  })}
-                        </div>
+                        <EstadoVacio
+                            texto={
+                                periodoVacio
+                                    ? t('dashboard.periodos.sinDatos', {
+                                          periodo: etiquetaActiva,
+                                      })
+                                    : t('dashboard.periodos.sinMovimientos', {
+                                          periodo: etiquetaActiva,
+                                      })
+                            }
+                            className="h-72"
+                        />
                     ) : datosGrafica.length === 0 ? (
-                        <div className="flex h-72 items-center justify-center text-sm text-slate-500">
-                            {t('dashboard.insufficientChartData')}
-                        </div>
+                        <EstadoVacio
+                            texto={t('dashboard.insufficientChartData')}
+                            className="h-72"
+                        />
                     ) : (
                         <div className="h-72 w-full">
                             <ResponsiveContainer
@@ -1318,36 +1423,39 @@ export default function Dashboard() {
 
                 {/* GRÁFICA GASTOS POR CATEGORÍA */}
 
-                <div className="card p-5">
+                <div className={CLASE_TARJETA}>
 
-                    <div className="mb-5">
-                        <h2 className="text-lg font-bold text-slate-800">
-                            {t('dashboard.gastos')} / {t('nav.categorias')}
-                        </h2>
-
-                        <p className="text-sm text-slate-500">
-                            {hayFiltroPeriodo
+                    <EncabezadoSeccion
+                        Icono={IconoPieChart}
+                        tono="violeta"
+                        titulo={`${t('dashboard.gastos')} / ${t('nav.categorias')}`}
+                        subtitulo={
+                            hayFiltroPeriodo
                                 ? t('dashboard.periodos.flujoPeriodoSubtitulo')
-                                : t('dashboard.expenseDistribution')}
-                        </p>
-                    </div>
+                                : t('dashboard.expenseDistribution')
+                        }
+                    />
 
                     {periodoVacio ||
                     (hayFiltroPeriodo && listaVacia) ? (
-                        <div className="flex h-72 items-center justify-center px-4 text-center text-sm text-slate-500">
-                            {periodoVacio
-                                ? t('dashboard.periodos.sinDatos', {
-                                      periodo: etiquetaActiva,
-                                  })
-                                : t('dashboard.periodos.sinMovimientos', {
-                                      periodo: etiquetaActiva,
-                                  })}
-                        </div>
+                        <EstadoVacio
+                            texto={
+                                periodoVacio
+                                    ? t('dashboard.periodos.sinDatos', {
+                                          periodo: etiquetaActiva,
+                                      })
+                                    : t('dashboard.periodos.sinMovimientos', {
+                                          periodo: etiquetaActiva,
+                                      })
+                            }
+                            className="h-72"
+                        />
                     ) : gastosPorCategoria.length ===
                     0 ? (
-                        <div className="flex h-72 items-center justify-center text-sm text-slate-500">
-                            {t('dashboard.noExpensesChart')}
-                        </div>
+                        <EstadoVacio
+                            texto={t('dashboard.noExpensesChart')}
+                            className="h-72"
+                        />
                     ) : (
                         <div className="h-72 w-full">
                             <ResponsiveContainer
@@ -1409,11 +1517,12 @@ export default function Dashboard() {
             ================================= */}
 
             {alertas.length > 0 && (
-                <section className="card mb-8 p-5">
-                    <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-800">
-                        <AlertTriangle size={20} className="text-amber-500" aria-hidden="true" />
-                        {t('dashboard.alertas')}
-                    </h2>
+                <section className={CLASE_TARJETA}>
+                    <EncabezadoSeccion
+                        Icono={AlertTriangle}
+                        tono="ambar"
+                        titulo={t('dashboard.alertas')}
+                    />
 
                     <ul className="space-y-3">
                         {alertas.map((alerta, indice) => {
@@ -1423,29 +1532,41 @@ export default function Dashboard() {
                             return (
                                 <li
                                     key={`alerta-${indice}`}
-                                    className={`rounded-lg border-l-4 p-3 ${
+                                    className={`flex items-start gap-3 rounded-xl border-l-4 p-4 ${
                                         esCritica
                                             ? 'border-red-500 bg-red-50'
                                             : 'border-amber-500 bg-amber-50'
                                     }`}
                                 >
-                                    <div className="mb-1 flex items-center justify-between gap-2">
-                                        <strong className={`text-xs uppercase ${
+                                    <AlertTriangle
+                                        size={18}
+                                        aria-hidden="true"
+                                        className={`mt-0.5 shrink-0 ${
                                             esCritica
-                                                ? 'text-red-700'
-                                                : 'text-amber-700'
-                                        }`}>
-                                            {alerta.tipoAlerta === 'Crítico' ? t('dashboard.critical') : t('dashboard.warning')}
-                                        </strong>
+                                                ? 'text-red-600'
+                                                : 'text-amber-600'
+                                        }`}
+                                    />
 
-                                        <span className="text-xs font-semibold text-gray-600">
-                                            {alerta.porcentajeUsado}%
-                                        </span>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="mb-1 flex items-center justify-between gap-2">
+                                            <strong className={`text-xs font-semibold uppercase tracking-wide ${
+                                                esCritica
+                                                    ? 'text-red-700'
+                                                    : 'text-amber-700'
+                                            }`}>
+                                                {alerta.tipoAlerta === 'Crítico' ? t('dashboard.critical') : t('dashboard.warning')}
+                                            </strong>
+
+                                            <span className="text-xs font-semibold text-gray-600">
+                                                {alerta.porcentajeUsado}%
+                                            </span>
+                                        </div>
+
+                                        <p className="text-sm leading-5 text-gray-700">
+                                            {alerta.mensaje}
+                                        </p>
                                     </div>
-
-                                    <p className="text-sm leading-5 text-gray-700">
-                                        {alerta.mensaje}
-                                    </p>
                                 </li>
                             )
                         })}
@@ -1457,37 +1578,39 @@ export default function Dashboard() {
                 METAS DE AHORRO
             ================================= */}
 
-            <section className="card mb-8 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="flex items-center gap-2 text-lg font-bold text-slate-800">
-                        <PiggyBank size={20} className="text-amber-500" aria-hidden="true" />
-                        {t('dashboard.metas')}
-                    </h2>
-
-                    <a
-                        href="/ahorro"
-                        className="text-sm font-semibold text-blue-600 hover:text-blue-800"
-                    >
-                        {t('dashboard.allGoals')}
-                    </a>
-                </div>
+            <section className={CLASE_TARJETA}>
+                <EncabezadoSeccion
+                    Icono={PiggyBank}
+                    tono="ambar"
+                    titulo={t('dashboard.metas')}
+                    extra={
+                        <a
+                            href="/ahorro"
+                            className="text-sm font-semibold text-blue-600 transition hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                            {t('dashboard.allGoals')}
+                        </a>
+                    }
+                />
 
                 {/* Con un período activo, las metas muestran los aportes
                     realizadas en ese período (aportesPorMeta del resumen
                     filtrado); en historial, el saldo consolidado de siempre. */}
                 {periodoVacio ? (
-                    <p className="py-4 text-center text-sm text-slate-500">
-                        {t('dashboard.periodos.sinDatos', {
+                    <EstadoVacio
+                        texto={t('dashboard.periodos.sinDatos', {
                             periodo: etiquetaActiva,
                         })}
-                    </p>
+                        className="py-6"
+                    />
                 ) : hayFiltroPeriodo ? (
                     aportesPeriodo.length === 0 ? (
-                        <p className="py-4 text-center text-sm text-slate-500">
-                            {t('dashboard.periodos.sinAportes', {
+                        <EstadoVacio
+                            texto={t('dashboard.periodos.sinAportes', {
                                 periodo: etiquetaActiva,
                             })}
-                        </p>
+                            className="py-6"
+                        />
                     ) : (
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             {aportesPeriodo.map((aporte) => {
@@ -1510,7 +1633,7 @@ export default function Dashboard() {
                                 return (
                                     <div
                                         key={aporte.idMeta}
-                                        className="rounded-lg border border-slate-100 p-4"
+                                        className="rounded-xl border border-slate-100 p-4"
                                     >
                                         <div className="flex items-center justify-between gap-2">
                                             <p className="truncate font-medium text-slate-800">
@@ -1544,9 +1667,10 @@ export default function Dashboard() {
                         </div>
                     )
                 ) : metas.length === 0 ? (
-                    <p className="py-4 text-center text-sm text-slate-500">
-                        {t('dashboard.noGoals')}
-                    </p>
+                    <EstadoVacio
+                        texto={t('dashboard.noGoals')}
+                        className="py-6"
+                    />
                 ) : (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         {metas.slice(0, 3).map((meta) => {
@@ -1565,7 +1689,7 @@ export default function Dashboard() {
                             return (
                                 <div
                                     key={meta.idMeta}
-                                    className="rounded-lg border border-slate-100 p-4"
+                                    className="rounded-xl border border-slate-100 p-4"
                                 >
                                     <p className="truncate font-medium text-slate-800">
                                         {meta.titulo}
@@ -1598,25 +1722,33 @@ export default function Dashboard() {
                 MOVIMIENTOS RECIENTES
             ================================= */}
 
-            <section className="card">
+            <section className={CLASE_TARJETA}>
 
-                <div className="flex flex-col gap-3 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-5 flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
 
-                    <div>
-                        <h2 className="text-lg font-bold text-slate-800">
-                            {t('dashboard.movimientosRecientes')}
-                        </h2>
+                    <div className="flex items-center gap-3">
+                        <ChipIcono
+                            Icono={List}
+                            tono="azul"
+                            className="h-9 w-9 rounded-lg"
+                        />
 
-                        <p className="text-sm text-slate-500">
-                            {t('dashboard.lastTransactions')}
-                        </p>
+                        <div>
+                            <h2 className="text-base font-bold text-slate-800 sm:text-lg">
+                                {t('dashboard.movimientosRecientes')}
+                            </h2>
+
+                            <p className="mt-0.5 text-sm text-slate-500">
+                                {t('dashboard.lastTransactions')}
+                            </p>
+                        </div>
                     </div>
 
                     <button
                         type="button"
                         onClick={actualizarDashboard}
                         disabled={procesando}
-                        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-slate-700"
                     >
                         {t('common.actualizar')}
                     </button>
@@ -1624,20 +1756,24 @@ export default function Dashboard() {
 
                 {periodoVacio ||
                 (hayFiltroPeriodo && listaVacia) ? (
-                    <div className="p-8 text-center text-sm text-slate-500">
-                        {periodoVacio
-                            ? t('dashboard.periodos.sinDatos', {
-                                  periodo: etiquetaActiva,
-                              })
-                            : t('dashboard.periodos.sinMovimientos', {
-                                  periodo: etiquetaActiva,
-                              })}
-                    </div>
+                    <EstadoVacio
+                        texto={
+                            periodoVacio
+                                ? t('dashboard.periodos.sinDatos', {
+                                      periodo: etiquetaActiva,
+                                  })
+                                : t('dashboard.periodos.sinMovimientos', {
+                                      periodo: etiquetaActiva,
+                                  })
+                        }
+                        className="py-8"
+                    />
                 ) : movimientosRecientes.length ===
                 0 ? (
-                    <div className="p-8 text-center text-sm text-slate-500">
-                        {t('dashboard.noTransactions')}
-                    </div>
+                    <EstadoVacio
+                        texto={t('dashboard.noTransactions')}
+                        className="py-8"
+                    />
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-sm">
@@ -1736,6 +1872,8 @@ export default function Dashboard() {
                     </div>
                 )}
             </section>
+
+            </div>
         </main>
     )
 }
