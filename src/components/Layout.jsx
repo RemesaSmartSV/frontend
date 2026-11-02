@@ -177,7 +177,7 @@ export default function Layout({
                 setMenuAbierto={setMenuAbierto}
             />
 
-            <main className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:ml-64">
+            <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 p-4 sm:p-6 lg:ml-64">
                 {/* CUENTA SIN FAMILIA: recordatorio no bloqueante. El flujo de
                     creación/búsqueda vive en /hogar, así que el resto de la app
                     sigue siendo usable sin familia. En /hogar se OMITE: allí el

@@ -10,6 +10,11 @@ import {
 import { formatearFecha } from '../utils/formato'
 import Notification from '../components/Notification'
 import LanguageSelector from '../components/LanguageSelector'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA } from '../components/ui/estilos'
+import { Hash, House, Inbox, Mail, Search, SearchX } from 'lucide-react'
 
 // Formato del código público generado por el backend (CodigoHogar):
 // ID de 6 dígitos numéricos. También se acepta el formato legacy
@@ -386,7 +391,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                 onClose={() => setMensaje('')}
             />
 
-            <section className="card w-full max-w-[430px] overflow-hidden p-5 sm:p-8 md:p-10">
+            <section className={`w-full max-w-[430px] overflow-hidden ${CLASE_TARJETA} sm:p-8 md:p-10`}>
                 <div className="mb-4 flex justify-end"><LanguageSelector /></div>
 
                 {/* SOLICITUD ACEPTADA: el refresco se intenta SOLO, al
@@ -417,13 +422,12 @@ export default function HogarPendiente({ onHogarCreado }) {
                 {/* INVITACIONES DE FAMILIA PENDIENTES */}
                 {invitaciones.length > 0 && (
                     <div className="mb-6">
-                        <h2 className="text-lg font-bold text-gray-800">
-                            {t('pendingHome.invited')}
-                        </h2>
-
-                        <p className="mb-3 text-sm text-gray-500">
-                            {t('pendingHome.invitationHint')}
-                        </p>
+                        <EncabezadoSeccion
+                            Icono={Mail}
+                            tono="azul"
+                            titulo={t('pendingHome.invited')}
+                            subtitulo={t('pendingHome.invitationHint')}
+                        />
 
                         {errorInvitacion && (
                             <p role="alert" className="mb-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
@@ -469,19 +473,19 @@ export default function HogarPendiente({ onHogarCreado }) {
                 )}
 
                 {/* NOMBRE DE LA APLICACIÓN */}
-                <h1 className="text-center text-2xl font-extrabold tracking-tight text-blue-600 sm:text-[1.8rem]">
+                <h1 className="text-center text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                     RemesaSmart SV
                 </h1>
 
-                {/* TÍTULO */}
-                <h2 className="mb-2 mt-6 text-center text-2xl font-normal text-gray-800 sm:mt-7 sm:text-[1.5rem]">
-                    {t('pendingHome.createTitle')}
-                </h2>
-
-                {/* DESCRIPCIÓN */}
-                <p className="mb-6 text-center text-sm leading-relaxed text-gray-500 sm:mb-7 sm:text-base">
-                    {t('pendingHome.createDescription')}
-                </p>
+                {/* TÍTULO + DESCRIPCIÓN */}
+                <div className="mt-6 sm:mt-7">
+                    <EncabezadoSeccion
+                        Icono={House}
+                        tono="azul"
+                        titulo={t('pendingHome.createTitle')}
+                        subtitulo={t('pendingHome.createDescription')}
+                    />
+                </div>
 
                 {/* FORMULARIO */}
                 <form
@@ -532,7 +536,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                     <button
                         type="submit"
                         disabled={cargando}
-                        className="mt-1 flex w-full items-center justify-center gap-2 rounded-[9px] bg-blue-600 px-3 py-3 text-base font-bold text-white transition hover:-translate-y-px hover:bg-blue-700 active:scale-[0.99] disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-blue-300"
+                        className="mt-1 flex w-full items-center justify-center gap-2 rounded-[9px] bg-[#123B8F] px-3 py-3 text-base font-bold text-white transition hover:-translate-y-px hover:bg-[#0B2E6B] active:scale-[0.99] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {cargando && (
                             <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
@@ -562,13 +566,12 @@ export default function HogarPendiente({ onHogarCreado }) {
                 <div className="my-6 border-t border-gray-200" />
 
                 {/* ÚNETE A UNA FAMILIA CON CÓDIGO PÚBLICO */}
-                <h2 className="mb-2 text-lg font-bold text-gray-800">
-                    {t('pendingHome.joinTitle')}
-                </h2>
-
-                <p className="mb-4 text-sm leading-relaxed text-gray-500">
-                    {t('pendingHome.joinDescription')}
-                </p>
+                <EncabezadoSeccion
+                    Icono={Hash}
+                    tono="violeta"
+                    titulo={t('pendingHome.joinTitle')}
+                    subtitulo={t('pendingHome.joinDescription')}
+                />
 
                 <form
                     onSubmit={buscarFamilia}
@@ -602,7 +605,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                     <button
                         type="submit"
                         disabled={buscando || solicitando}
-                        className="mt-1 flex shrink-0 items-center justify-center gap-2 self-end rounded-[9px] bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-px hover:bg-blue-700 active:scale-[0.99] disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-blue-300"
+                        className="mt-1 flex shrink-0 items-center justify-center gap-2 self-end rounded-[9px] bg-[#123B8F] px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-px hover:bg-[#0B2E6B] active:scale-[0.99] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {buscando && (
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
@@ -638,7 +641,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                             type="button"
                             disabled={solicitando}
                             onClick={solicitarUnion}
-                            className="mt-3 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                            className="mt-3 w-full rounded-lg bg-[#123B8F] px-3 py-2 text-sm font-bold text-white hover:bg-[#0B2E6B] disabled:opacity-50"
                         >
                             {solicitando
                                 ? t('pendingHome.joinSending')
@@ -652,13 +655,12 @@ export default function HogarPendiente({ onHogarCreado }) {
                     público) y el Admin de la familia la aprueba o rechaza. */}
                 <div className="my-6 border-t border-gray-200" />
 
-                <h2 className="mb-2 text-lg font-bold text-gray-800">
-                    {t('family.searchByNameTitle')}
-                </h2>
-
-                <p className="mb-4 text-sm leading-relaxed text-gray-500">
-                    {t('family.searchByNameHint')}
-                </p>
+                <EncabezadoSeccion
+                    Icono={Search}
+                    tono="ambar"
+                    titulo={t('family.searchByNameTitle')}
+                    subtitulo={t('family.searchByNameHint')}
+                />
 
                 <form
                     onSubmit={buscarFamiliaPorNombre}
@@ -691,7 +693,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                     <button
                         type="submit"
                         disabled={buscandoPorNombre || solicitandoAHogar !== null}
-                        className="mt-1 flex shrink-0 items-center justify-center gap-2 self-end rounded-[9px] bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-px hover:bg-blue-700 active:scale-[0.99] disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-blue-300"
+                        className="mt-1 flex shrink-0 items-center justify-center gap-2 self-end rounded-[9px] bg-[#123B8F] px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-px hover:bg-[#0B2E6B] active:scale-[0.99] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {buscandoPorNombre && (
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
@@ -713,9 +715,11 @@ export default function HogarPendiente({ onHogarCreado }) {
                 )}
 
                 {busquedaHecha && coincidencias.length === 0 && (
-                    <p className="mt-3 text-sm text-gray-500">
-                        {t('family.searchByNameEmpty')}
-                    </p>
+                    <EstadoVacio
+                        Icono={SearchX}
+                        texto={t('family.searchByNameEmpty')}
+                        className="mt-3"
+                    />
                 )}
 
                 {coincidencias.length > 0 && (
@@ -733,7 +737,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                                     type="button"
                                     disabled={solicitandoAHogar !== null}
                                     onClick={() => solicitarUnionPorNombre(familia)}
-                                    className="mt-3 w-full rounded-lg bg-blue-600 px-3 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                                    className="mt-3 w-full rounded-lg bg-[#123B8F] px-3 py-2 text-sm font-bold text-white hover:bg-[#0B2E6B] disabled:opacity-50"
                                 >
                                     {solicitandoAHogar === familia.idHogar
                                         ? t('pendingHome.joinSending')
@@ -745,9 +749,13 @@ export default function HogarPendiente({ onHogarCreado }) {
                 )}
 
                 {/* MIS SOLICITUDES DE UNIÓN */}
-                <h3 className="mb-2 mt-6 text-base font-bold text-gray-800">
-                    {t('pendingHome.myRequests')}
-                </h3>
+                <div className="mt-6">
+                    <EncabezadoSeccion
+                        Icono={Inbox}
+                        tono="azul"
+                        titulo={t('pendingHome.myRequests')}
+                    />
+                </div>
 
                 {errorSolicitud && (
                     <p
@@ -759,9 +767,7 @@ export default function HogarPendiente({ onHogarCreado }) {
                 )}
 
                 {solicitudes.length === 0 ? (
-                    <p className="text-sm text-gray-500">
-                        {t('pendingHome.noRequests')}
-                    </p>
+                    <EstadoVacio texto={t('pendingHome.noRequests')} />
                 ) : (
                     <ul className="space-y-3">
                         {solicitudes.map((sol) => (
@@ -777,10 +783,10 @@ export default function HogarPendiente({ onHogarCreado }) {
                                     <span
                                         className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
                                             sol.estado === 'Aceptada'
-                                                ? 'bg-green-100 text-green-700'
+                                                ? TONOS.verde
                                                 : sol.estado === 'Rechazada' || sol.estado === 'Cancelada'
-                                                    ? 'bg-red-100 text-red-700'
-                                                    : 'bg-yellow-100 text-yellow-700'
+                                                    ? TONOS.rojo
+                                                    : TONOS.ambar
                                         }`}
                                     >
                                         {sol.estado === 'Aceptada'
