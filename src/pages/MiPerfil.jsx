@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AtSign, KeyRound, Languages, Monitor, Moon, Palette, Sun, User } from 'lucide-react'
 import { normalizarIdioma } from '../i18n/index.js'
 import { hogaresApi, usuariosApi } from '../services/api'
 import { useTheme } from '../context/ThemeContext.jsx'
 import Loading from '../components/Loading'
 import Notification from '../components/Notification'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { CLASE_TARJETA } from '../components/ui/estilos'
 
 // Perfil completo con secciones: Información personal, Apariencia, Idioma.
 // El cambio de contraseña va en la sección de seguridad (F7).
@@ -157,8 +160,8 @@ export default function MiPerfil() {
         <div className="space-y-6">
             {/* ENCABEZADO */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-800">{t('profile.title')}</h1>
-                <p className="text-gray-500">{t('profile.subtitle')}</p>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">{t('profile.title')}</h1>
+                <p className="mt-1 text-sm text-slate-500">{t('profile.subtitle')}</p>
             </div>
 
             {exito && <Notification tipo="success" mensaje={exito} onClose={() => setExito('')} />}
@@ -166,8 +169,12 @@ export default function MiPerfil() {
 
             <form onSubmit={guardarPerfil} className="space-y-6">
                 {/* SECCIÓN 1: INFORMACIÓN PERSONAL */}
-                <section className="card p-6">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.personal')}</h2>
+                <section className={CLASE_TARJETA}>
+                    <EncabezadoSeccion
+                        Icono={User}
+                        tono="azul"
+                        titulo={t('profile.personal')}
+                    />
 
                     {/* AVATAR */}
                     <div className="mb-6 flex items-center gap-4">
@@ -243,8 +250,12 @@ export default function MiPerfil() {
                 </section>
 
                 {/* SECCIÓN 2: CUENTA (solo lectura) */}
-                <section className="card p-6">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.account')}</h2>
+                <section className={CLASE_TARJETA}>
+                    <EncabezadoSeccion
+                        Icono={AtSign}
+                        tono="violeta"
+                        titulo={t('profile.account')}
+                    />
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div>
@@ -267,14 +278,18 @@ export default function MiPerfil() {
                 </section>
 
                 {/* SECCIÓN 3: APARIENCIA */}
-                <section className="card p-6">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.appearance')}</h2>
+                <section className={CLASE_TARJETA}>
+                    <EncabezadoSeccion
+                        Icono={Palette}
+                        tono="ambar"
+                        titulo={t('profile.appearance')}
+                    />
 
                     <div className="flex gap-3">
                         {[
-                            { valor: 'claro', etiqueta: t('profile.light'), icono: '☀️' },
-                            { valor: 'oscuro', etiqueta: t('profile.dark'), icono: '🌙' },
-                            { valor: 'sistema', etiqueta: t('profile.system'), icono: '💻' },
+                            { valor: 'claro', etiqueta: t('profile.light'), Icono: Sun },
+                            { valor: 'oscuro', etiqueta: t('profile.dark'), Icono: Moon },
+                            { valor: 'sistema', etiqueta: t('profile.system'), Icono: Monitor },
                         ].map((opcion) => (
                             <button
                                 key={opcion.valor}
@@ -287,15 +302,22 @@ export default function MiPerfil() {
                                         : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                                 }`}
                             >
-                                <span>{opcion.icono}</span> {opcion.etiqueta}
+                                <span aria-hidden="true" className="flex items-center">
+                                    <opcion.Icono size={16} strokeWidth={2} />
+                                </span>{' '}
+                                {opcion.etiqueta}
                             </button>
                         ))}
                     </div>
                 </section>
 
                 {/* SECCIÓN 4: IDIOMA */}
-                <section className="card p-6">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('profile.language')}</h2>
+                <section className={CLASE_TARJETA}>
+                    <EncabezadoSeccion
+                        Icono={Languages}
+                        tono="verde"
+                        titulo={t('profile.language')}
+                    />
 
                     <div className="flex gap-3">
                         {[
@@ -324,7 +346,7 @@ export default function MiPerfil() {
                     <button
                         type="submit"
                         disabled={guardando}
-                        className="rounded-lg bg-blue-600 px-6 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                        className="rounded-lg bg-[#123B8F] px-6 py-2.5 font-medium text-white transition hover:bg-[#0B2E6B] disabled:opacity-50"
                     >
                         {guardando ? t('common.guardando') : t('common.guardar')}
                     </button>
@@ -333,7 +355,7 @@ export default function MiPerfil() {
                         type="button"
                         onClick={cancelarCambios}
                         disabled={guardando}
-                        className="rounded-lg border border-gray-300 px-6 py-2.5 font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                        className="rounded-lg bg-slate-100 px-6 py-2.5 font-medium text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
                     >
                         {t('common.cancelar')}
                     </button>
@@ -401,8 +423,12 @@ function CambiarContrasena() {
     }
 
     return (
-        <section className="card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-gray-800">{t('security.title')}</h2>
+        <section className={CLASE_TARJETA}>
+            <EncabezadoSeccion
+                Icono={KeyRound}
+                tono="azul"
+                titulo={t('security.title')}
+            />
 
             {exito && <Notification tipo="success" mensaje={exito} onClose={() => setExito('')} />}
             {error && <Notification tipo="error" mensaje={error} onClose={() => setError('')} />}
@@ -460,7 +486,7 @@ function CambiarContrasena() {
                 <button
                     type="submit"
                     disabled={guardando}
-                    className="rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    className="rounded-lg bg-[#123B8F] px-5 py-2 font-medium text-white transition hover:bg-[#0B2E6B] disabled:opacity-50"
                 >
                     {guardando ? t('security.changing') : t('security.change')}
                 </button>

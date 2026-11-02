@@ -2,6 +2,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useOutletContext } from 'react-router-dom'
 import {
+    Hash,
+    Inbox,
+    Send,
+    TriangleAlert,
+    UserPlus,
+    Users,
+} from 'lucide-react'
+import {
     hogaresApi,
     usuariosApi,
     invitacionesApi,
@@ -12,6 +20,10 @@ import { formatearFecha } from '../utils/formato'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import ConfirmModal from '../components/ConfirmModal'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA } from '../components/ui/estilos'
 
 export default function MiHogar() {
     const { t } = useTranslation()
@@ -200,11 +212,11 @@ export default function MiHogar() {
         <div className="space-y-6">
             {/* ENCABEZADO */}
             <div>
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                     {hogar?.nombreFamiliar || t('family.title')}
                 </h1>
 
-                <p className="text-gray-500">{t('family.subtitle')}</p>
+                <p className="mt-1 text-sm text-slate-500">{t('family.subtitle')}</p>
             </div>
 
             {error && (
@@ -217,14 +229,13 @@ export default function MiHogar() {
 
             {/* CÓDIGO PÚBLICO DE LA FAMILIA */}
             {hogar?.codigoPublico && (
-                <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h2 className="mb-2 text-lg font-semibold text-gray-800">
-                        {t('family.publicCode')}
-                    </h2>
-
-                    <p className="mb-4 text-sm text-gray-500">
-                        {t('family.publicCodeHint')}
-                    </p>
+                <div className={CLASE_TARJETA}>
+                    <EncabezadoSeccion
+                        Icono={Hash}
+                        tono="azul"
+                        titulo={t('family.publicCode')}
+                        subtitulo={t('family.publicCodeHint')}
+                    />
 
                     <div className="flex flex-wrap items-center gap-3">
                         <code className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 font-mono text-sm font-semibold tracking-wide text-gray-800 select-all">
@@ -234,7 +245,7 @@ export default function MiHogar() {
                         <button
                             type="button"
                             onClick={copiarCodigo}
-                            className="rounded-lg bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${TONOS.azul} hover:bg-blue-200`}
                         >
                             {codigoCopiado ? t('family.codeCopied') : t('family.copyCode')}
                         </button>
@@ -244,10 +255,12 @@ export default function MiHogar() {
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* MIEMBROS */}
-                <div className="rounded-xl bg-white p-6 shadow-sm">
-                    <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                        {t('family.members')} ({miembros.length})
-                    </h2>
+                <div className={CLASE_TARJETA}>
+                    <EncabezadoSeccion
+                        Icono={Users}
+                        tono="azul"
+                        titulo={`${t('family.members')} (${miembros.length})`}
+                    />
 
                     <ul className="divide-y divide-gray-100">
                         {miembros.map((miembro) => (
@@ -299,7 +312,7 @@ export default function MiHogar() {
                                                         setError(err.message || t('family.removeError'))
                                                     }
                                                 }}
-                                                className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
+                                                className={`rounded-lg px-2 py-1 text-xs font-medium transition ${TONOS.rojo} hover:bg-red-200`}
                                             >
                                                 {t('family.remove')}
                                             </button>
@@ -324,10 +337,12 @@ export default function MiHogar() {
                 {/* INVITAR + ESTADO DE INVITACIONES (solo Admin) */}
                 {esAdmin ? (
                     <div className="space-y-6">
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                                {t('family.invite')}
-                            </h2>
+                        <div className={CLASE_TARJETA}>
+                            <EncabezadoSeccion
+                                Icono={UserPlus}
+                                tono="verde"
+                                titulo={t('family.invite')}
+                            />
 
                             <form onSubmit={invitar} className="flex flex-col gap-3 sm:flex-row">
                                 <input
@@ -343,7 +358,7 @@ export default function MiHogar() {
                                 <button
                                     type="submit"
                                     disabled={enviando}
-                                    className="shrink-0 rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                                    className="shrink-0 rounded-lg bg-[#123B8F] px-5 py-2 font-medium text-white transition hover:bg-[#0B2E6B] disabled:opacity-50"
                                 >
                                     {enviando ? t('common.enviando') : t('family.invite')}
                                 </button>
@@ -355,19 +370,20 @@ export default function MiHogar() {
                         </div>
 
                         {/* SOLICITUDES DE UNIÓN RECIBIDAS (solo Admin) */}
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="mb-1 text-lg font-semibold text-gray-800">
-                                {t('family.joinRequests')}
-                            </h2>
-
-                            <p className="mb-4 text-sm text-gray-500">
-                                {t('family.joinRequestsHint')}
-                            </p>
+                        <div className={CLASE_TARJETA}>
+                            <EncabezadoSeccion
+                                Icono={Inbox}
+                                tono="ambar"
+                                titulo={t('family.joinRequests')}
+                                subtitulo={t('family.joinRequestsHint')}
+                            />
 
                             {solicitudes.length === 0 ? (
-                                <p className="py-4 text-center text-sm text-gray-500">
-                                    {t('family.noJoinRequests')}
-                                </p>
+                                <EstadoVacio
+                                    Icono={Inbox}
+                                    texto={t('family.noJoinRequests')}
+                                    className="py-6"
+                                />
                             ) : (
                                 <ul className="divide-y divide-gray-100">
                                     {solicitudes.map((sol) => (
@@ -387,7 +403,7 @@ export default function MiHogar() {
                                                     type="button"
                                                     disabled={resolviendo === sol.idSolicitud}
                                                     onClick={() => responderSolicitud(sol.idSolicitud, 'aceptar')}
-                                                    className="rounded-lg bg-green-100 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-200 disabled:opacity-50"
+                                                    className={`rounded-lg px-2 py-1 text-xs font-medium transition ${TONOS.verde} hover:bg-green-200 disabled:opacity-50`}
                                                 >
                                                     {t('common.aceptar')}
                                                 </button>
@@ -396,7 +412,7 @@ export default function MiHogar() {
                                                     type="button"
                                                     disabled={resolviendo === sol.idSolicitud}
                                                     onClick={() => responderSolicitud(sol.idSolicitud, 'rechazar')}
-                                                    className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-200 disabled:opacity-50"
+                                                    className={`rounded-lg px-2 py-1 text-xs font-medium transition ${TONOS.rojo} hover:bg-red-200 disabled:opacity-50`}
                                                 >
                                                     {t('common.rechazar')}
                                                 </button>
@@ -407,15 +423,19 @@ export default function MiHogar() {
                             )}
                         </div>
 
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 text-lg font-semibold text-gray-800">
-                                    {t('family.sentInvitations')}
-                            </h2>
+                        <div className={CLASE_TARJETA}>
+                            <EncabezadoSeccion
+                                Icono={Send}
+                                tono="violeta"
+                                titulo={t('family.sentInvitations')}
+                            />
 
                             {enviadas.length === 0 ? (
-                                <p className="py-4 text-center text-sm text-gray-500">
-                                {t('family.noInvitations')}
-                                </p>
+                                <EstadoVacio
+                                    Icono={Send}
+                                    texto={t('family.noInvitations')}
+                                    className="py-6"
+                                />
                             ) : (
                                 <ul className="divide-y divide-gray-100">
                                     {enviadas.map((inv) => (
@@ -459,7 +479,7 @@ export default function MiHogar() {
                                                                     setError(err.message || t('family.resendError'))
                                                                 }
                                                             }}
-                                                            className="rounded-lg bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-200"
+                                                            className={`rounded-lg px-2 py-1 text-xs font-medium transition ${TONOS.azul} hover:bg-blue-200`}
                                                         >
                                                             {t('family.resend')}
                                                         </button>
@@ -476,7 +496,7 @@ export default function MiHogar() {
                                                                     setError(err.message || t('family.cancelError'))
                                                                 }
                                                             }}
-                                                            className="rounded-lg bg-red-100 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-200"
+                                                            className={`rounded-lg px-2 py-1 text-xs font-medium transition ${TONOS.rojo} hover:bg-red-200`}
                                                         >
                                                             {t('family.cancelInvitation')}
                                                         </button>
@@ -490,7 +510,7 @@ export default function MiHogar() {
                         </div>
                     </div>
                 ) : (
-                    <div className="rounded-xl bg-white p-6 shadow-sm">
+                    <div className={CLASE_TARJETA}>
                         <p className="text-sm text-gray-500">
                                     {t('family.soloAdmin')}
                         </p>
@@ -499,8 +519,14 @@ export default function MiHogar() {
             </div>
 
             {/* ABANDONAR FAMILIA */}
-            <div className="rounded-xl border border-red-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-2 text-lg font-semibold text-red-700">{t('family.riskZone')}</h2>
+            {/* border-red-200! gana a border-slate-100 de CLASE_TARJETA:
+                Tailwind ordena slate después que rojo en el CSS generado. */}
+            <div className={`${CLASE_TARJETA} border-red-200!`}>
+                <EncabezadoSeccion
+                    Icono={TriangleAlert}
+                    tono="rojo"
+                    titulo={t('family.riskZone')}
+                />
                 <p className="mb-4 text-sm text-gray-500">
                     {esUltimoMiembro ? t('family.leaveWarningLast') : t('family.leaveWarning')}
                 </p>

@@ -1,9 +1,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import {
+    ArrowDownLeft,
+    ArrowUpRight,
+    Layers,
+    List,
+    Percent,
+    Pencil,
+    Plus,
+    Receipt,
+} from 'lucide-react'
 import { remesasApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import ConfirmModal from '../components/ConfirmModal'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { TarjetaKpi } from '../components/ui/TarjetaKpi'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import {
     formatearFecha,
     formatearMoneda,
@@ -266,10 +281,10 @@ export default function Remesas() {
             />
 
             {/* ENCABEZADO */}
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                         {t('remesas.titulo')}
                     </h1>
 
@@ -311,7 +326,7 @@ export default function Remesas() {
                         type="button"
                         onClick={cargarDatos}
                         disabled={cargando || procesando}
-                        className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="rounded-lg bg-[#123B8F] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0B2E6B] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {cargando
                             ? t('common.cargando')
@@ -325,93 +340,83 @@ export default function Remesas() {
                 TARJETAS RESUMEN
             ================================= */}
 
-            <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
                 {/* TOTAL ENVIADO */}
-                <div className="flex min-w-0 flex-col rounded-xl border border-violet-100 bg-violet-50 p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
-                        {t('remesas.totalEnviado')}
-                    </p>
-
-                    <p className="mt-2 text-2xl font-bold tabular-nums text-violet-700">
-                        {formatearMoneda(resumen?.totalEnviado ?? 0)}
-                    </p>
-                </div>
+                <TarjetaKpi
+                    Icono={ArrowUpRight}
+                    tono="violeta"
+                    etiqueta={t('remesas.totalEnviado')}
+                    valor={formatearMoneda(resumen?.totalEnviado ?? 0)}
+                    colorValor="text-violet-700"
+                />
 
                 {/* TOTAL RECIBIDO */}
-                <div className="flex min-w-0 flex-col rounded-xl border border-green-100 bg-green-50 p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
-                        {t('remesas.totalRecibido')}
-                    </p>
+                <TarjetaKpi
+                    Icono={ArrowDownLeft}
+                    tono="verde"
+                    etiqueta={t('remesas.totalRecibido')}
+                    valor={formatearMoneda(resumen?.totalRecibido ?? 0)}
+                    colorValor="text-green-700"
+                />
 
-                    <p className="mt-2 text-2xl font-bold tabular-nums text-green-700">
-                        {formatearMoneda(resumen?.totalRecibido ?? 0)}
-                    </p>
-                </div>
-
-                {/* TOTAL DE COMISIONES: el dato estrella del registro de remesas, destacado
-                    con un anillo para separarlo visualmente del resto. */}
-                <div className="flex min-w-0 flex-col rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-sm ring-2 ring-amber-300">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                        {t('remesas.totalComisiones')}
-                    </p>
-
-                    <p className="mt-2 text-2xl font-bold tabular-nums text-amber-700">
-                        {formatearMoneda(resumen?.totalComision ?? 0)}
-                    </p>
-                </div>
+                {/* TOTAL DE COMISIONES: el dato estrella del registro de remesas,
+                    con el tono ámbar de TONOS para distinguirlo del resto. */}
+                <TarjetaKpi
+                    Icono={Percent}
+                    tono="ambar"
+                    etiqueta={t('remesas.totalComisiones')}
+                    valor={formatearMoneda(resumen?.totalComision ?? 0)}
+                    colorValor="text-amber-700"
+                />
 
                 {/* CANTIDAD */}
-                <div className="flex min-w-0 flex-col rounded-xl border border-blue-100 bg-blue-50 p-5 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-                        {t('remesas.cantidad')}
-                    </p>
-
-                    <p className="mt-2 text-2xl font-bold tabular-nums text-blue-700">
-                        {resumen?.cantidad ?? 0}
-                    </p>
-                </div>
+                <TarjetaKpi
+                    Icono={Layers}
+                    tono="azul"
+                    etiqueta={t('remesas.cantidad')}
+                    valor={resumen?.cantidad ?? 0}
+                    colorValor="text-blue-700"
+                />
             </section>
 
             {/* ================================
                 DESGLOSE POR CANAL
             ================================= */}
 
-            <section className="mb-8 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
+            <section className={CLASE_TARJETA}>
 
-                <div className="mb-5">
-                    <h2 className="text-lg font-bold text-slate-800">
-                        {t('remesas.porCanalTitulo')}
-                    </h2>
-                </div>
+                <EncabezadoSeccion
+                    Icono={List}
+                    tono="violeta"
+                    titulo={t('remesas.porCanalTitulo')}
+                />
 
                 {!resumen?.porCanal?.length ? (
-                    <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-                        {t('remesas.vacia')}
-                    </div>
+                    <EstadoVacio texto={t('remesas.vacia')} />
                 ) : (
                     <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
                         <table className="min-w-[700px] w-full border-collapse text-left text-sm">
 
                             <thead>
                                 <tr>
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.canal')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.cantidad')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.montoEnviado')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.montoRecibido')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.comision')}
                                     </th>
                                 </tr>
@@ -454,13 +459,17 @@ export default function Remesas() {
                 FORMULARIO
             ================================= */}
 
-            <section className="mb-6 rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
+            <section className={CLASE_TARJETA}>
 
-                <h2 className="mb-4 text-xl font-semibold text-slate-900">
-                    {editandoId
-                        ? t('remesas.editarTitulo')
-                        : t('remesas.crearTitulo')}
-                </h2>
+                <EncabezadoSeccion
+                    Icono={editandoId ? Pencil : Plus}
+                    tono={editandoId ? 'ambar' : 'azul'}
+                    titulo={
+                        editandoId
+                            ? t('remesas.editarTitulo')
+                            : t('remesas.crearTitulo')
+                    }
+                />
 
                 <form
                     onSubmit={guardarRemesa}
@@ -659,7 +668,7 @@ export default function Remesas() {
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-lg bg-[#123B8F] px-5 py-2.5 font-semibold text-white transition hover:bg-[#0B2E6B] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {procesando
                                 ? t('common.guardando')
@@ -673,7 +682,7 @@ export default function Remesas() {
                                 type="button"
                                 onClick={limpiarFormulario}
                                 disabled={procesando}
-                                className="rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-lg bg-slate-100 px-5 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {t('common.cancelar')}
                             </button>
@@ -686,26 +695,21 @@ export default function Remesas() {
                 LISTADO
             ================================= */}
 
-            <section className="rounded-[14px] bg-white p-5 shadow-[0_3px_12px_rgba(0,0,0,0.08)]">
+            <section className={CLASE_TARJETA}>
 
-                <div className="mb-5">
-                    <h2 className="text-xl font-semibold text-slate-900">
-                        {t('remesas.listadoTitulo')}
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                        {t('remesas.listadoDescripcion', { anio })}
-                    </p>
-                </div>
+                <EncabezadoSeccion
+                    Icono={Receipt}
+                    tono="azul"
+                    titulo={t('remesas.listadoTitulo')}
+                    subtitulo={t('remesas.listadoDescripcion', { anio })}
+                />
 
                 {cargando ? (
                     <Loading mensaje={t('common.cargando')} />
 
                 ) : remesas.length === 0 ? (
 
-                    <div className="rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-                        {t('remesas.vacia')}
-                    </div>
+                    <EstadoVacio texto={t('remesas.vacia')} />
 
                 ) : (
 
@@ -715,39 +719,39 @@ export default function Remesas() {
 
                             <thead>
                                 <tr>
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('common.fecha')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.direccion')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.canal')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.montoEnviado')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.montoRecibido')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.comision')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('remesas.folio')}
                                     </th>
 
-                                    <th className="bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} px-3.5 py-3`}>
                                         {t('remesas.notas')}
                                     </th>
 
-                                    <th className="whitespace-nowrap bg-violet-50 px-3.5 py-3 font-bold text-gray-700">
+                                    <th className={`${CLASE_TH} whitespace-nowrap px-3.5 py-3`}>
                                         {t('common.acciones')}
                                     </th>
                                 </tr>
@@ -767,8 +771,8 @@ export default function Remesas() {
                                             <span
                                                 className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                                                     remesa.direccion === 'Envio'
-                                                        ? 'bg-blue-100 text-blue-800'
-                                                        : 'bg-green-100 text-green-800'
+                                                        ? TONOS.azul
+                                                        : TONOS.verde
                                                 }`}
                                             >
                                                 {etiquetaDireccion(remesa.direccion)}
@@ -807,7 +811,7 @@ export default function Remesas() {
                                                     type="button"
                                                     onClick={() => editarRemesa(remesa)}
                                                     disabled={procesando}
-                                                    className="w-full rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                                    className={`w-full rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.ambar} hover:bg-yellow-200`}
                                                 >
                                                     {t('common.editar')}
                                                 </button>
@@ -816,7 +820,7 @@ export default function Remesas() {
                                                     type="button"
                                                     onClick={() => eliminarRemesa(remesa.idRemesa)}
                                                     disabled={procesando}
-                                                    className="w-full rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                                    className={`w-full rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.rojo} hover:bg-red-200`}
                                                 >
                                                     {procesando
                                                         ? t('common.procesando')
