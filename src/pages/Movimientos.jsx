@@ -7,7 +7,18 @@ import Pagination from '../components/Pagination'
 import ConfirmModal from '../components/ConfirmModal'
 import FiltrosMenu from '../components/FiltrosMenu'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
-import { Download } from 'lucide-react'
+import {
+    ClipboardList,
+    Download,
+    Filter,
+    Pencil,
+    Plus,
+    SearchX,
+} from 'lucide-react'
+import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
+import { EstadoVacio } from '../components/ui/EstadoVacio'
+import { TONOS } from '../components/ui/ChipIcono'
+import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 
 /*
  * ==========================================
@@ -25,20 +36,20 @@ import { Download } from 'lucide-react'
 function estiloPorTipo(tipo) {
     if (tipo === 'Ingreso') {
         return {
-            badge: 'inline-block rounded-full bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700',
+            badge: `inline-block rounded-full ${TONOS.verde} px-2.5 py-1 text-sm font-bold`,
             monto: 'text-green-600',
         }
     }
 
     if (tipo === 'Ahorro') {
         return {
-            badge: 'inline-block rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700',
+            badge: `inline-block rounded-full ${TONOS.ambar} px-2.5 py-1 text-sm font-bold`,
             monto: 'text-amber-600',
         }
     }
 
     return {
-        badge: 'inline-block rounded-full bg-red-100 px-2.5 py-1 text-sm font-bold text-red-600',
+        badge: `inline-block rounded-full ${TONOS.rojo} px-2.5 py-1 text-sm font-bold`,
         monto: 'text-red-600',
     }
 }
@@ -591,11 +602,11 @@ export default function Movimientos() {
 
             <div className="mb-6 sm:mb-8">
 
-                <h1 className="text-2xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">
                     {t('nav.movimientos')}
                 </h1>
 
-                <p className="text-gray-500">
+                <p className="mt-1 text-sm text-slate-500">
                     {t('transactions.description')}
                 </p>
 
@@ -603,13 +614,17 @@ export default function Movimientos() {
 
             {/* FORMULARIO */}
 
-            <section className="card mb-6 w-full p-4 sm:mb-8 sm:p-6">
+            <section className={`${CLASE_TARJETA} mb-6 sm:mb-8`}>
 
-                <h2 className="mb-5 text-xl font-semibold text-slate-900">
-                    {editandoId
-                        ? t('common.editar')
-                        : t('common.crear')}
-                </h2>
+                <EncabezadoSeccion
+                    Icono={editandoId ? Pencil : Plus}
+                    tono={editandoId ? 'ambar' : 'azul'}
+                    titulo={
+                        editandoId
+                            ? t('common.editar')
+                            : t('common.crear')
+                    }
+                />
 
                 <form onSubmit={guardarMovimiento}>
 
@@ -792,7 +807,7 @@ export default function Movimientos() {
                         <button
                             type="submit"
                             disabled={procesando}
-                            className="w-full rounded-lg bg-blue-600 px-5 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                            className="w-full rounded-lg bg-[#123B8F] px-5 py-3 font-semibold text-white transition hover:-translate-y-px hover:bg-[#0B2E6B] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                         >
                             {procesando
                                 ? t('common.guardando')
@@ -806,7 +821,7 @@ export default function Movimientos() {
                                 type="button"
                                 onClick={limpiarFormulario}
                                 disabled={procesando}
-                                className="w-full rounded-lg bg-gray-500 px-5 py-2.5 font-semibold text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                className="w-full rounded-lg bg-slate-100 px-5 py-3 font-semibold text-slate-700 transition hover:-translate-y-px hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                             >
                                 {t('common.cancelar')}
                             </button>
@@ -820,56 +835,58 @@ export default function Movimientos() {
 
             {/* FILTROS */}
 
-            <section className="card mb-6 w-full p-4 sm:p-6">
+            <section className={`${CLASE_TARJETA} mb-6`}>
 
-                <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="text-xl font-semibold text-slate-900">
-                        {t('transactions.filtersTitle')}
-                    </h2>
-
-                    {/* Acciones de la vista: movidas desde la fila de filtros
-                        para dejar el botón "Filtros" al FINAL de esa fila
-                        (borde derecho de la card), que es lo que necesita el
-                        anclaje `right-0` del panel flotante. */}
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                        <button
-                            type="button"
-                            onClick={exportarMovimientosCSV}
-                            disabled={
-                                cargando ||
-                                procesando ||
-                                movimientosFiltrados.length === 0
-                            }
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-green-200 px-4 py-2.5 font-semibold text-green-700 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            <Download size={17} aria-hidden="true" />
-                            {t('transactions.csvFiltered')}
-                        </button>
-                        <button
-                            onClick={() => exportarMovimientosRemotos('csv')}
-                            disabled={cargando || procesando}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            <Download size={17} aria-hidden="true" />
-                            {t('transactions.csv')}
-                        </button>
-                        <button
-                            onClick={() => exportarMovimientosRemotos('json')}
-                            disabled={cargando || procesando}
-                            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 px-4 py-2.5 font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            <Download size={17} aria-hidden="true" />
-                            {t('transactions.json')}
-                        </button>
-                        <button
-                            onClick={cargarDatos}
-                            disabled={cargando || procesando}
-                            className="w-full rounded-lg bg-gray-700 px-4 py-2.5 font-semibold text-white transition hover:-translate-y-px hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                        >
-                            {cargando ? t('common.cargando') : t('common.actualizar')}
-                        </button>
-                    </div>
-                </div>
+                {/* Acciones de la vista: viven en el slot `extra` del
+                    encabezado para dejar el botón "Filtros" al FINAL de la
+                    fila de filtros (borde derecho de la card), que es lo que
+                    necesita el anclaje `right-0` del panel flotante. */}
+                <EncabezadoSeccion
+                    Icono={Filter}
+                    tono="azul"
+                    titulo={t('transactions.filtersTitle')}
+                    subtitulo={t('transactions.filterDescription')}
+                    extra={
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                            <button
+                                type="button"
+                                onClick={exportarMovimientosCSV}
+                                disabled={
+                                    cargando ||
+                                    procesando ||
+                                    movimientosFiltrados.length === 0
+                                }
+                                className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.verde} hover:bg-green-200`}
+                            >
+                                <Download size={17} aria-hidden="true" />
+                                {t('transactions.csvFiltered')}
+                            </button>
+                            <button
+                                onClick={() => exportarMovimientosRemotos('csv')}
+                                disabled={cargando || procesando}
+                                className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.azul} hover:bg-blue-200`}
+                            >
+                                <Download size={17} aria-hidden="true" />
+                                {t('transactions.csv')}
+                            </button>
+                            <button
+                                onClick={() => exportarMovimientosRemotos('json')}
+                                disabled={cargando || procesando}
+                                className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.azul} hover:bg-blue-200`}
+                            >
+                                <Download size={17} aria-hidden="true" />
+                                {t('transactions.json')}
+                            </button>
+                            <button
+                                onClick={cargarDatos}
+                                disabled={cargando || procesando}
+                                className={`w-full rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.azul} hover:bg-blue-200`}
+                            >
+                                {cargando ? t('common.cargando') : t('common.actualizar')}
+                            </button>
+                        </div>
+                    }
+                />
 
                 {/* T1/T2 — fila superior: la búsqueda queda SIEMPRE visible
                     (es el control de mayor uso); los otros seis controles
@@ -901,10 +918,6 @@ export default function Movimientos() {
                         cantidadActivos={cantidadFiltrosActivos}
                         onLimpiar={limpiarFiltros}
                     >
-                        <p className="mb-4 text-sm text-gray-500">
-                            {t('transactions.filterDescription')}
-                        </p>
-
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="flex min-w-0 flex-col gap-2">
                                 <label htmlFor="fechaDesde" className="text-sm font-semibold text-gray-700">
@@ -1018,38 +1031,28 @@ export default function Movimientos() {
 
                 ) : movimientos.length === 0 ? (
 
-                    <div className="rounded-lg bg-gray-50 p-8 text-center">
-
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-2xl">
-                            📋
-                        </div>
-
-                        <p className="mt-4 font-medium text-gray-700">
-                            {t('transactions.empty')}
-                        </p>
-
-                        <p className="mt-1 text-sm text-gray-500">
-                            {t('transactions.emptyHint')}
-                        </p>
-
-                    </div>
+                    <EstadoVacio
+                        Icono={ClipboardList}
+                        texto={`${t('transactions.empty')} ${t('transactions.emptyHint')}`}
+                        className="py-8"
+                    />
 
                 ) : movimientosFiltrados.length === 0 ? (
 
-                    <div className="rounded-lg bg-gray-50 p-6 text-center sm:p-8">
-
-                        <p className="text-sm font-medium text-gray-600 sm:text-base">
-                            {t('transactions.emptyFiltered')}
-                        </p>
+                    <div className="text-center">
+                        <EstadoVacio
+                            Icono={SearchX}
+                            texto={t('transactions.emptyFiltered')}
+                            className="py-8"
+                        />
 
                         <button
                             type="button"
                             onClick={limpiarFiltros}
-                            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                            className="mt-4 rounded-lg bg-[#123B8F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0B2E6B]"
                         >
                             {t('common.limpiarFiltros')}
                         </button>
-
                     </div>
 
                 ) : (
@@ -1065,35 +1068,35 @@ export default function Movimientos() {
 
                                     <tr>
 
-                                        <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3 py-3 sm:px-3.5`}>
                                             {t('common.fecha')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3 py-3 sm:px-3.5`}>
                                             {t('common.tipo')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3 py-3 sm:px-3.5`}>
                                             {t('common.categoria')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3 py-3 sm:px-3.5`}>
                                             {t('common.monto')}
                                         </th>
 
-                                        <th className="bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className={`${CLASE_TH} px-3 py-3 sm:px-3.5`}>
                                             {t('common.descripcion')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3 py-3 sm:px-3.5`}>
                                             {t('common.origen')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3 py-3 sm:px-3.5`}>
                                             {t('transactions.registeredBy')}
                                         </th>
 
-                                        <th className="whitespace-nowrap bg-blue-50 px-3 py-3 text-left text-sm font-bold text-gray-700 sm:px-3.5">
+                                        <th className={`${CLASE_TH} whitespace-nowrap px-3 py-3 sm:px-3.5`}>
                                             {t('common.acciones')}
                                         </th>
 
@@ -1116,7 +1119,7 @@ export default function Movimientos() {
 
                                             <tr
                                                 key={movimiento.idMovimiento}
-                                                className="transition hover:bg-gray-50"
+                                                className="transition hover:bg-slate-50"
                                             >
 
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
@@ -1173,7 +1176,7 @@ export default function Movimientos() {
                                                                 )
                                                             }
                                                             disabled={procesando}
-                                                            className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                                            className={`w-full rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.ambar} hover:bg-yellow-200`}
                                                         >
                                                             {t('common.editar')}
                                                         </button>
@@ -1185,7 +1188,7 @@ export default function Movimientos() {
                                                                 )
                                                             }
                                                             disabled={procesando}
-                                                            className="w-full rounded-lg px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                                                            className={`w-full rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.rojo} hover:bg-red-200`}
                                                         >
                                                             {procesando
                                                                 ? t('common.procesando')
@@ -1225,7 +1228,7 @@ export default function Movimientos() {
                                 return (
                                     <li
                                         key={movimiento.idMovimiento}
-                                        className="card p-4"
+                                        className={CLASE_TARJETA}
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
@@ -1303,7 +1306,7 @@ export default function Movimientos() {
                                                     )
                                                 }
                                                 disabled={procesando}
-                                                className="flex-1 rounded-lg px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                                                className={`flex-1 rounded-lg px-3 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${TONOS.ambar} hover:bg-yellow-200`}
                                             >
                                                 {t('common.editar')}
                                             </button>
@@ -1315,7 +1318,7 @@ export default function Movimientos() {
                                                     )
                                                 }
                                                 disabled={procesando}
-                                                className="flex-1 rounded-lg px-3 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950"
+                                                className={`flex-1 rounded-lg px-3 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${TONOS.rojo} hover:bg-red-200`}
                                             >
                                                 {procesando
                                                     ? t('common.procesando')
