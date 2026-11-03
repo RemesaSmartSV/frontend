@@ -7,6 +7,7 @@ import {
     Heart,
     Lightbulb,
     Library,
+    Sparkles,
     TrendingUp,
     TriangleAlert,
 } from 'lucide-react'
@@ -14,14 +15,21 @@ import { educacionApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
-import { ChipIcono } from '../components/ui/ChipIcono'
+import { ChipIcono, TONOS } from '../components/ui/ChipIcono'
 import { CLASE_TARJETA } from '../components/ui/estilos'
+
+// Rotación de consejos IA: el backend cachea 2h, el frontend reconsulta
+// en ese mismo intervalo para que los tips cambiados lleguen solos.
+const INTERVALO_ROTACION_MS = 2 * 60 * 60 * 1000
 
 export default function EducacionFinanciera() {
     const { t } = useTranslation()
     const [tips, setTips] = useState([])
     const [cargando, setCargando] = useState(true)
     const [procesando, setProcesando] = useState(false)
+    // Origen de los tips mostrados: 'ia' solo cuando el endpoint de IA
+    // respondió un array no vacío; 'db' en cualquier otro caso (fallback).
+    const [fuente, setFuente] = useState('db')
 
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
@@ -31,9 +39,30 @@ export default function EducacionFinanciera() {
             setCargando(true)
             setError('')
 
-            const datos = await educacionApi.listar()
+            // 1) IA primero. Cualquier fallo (red, non-2xx, body no-array,
+            // array vacío) cae al fallback de la DB sin propagar: la página
+            // DEBE seguir funcionando aunque el backend de IA esté caído.
+            let datos = null
+            let origen = 'db'
 
-            setTips(datos)
+            try {
+                const consejos = await educacionApi.consejosIa()
+
+                if (Array.isArray(consejos) && consejos.length > 0) {
+                    datos = consejos
+                    origen = 'ia'
+                }
+            } catch {
+                // Silencio: se resuelve con educacionApi.listar() abajo.
+            }
+
+            // 2) Fallback a los tips de la DB.
+            if (!datos) {
+                datos = await educacionApi.listar()
+            }
+
+            setTips(Array.isArray(datos) ? datos : [])
+            setFuente(origen)
         } catch (err) {
             setError(
                 err.message ||
@@ -46,6 +75,14 @@ export default function EducacionFinanciera() {
 
     useEffect(() => {
         cargarTips()
+
+        // Rotación cada 2h + limpieza al desmontar (evita timer huérfano).
+        const intervalo = setInterval(
+            cargarTips,
+            INTERVALO_ROTACION_MS
+        )
+
+        return () => clearInterval(intervalo)
     }, [cargarTips])
 
     async function actualizarTips() {
@@ -128,15 +165,29 @@ export default function EducacionFinanciera() {
                 titulo={t('education.tips')}
                 subtitulo={t('education.recommendations')}
                 extra={
-                    <button
-                        onClick={actualizarTips}
-                        disabled={cargando || procesando}
-                        className="w-full rounded-lg bg-blue-100 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
-                    >
-                        {procesando
-                            ? t('common.procesando')
-                            : t('common.actualizar')}
-                    </button>
+                    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                        {/* Chip de origen: solo cuando los tips vinieron de IA.
+                            Violeta con dark override en Index.css (TONOS). */}
+                        {fuente === 'ia' && (
+                            <span
+                                title={t('education.aiTitle')}
+                                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${TONOS.violeta}`}
+                            >
+                                <Sparkles size={14} strokeWidth={2} aria-hidden="true" />
+                                {t('education.aiBadge')}
+                            </span>
+                        )}
+
+                        <button
+                            onClick={actualizarTips}
+                            disabled={cargando || procesando}
+                            className="w-full rounded-lg bg-blue-100 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2"
+                        >
+                            {procesando
+                                ? t('common.procesando')
+                                : t('common.actualizar')}
+                        </button>
+                    </div>
                 }
             />
 
@@ -205,9 +256,12 @@ export default function EducacionFinanciera() {
             {!cargando && !error && tips.length > 0 && (
                 <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
 
-                    {tips.map((tip) => (
+                    {tips.map((tip, indice) => (
                         <article
-                            key={tip.idTip}
+                            // Los consejos de IA llegan crudos { titulo,
+                            // contenido } sin idTip: el índice evita la key
+                            // duplicada que rompería el render de la lista.
+                            key={tip.idTip ?? `ia-${indice}`}
                             className={`group relative overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl ${CLASE_TARJETA}`}
                         >
 

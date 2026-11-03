@@ -767,6 +767,17 @@ export const educacionApi = {
         return manejarRespuesta(res)
     },
 
+    // GET /api/ConsejosIa: array crudo [{ titulo, contenido }] generado por
+    // IA (Groq) con caché de 2h en el backend. Endpoint anónimo; si falla,
+    // la página cae a listar() (tips de la DB) sin romper nunca.
+    async consejosIa() {
+        const res = await fetch(`${API_URL}/ConsejosIa`, {
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
     async obtener(id) {
         const res = await fetch(`${API_URL}/TipsFinancieros/${id}`, {
             headers: obtenerHeaders(),
