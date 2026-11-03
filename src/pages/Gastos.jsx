@@ -6,12 +6,13 @@ import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import FiltrosMenu from '../components/FiltrosMenu'
-import { Banknote, Filter, Pencil, Plus, Receipt } from 'lucide-react'
+import { Banknote, Download, Filter, Pencil, Plus, Receipt } from 'lucide-react'
 import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
 import { EstadoVacio } from '../components/ui/EstadoVacio'
 import { TONOS } from '../components/ui/ChipIcono'
 import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
+import { exportarCsv } from '../utils/exportarCsv'
 
 export default function Gastos() {
     const { t } = useTranslation()
@@ -371,50 +372,13 @@ export default function Gastos() {
             ]
         })
 
-        function escaparCSV(valor) {
-            let texto = String(valor).replace(/"/g, '""')
+        const count = exportarCsv({
+            encabezados,
+            filas,
+            nombreBase: 'gastos',
+        })
 
-            if (/^[=+\-@\t\r]/.test(texto)) {
-                texto = "'" + texto
-            }
-
-            return `"${texto}"`
-        }
-
-        const contenidoCSV = [
-            encabezados.map(escaparCSV).join(','),
-            ...filas.map((fila) =>
-                fila.map(escaparCSV).join(',')
-            ),
-        ].join('\n')
-
-        // BOM para que Excel reconozca correctamente UTF-8
-        const BOM = '\uFEFF'
-
-        const archivo = new Blob(
-            [BOM + contenidoCSV],
-            {
-                type: 'text/csv;charset=utf-8;',
-            }
-        )
-
-        const url = URL.createObjectURL(archivo)
-
-        const enlace = document.createElement('a')
-        enlace.href = url
-
-        const fechaActual = obtenerFechaHoy()
-
-        enlace.download =
-            `gastos_${fechaActual}.csv`
-
-        document.body.appendChild(enlace)
-        enlace.click()
-        document.body.removeChild(enlace)
-
-        URL.revokeObjectURL(url)
-
-        setMensaje(t('expense.exported', { count: gastosFiltrados.length }))
+        setMensaje(t('expense.exported', { count }))
     }
 
     // =========================================================
@@ -811,8 +775,9 @@ export default function Gastos() {
                                     procesando ||
                                     gastosFiltrados.length === 0
                                 }
-                                className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5 ${TONOS.verde} hover:bg-green-200`}
+                                className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.verde} hover:bg-green-200`}
                             >
+                                <Download size={17} aria-hidden="true" />
                                 {t('expense.export')}
                             </button>
 
@@ -820,7 +785,7 @@ export default function Gastos() {
                             <button
                                 onClick={cargarDatos}
                                 disabled={cargando || procesando}
-                                className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5 ${TONOS.azul} hover:bg-blue-200`}
+                                className={`w-full rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${TONOS.azul} hover:bg-blue-200`}
                             >
                                 {cargando ? t('common.cargando') : t('common.actualizar')}
                             </button>

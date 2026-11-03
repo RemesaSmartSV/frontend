@@ -448,6 +448,7 @@
     "searchPlaceholder": "Search...",
     "empty": "You have no recorded budgets.",
     "exportEmpty": "There are no budgets to export.",
+    "exported": "{{count}} budget(s) exported successfully.",
     "saved": "Budget created successfully.",
     "updated": "Budget updated successfully.",
     "deleted": "Budget deleted successfully.",

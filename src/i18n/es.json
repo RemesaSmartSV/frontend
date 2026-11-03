@@ -403,6 +403,7 @@
     "searchPlaceholder": "Buscar...",
     "empty": "No tienes presupuestos registrados.",
     "exportEmpty": "No hay presupuestos para exportar.",
+    "exported": "{{count}} presupuesto(s) exportado(s) correctamente.",
     "saved": "Presupuesto creado correctamente.",
     "updated": "Presupuesto actualizado correctamente.",
     "deleted": "Presupuesto eliminado correctamente.",

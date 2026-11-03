@@ -11,11 +11,12 @@ import ConfirmModal from '../components/ConfirmModal'
 import Loading from '../components/Loading'
 import Pagination from '../components/Pagination'
 import FiltrosMenu from '../components/FiltrosMenu'
-import { Filter, Pencil, Plus } from 'lucide-react'
+import { Download, Filter, Pencil, Plus } from 'lucide-react'
 import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
 import { TONOS } from '../components/ui/ChipIcono'
 import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import { formatearMoneda, formatearNumero, formatearFecha } from '../utils/formato'
+import { exportarCsv } from '../utils/exportarCsv'
 
 function Presupuestos() {
     const { t } = useTranslation()
@@ -470,37 +471,13 @@ function Presupuestos() {
                 }
             )
 
-        const contenido = [
+        const count = exportarCsv({
             encabezados,
-            ...filas,
-        ]
-            .map((fila) => fila.join(','))
-            .join('\n')
+            filas,
+            nombreBase: 'presupuestos',
+        })
 
-        const blob = new Blob(
-            [contenido],
-            {
-                type: 'text/csv;charset=utf-8;',
-            }
-        )
-
-        const url =
-            URL.createObjectURL(blob)
-
-        const enlace =
-            document.createElement('a')
-
-        enlace.href = url
-        enlace.download =
-            'presupuestos.csv'
-
-        document.body.appendChild(enlace)
-
-        enlace.click()
-
-        document.body.removeChild(enlace)
-
-        URL.revokeObjectURL(url)
+        setMensaje(t('budget.exported', { count }))
     }
 
     // ==========================================
@@ -537,15 +514,16 @@ function Presupuestos() {
                     <button
                         type="button"
                         onClick={exportarCSV}
-                        className={`rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-green-200 ${TONOS.verde}`}
+                        className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px ${TONOS.verde} hover:bg-green-200`}
                     >
+                        <Download size={17} aria-hidden="true" />
                         {t('common.exportar')}
                     </button>
 
                     <button
                         type="button"
                         onClick={cargarDatos}
-                        className={`rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-blue-200 ${TONOS.azul}`}
+                        className={`rounded-lg px-4 py-2.5 font-semibold transition hover:-translate-y-px ${TONOS.azul} hover:bg-blue-200`}
                     >
                         {t('common.actualizar')}
                     </button>

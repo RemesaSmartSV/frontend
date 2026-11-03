@@ -7,6 +7,7 @@ import Pagination from '../components/Pagination'
 import ConfirmModal from '../components/ConfirmModal'
 import FiltrosMenu from '../components/FiltrosMenu'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
+import { exportarCsv } from '../utils/exportarCsv'
 import {
     ClipboardList,
     Download,
@@ -501,54 +502,13 @@ export default function Movimientos() {
             }
         )
 
-        function escaparCSV(valor) {
-            let texto = String(valor).replace(/"/g, '""')
+        const count = exportarCsv({
+            encabezados,
+            filas,
+            nombreBase: 'movimientos',
+        })
 
-            if (/^[=+\-@\t\r]/.test(texto)) {
-                texto = "'" + texto
-            }
-
-            return `"${texto}"`
-        }
-
-        const contenidoCSV = [
-            encabezados.map(escaparCSV).join(','),
-            ...filas.map((fila) =>
-                fila.map(escaparCSV).join(',')
-            ),
-        ].join('\n')
-
-        const BOM = '\uFEFF'
-
-        const archivo = new Blob(
-            [BOM + contenidoCSV],
-            {
-                type: 'text/csv;charset=utf-8;',
-            }
-        )
-
-        const url =
-            URL.createObjectURL(archivo)
-
-        const enlace =
-            document.createElement('a')
-
-        enlace.href = url
-
-        const fechaActual = obtenerFechaHoy()
-
-        enlace.download =
-            `movimientos_${fechaActual}.csv`
-
-        document.body.appendChild(enlace)
-
-        enlace.click()
-
-        document.body.removeChild(enlace)
-
-        URL.revokeObjectURL(url)
-
-        setMensaje(t('transactions.exported', { count: movimientosFiltrados.length }))
+        setMensaje(t('transactions.exported', { count }))
     }
 
     // =========================
