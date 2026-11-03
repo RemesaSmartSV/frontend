@@ -13,6 +13,11 @@ import { CLASE_TARJETA } from '../components/ui/estilos'
 // El cambio de contraseña va en la sección de seguridad (F7).
 // Rol, IdHogar y Correo no se editan aquí: no hay endpoints de auto-servicio
 // para ellos y no deben escalarse desde el frontend.
+
+// Solo se previsualiza una URL con esquema http(s): el backend acepta cualquier
+// string ≤500, así que la validación es informativa y nunca bloquea el guardado.
+const ES_URL_FOTO = /^https?:\/\/\S/i
+
 export default function MiPerfil() {
     const { t, i18n } = useTranslation()
     const { cambiarTema } = useTheme()
@@ -30,6 +35,11 @@ export default function MiPerfil() {
     const [idioma, setIdioma] = useState('es')
     const [tema, setTema] = useState('claro')
 
+    // Vista previa de la foto: debounce para no recargar el <img> en cada tecla,
+    // y flag de imagen rota para volver a las iniciales con onError.
+    const [fotoPrevia, setFotoPrevia] = useState('')
+    const [fotoRota, setFotoRota] = useState(false)
+
     // Estado
     const [cargando, setCargando] = useState(true)
     const [guardando, setGuardando] = useState(false)
@@ -43,6 +53,14 @@ export default function MiPerfil() {
         i18n.on('languageChanged', sincronizarIdioma)
         return () => i18n.off('languageChanged', sincronizarIdioma)
     }, [i18n])
+
+    useEffect(() => {
+        const temporizador = setTimeout(() => {
+            setFotoPrevia(fotoPerfil.trim())
+            setFotoRota(false)
+        }, 300)
+        return () => clearTimeout(temporizador)
+    }, [fotoPerfil])
 
     useEffect(() => {
         let vigente = true
@@ -156,6 +174,10 @@ export default function MiPerfil() {
         .join('')
         .toUpperCase()
 
+    const urlFoto = fotoPerfil.trim()
+    const urlFotoInvalida = urlFoto !== '' && !ES_URL_FOTO.test(urlFoto)
+    const mostrarFoto = ES_URL_FOTO.test(fotoPrevia) && !fotoRota
+
     return (
         <div className="space-y-6">
             {/* ENCABEZADO */}
@@ -176,14 +198,41 @@ export default function MiPerfil() {
                         titulo={t('profile.personal')}
                     />
 
-                    {/* AVATAR */}
-                    <div className="mb-6 flex items-center gap-4">
-                        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-2xl font-bold text-blue-700">
-                            {fotoPerfil ? (
-                                <img src={fotoPerfil} alt={t('profile.photoAlt')} className="h-full w-full object-cover" />
+                    {/* AVATAR + editor de la URL de la foto */}
+                    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-2xl font-bold text-blue-700">
+                            {mostrarFoto ? (
+                                <img
+                                    src={fotoPrevia}
+                                    alt={t('profile.photoAlt')}
+                                    className="h-full w-full object-cover"
+                                    onError={() => setFotoRota(true)}
+                                />
                             ) : (
                                 iniciales
                             )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                            <label htmlFor="fotoPerfil" className="mb-1 block text-sm font-medium text-gray-700">
+                                {t('profile.photoUrl')}
+                            </label>
+                            <input
+                                id="fotoPerfil"
+                                type="text"
+                                value={fotoPerfil}
+                                onChange={(e) => setFotoPerfil(e.target.value)}
+                                maxLength={500}
+                                placeholder={t('profile.photoPlaceholder')}
+                                aria-describedby="fotoPerfil-ayuda"
+                                className="input py-2"
+                            />
+                            <p
+                                id="fotoPerfil-ayuda"
+                                className={`mt-1 text-xs ${urlFotoInvalida ? 'text-amber-700 dark:text-amber-300' : 'text-gray-500'}`}
+                            >
+                                {urlFotoInvalida ? t('profile.photoInvalid') : t('profile.photoUrlHint')}
+                            </p>
                         </div>
                     </div>
 
@@ -285,7 +334,7 @@ export default function MiPerfil() {
                         titulo={t('profile.appearance')}
                     />
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                         {[
                             { valor: 'claro', etiqueta: t('profile.light'), Icono: Sun },
                             { valor: 'oscuro', etiqueta: t('profile.dark'), Icono: Moon },
@@ -319,7 +368,7 @@ export default function MiPerfil() {
                         titulo={t('profile.language')}
                     />
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
                         {[
                             { valor: 'es', etiqueta: 'Español' },
                             { valor: 'en', etiqueta: 'English' },
@@ -342,7 +391,7 @@ export default function MiPerfil() {
                 </section>
 
                 {/* BOTONES */}
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                     <button
                         type="submit"
                         disabled={guardando}
