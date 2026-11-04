@@ -19,14 +19,16 @@
     --color-danger: #dc2626;
 }
 
+/* Dark OLED: negro puro + superficies neutras (sin tinte azul pizarra).
+   Los semanticos (primary/success/warning/danger) no cambian. */
 .dark {
-    --color-bg: #0f172a;
-    --color-surface: #1e293b;
-    --color-surface-hover: #334155;
-    --color-border: #334155;
-    --color-border-strong: #475569;
-    --color-text: #f1f5f9;
-    --color-text-secondary: #94a3b8;
+    --color-bg: #000000;
+    --color-surface: #121212;
+    --color-surface-hover: #1f1f1f;
+    --color-border: #2a2a2a;
+    --color-border-strong: #3f3f3f;
+    --color-text: #f5f5f5;
+    --color-text-secondary: #a3a3a3;
     --color-primary: #3b82f6;
     --color-primary-hover: #60a5fa;
     --color-success: #22c55e;
@@ -134,6 +136,25 @@ body {
 .dark .text-violet-700 { color: #a78bfa; }
 .dark .text-blue-700,
 .dark .text-blue-800 { color: #60a5fa; }
+
+/*
+ * T1 — Fondos ya oscuros con tinte azul hardcodeados en el markup.
+ * Agrupados acá para no editar cada página. Todos van con scope .dark y
+ * fuera de @layer: ganan a las utilidades de Tailwind solo en dark mode,
+ * el modo claro queda intacto.
+ */
+
+/* EducacionFinanciera: pie sobre el lienzo negro. shadow-lg no se ve en
+   negro, así que suma borde para que no se funda con el fondo. */
+.dark .bg-gray-900 { background-color: #0a0a0a; border: 1px solid var(--color-border); }
+
+/* Presentacion: riel de la barra de progreso (slate-900/10 era invisible). */
+.dark .bg-slate-900\/10 { background-color: rgba(245, 245, 245, 0.1); }
+
+/* Variantes dark: explícitas en JSX (Login, FiltrosMenu, Dashboard, Navbar). */
+.dark .dark\:bg-slate-800 { background-color: var(--color-surface); }
+.dark .dark\:hover\:bg-slate-700:hover { background-color: var(--color-surface-hover); }
+.dark .dark\:hover\:bg-gray-700:hover { background-color: var(--color-surface-hover); }
 
 /*
  * Indicador de foco visible para quien navega con teclado (WCAG 2.4.7).
