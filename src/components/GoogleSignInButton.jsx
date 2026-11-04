@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 /** Renders the official GIS button. This callback/ID-token flow has no OAuth redirect URI. */
 export default function GoogleSignInButton({ onCredential, onError, disabled = false }) {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const hostRef = useRef(null)
     const handlersRef = useRef({ onCredential, onError })
     const [message, setMessage] = useState('')
@@ -68,12 +68,15 @@ export default function GoogleSignInButton({ onCredential, onError, disabled = f
             }
         }
 
+        // i18n.language: el mensaje de este effect se pinta con t(), así que
+        // al cambiar de idioma hay que volver a resolverlo (no quedarse con
+        // el string de la primera carga).
         configureGoogleButton()
         return () => {
             disposed = true
             if (hostRef.current) hostRef.current.replaceChildren()
         }
-    }, [t])
+    }, [t, i18n.language])
 
     return (
         <div className={`w-full ${disabled ? 'pointer-events-none opacity-60' : ''}`} aria-busy={disabled}>

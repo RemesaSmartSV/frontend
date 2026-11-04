@@ -1,3 +1,6 @@
+import i18n from '../i18n'
+import { traducirMensaje } from '../utils/traducirMensaje'
+
 const API_URL = '/api'
 
 let onUnauthorized = null
@@ -44,7 +47,9 @@ async function manejarRespuesta(res) {
         localStorage.removeItem('token')
         localStorage.removeItem('usuario')
         onUnauthorized?.()
-        throw new Error('Sesión expirada. Inicia sesión nuevamente.')
+        // i18n.t en el momento del throw: el instance ya está inicializado y
+        // así el mensaje sale en el idioma activo (errors.noAutorizado).
+        throw new Error(i18n.t('errors.noAutorizado'))
     }
 
     let mensaje = `Error ${res.status}`
@@ -61,7 +66,10 @@ async function manejarRespuesta(res) {
         // No se pudo leer la respuesta
     }
 
-    throw new Error(mensaje)
+    // Punto único de traducción de los mensajes del backend: todo lo que
+    // salga de aquí (message / detail / title / errors) pasa por el mapa y
+    // en es devuelve byte-idéntico el string original.
+    throw new Error(traducirMensaje(mensaje))
 }
 
 function obtenerHeaders(incluyeBody = false) {
@@ -770,8 +778,11 @@ export const educacionApi = {
     // GET /api/ConsejosIa: array crudo [{ titulo, contenido }] generado por
     // IA (Groq) con caché de 2h en el backend. Endpoint anónimo; si falla,
     // la página cae a listar() (tips de la DB) sin romper nunca.
-    async consejosIa() {
-        const res = await fetch(`${API_URL}/ConsejosIa`, {
+    // `idioma` ('es' | 'en') viaja como query param: cada idioma tiene su
+    // propia caché y su propio prompt en el backend.
+    async consejosIa(idioma) {
+        const parametros = idioma ? `?idioma=${encodeURIComponent(idioma)}` : ''
+        const res = await fetch(`${API_URL}/ConsejosIa${parametros}`, {
             headers: obtenerHeaders(),
         })
 

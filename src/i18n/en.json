@@ -62,7 +62,8 @@
     "siguiente": "Next",
     "paginaAnterior": "Previous page",
     "paginaSiguiente": "Next page",
-    "pageNumber": "Page {{page}}"
+    "pageNumber": "Page {{page}}",
+    "amountExample": "e.g. 100.00"
   },
   "auth": {
     "login": "Sign in",
@@ -96,6 +97,7 @@
     "registerDescription": "Sign up to start managing your household finances.",
     "enterName": "Enter your name",
     "emailExample": "email@example.com",
+    "emailExampleGmail": "email@gmail.com",
     "passwordMin": "At least 6 characters",
     "repeatPassword": "Re-enter your password",
     "registering": "Creating account...",
@@ -288,7 +290,12 @@
     "amountPositive": "Amount must be greater than 0.",
     "dateRequired": "Select a date.",
     "filtersTitle": "Transaction filters",
-    "allCategories": "All"
+    "allCategories": "All",
+    "type": {
+      "income": "Income",
+      "expense": "Expense",
+      "saving": "Savings"
+    }
   },
   "income": {
     "description": "Record and manage your income.",
@@ -341,7 +348,8 @@
     "saveError": "Could not save the expense.",
     "categoryRequired": "Select a category.",
     "amountPositive": "Amount must be greater than 0.",
-    "dateRequired": "Select a date."
+    "dateRequired": "Select a date.",
+    "amountExample": "e.g. 10.00"
   },
   "remittance": {
     "title": "Remittances",
@@ -776,6 +784,26 @@
       "s5": "5. Changes to this policy",
       "p6": "If we add cookies in the future, we will update this page and request consent before installing them. The date of the latest change appears at the beginning of the document."
     }
+  },
+  "backendErrors": {
+    "invalidCredentials": "Incorrect credentials.",
+    "emailRegistered": "That email is already registered.",
+    "passwordMismatch": "Passwords do not match.",
+    "gmailOnly": "Only @gmail.com email addresses are allowed.",
+    "resetLinkInvalid": "The password reset link is invalid or has expired.",
+    "alreadyInHousehold": "You already belong to a household.",
+    "familyNotFoundCode": "No household was found with that code.",
+    "familySearchMin3": "The search must be at least 3 characters.",
+    "familyNotFoundId": "No household was found with that identifier.",
+    "familyCodeInvalid": "The household code format is invalid.",
+    "pendingRequestExists": "You already have a pending request for this household.",
+    "categoryNotFound": "The category does not exist.",
+    "categoryNotInHousehold": "The category does not exist or does not belong to your household.",
+    "invalidType": "The type must be Income, Expense, or Savings.",
+    "invalidLanguage": "The language must be es or en.",
+    "unexpectedError": "An unexpected error occurred.",
+    "noHousehold": "You do not belong to any household.",
+    "currentPasswordWrong": "The current password is incorrect."
   },
   "errors": {
     "generico": "An error occurred. Please try again.",

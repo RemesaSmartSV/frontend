@@ -12,6 +12,7 @@ import {
     TriangleAlert,
 } from 'lucide-react'
 import { educacionApi } from '../services/api'
+import { normalizarIdioma } from '../i18n/index.js'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
 import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
@@ -19,11 +20,17 @@ import { ChipIcono, TONOS } from '../components/ui/ChipIcono'
 import { CLASE_TARJETA } from '../components/ui/estilos'
 
 // Rotación de consejos IA: el backend cachea 2h, el frontend reconsulta
-// en ese mismo intervalo para que los tips cambiados lleguen solos.
+// en ese mismo intervalo para que los tips cambiados lleguen solos. También
+// se reconsulta al cambiar de idioma: el endpoint recibe ?idioma= y cada
+// idioma tiene su propia caché en el backend.
 const INTERVALO_ROTACION_MS = 2 * 60 * 60 * 1000
 
 export default function EducacionFinanciera() {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
+    // Idioma activo como primitiva: al cambiar de idioma cambia la identidad
+    // de cargarTips y el effect de abajo vuelve a consultar de inmediato, sin
+    // esperar al intervalo de 2h. Se normaliza 'es-SV'/'en-US' → 'es'/'en'.
+    const idiomaActual = normalizarIdioma(i18n.language) || 'es'
     const [tips, setTips] = useState([])
     const [cargando, setCargando] = useState(true)
     const [procesando, setProcesando] = useState(false)
@@ -46,7 +53,7 @@ export default function EducacionFinanciera() {
             let origen = 'db'
 
             try {
-                const consejos = await educacionApi.consejosIa()
+                const consejos = await educacionApi.consejosIa(idiomaActual)
 
                 if (Array.isArray(consejos) && consejos.length > 0) {
                     datos = consejos
@@ -71,7 +78,7 @@ export default function EducacionFinanciera() {
         } finally {
             setCargando(false)
         }
-    }, [t])
+    }, [t, idiomaActual])
 
     useEffect(() => {
         cargarTips()

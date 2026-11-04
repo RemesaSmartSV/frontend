@@ -13,6 +13,7 @@ import { TONOS } from '../components/ui/ChipIcono'
 import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 import { exportarCsv } from '../utils/exportarCsv'
+import { traducirNombreCategoria } from '../utils/traducirCategoria'
 
 function Ingresos() {
     const { t } = useTranslation()
@@ -454,7 +455,7 @@ function Ingresos() {
                                             categoria.idCategoria
                                         }
                                     >
-                                        {categoria.nombre}
+                                        {traducirNombreCategoria(categoria.nombre)}
                                     </option>
                                 )
                             )}
@@ -677,9 +678,7 @@ function Ingresos() {
                                                         categoria.idCategoria
                                                     }
                                                 >
-                                                    {
-                                                        categoria.nombre
-                                                    }
+                                                    {traducirNombreCategoria(categoria.nombre)}
                                                 </option>
                                             )
                                         )}
@@ -804,8 +803,10 @@ function Ingresos() {
                                                 </td>
 
                                                 <td className="px-4 py-3 text-sm text-slate-700">
-                                                    {obtenerNombreCategoria(
-                                                        ingreso.idCategoria
+                                                    {traducirNombreCategoria(
+                                                        obtenerNombreCategoria(
+                                                            ingreso.idCategoria
+                                                        )
                                                     )}
                                                 </td>
 

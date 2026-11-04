@@ -13,6 +13,7 @@ import { TONOS } from '../components/ui/ChipIcono'
 import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
 import { exportarCsv } from '../utils/exportarCsv'
+import { traducirNombreCategoria } from '../utils/traducirCategoria'
 
 export default function Gastos() {
     const { t } = useTranslation()
@@ -494,7 +495,7 @@ export default function Gastos() {
                                             key={categoria.idCategoria}
                                             value={categoria.idCategoria}
                                         >
-                                            {categoria.nombre}
+                                            {traducirNombreCategoria(categoria.nombre)}
                                         </option>
                                     ))}
                             </select>
@@ -692,7 +693,7 @@ export default function Gastos() {
                                                 key={categoria.idCategoria}
                                                 value={categoria.idCategoria}
                                             >
-                                                {categoria.nombre}
+                                                {traducirNombreCategoria(categoria.nombre)}
                                             </option>
                                         ))}
                                 </select>
@@ -713,7 +714,7 @@ export default function Gastos() {
                                     step="0.01"
                                     value={filtros.montoMinimo}
                                     onChange={manejarCambioFiltro}
-                                    placeholder="Ej. 10.00"
+                                    placeholder={t('expense.amountExample')}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
                                 />
 
@@ -733,7 +734,7 @@ export default function Gastos() {
                                     step="0.01"
                                     value={filtros.montoMaximo}
                                     onChange={manejarCambioFiltro}
-                                    placeholder="Ej. 100.00"
+                                    placeholder={t('common.amountExample')}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-3 text-base outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-gray-400 sm:py-2.5 sm:text-sm"
                                 />
 
@@ -856,8 +857,10 @@ export default function Gastos() {
                                             </td>
 
                                             <td className="whitespace-nowrap border-b border-gray-200 px-3.5 py-3.5 text-sm">
-                                                {obtenerNombreCategoria(
-                                                    gasto.idCategoria
+                                                {traducirNombreCategoria(
+                                                    obtenerNombreCategoria(
+                                                        gasto.idCategoria
+                                                    )
                                                 )}
                                             </td>
 

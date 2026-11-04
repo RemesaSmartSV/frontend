@@ -349,7 +349,7 @@ export default function MiHogar() {
                                     type="email"
                                     value={correo}
                                     onChange={(e) => setCorreo(e.target.value)}
-                                    placeholder="correo@ejemplo.com"
+                                    placeholder={t('auth.emailExample')}
                                     aria-label={t('family.inviteEmail')}
                                     required
                                     className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"

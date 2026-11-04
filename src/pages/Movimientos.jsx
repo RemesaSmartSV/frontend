@@ -7,6 +7,7 @@ import Pagination from '../components/Pagination'
 import ConfirmModal from '../components/ConfirmModal'
 import FiltrosMenu from '../components/FiltrosMenu'
 import { formatearMoneda, formatearFecha, obtenerFechaHoy } from '../utils/formato'
+import { traducirNombreCategoria } from '../utils/traducirCategoria'
 import { exportarCsv } from '../utils/exportarCsv'
 import {
     ClipboardList,
@@ -53,6 +54,18 @@ function estiloPorTipo(tipo) {
         badge: `inline-block rounded-full ${TONOS.rojo} px-2.5 py-1 text-sm font-bold`,
         monto: 'text-red-600',
     }
+}
+
+/**
+ * Etiqueta del badge de tipo. SOLO presentación: las comparaciones de
+ * negocio siguen siendo contra los valores crudos ('Ingreso' | 'Gasto' |
+ * 'Ahorro'), que es lo que el backend guarda y devuelve.
+ */
+function etiquetaTipo(t, tipo) {
+    if (tipo === 'Ingreso') return t('transactions.type.income')
+    if (tipo === 'Ahorro') return t('transactions.type.saving')
+    if (tipo === 'Gasto') return t('transactions.type.expense')
+    return tipo || ''
 }
 
 export default function Movimientos() {
@@ -654,7 +667,7 @@ export default function Movimientos() {
                                             key={categoria.idCategoria}
                                             value={categoria.idCategoria}
                                         >
-                                            {categoria.nombre}
+                                            {traducirNombreCategoria(categoria.nombre)}
                                         </option>
                                     ))}
                             </select>
@@ -921,7 +934,7 @@ export default function Movimientos() {
                                     <option value="">{t('transactions.allCategories')}</option>
                                     {categorias.map((categoria) => (
                                         <option key={categoria.idCategoria} value={categoria.idCategoria}>
-                                            {categoria.nombre}
+                                            {traducirNombreCategoria(categoria.nombre)}
                                         </option>
                                     ))}
                                 </select>
@@ -1095,13 +1108,13 @@ export default function Movimientos() {
                                                             ).badge
                                                         }
                                                     >
-                                                        {movimiento.tipo}
+                                                        {etiquetaTipo(t, movimiento.tipo)}
                                                     </span>
 
                                                 </td>
 
                                                 <td className="whitespace-nowrap border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                                    {categoria?.nombre ||
+                                                    {traducirNombreCategoria(categoria?.nombre) ||
                                                         t('common.sinCategoria')}
                                                 </td>
 
@@ -1203,7 +1216,7 @@ export default function Movimientos() {
                                                     tests sin acotar regex. */}
                                                 <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-gray-500 dark:text-gray-400">
                                                     <span>
-                                                        {categoria?.nombre ||
+                                                        {traducirNombreCategoria(categoria?.nombre) ||
                                                             t(
                                                                 'common.sinCategoria'
                                                             )}
@@ -1222,7 +1235,7 @@ export default function Movimientos() {
                                             </div>
 
                                             <span className={estilo.badge}>
-                                                {movimiento.tipo}
+                                                {etiquetaTipo(t, movimiento.tipo)}
                                             </span>
                                         </div>
 

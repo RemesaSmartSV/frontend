@@ -82,7 +82,7 @@ export default function Layout({
             setInvitaciones(inv || [])
         } catch (err) {
             setErrorInvitacion(
-                err.message || 'No se pudo responder la invitación.'
+                err.message || t('pendingHome.invitationError')
             )
         } finally {
             setProcesandoInvitacion(false)

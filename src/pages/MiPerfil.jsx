@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AtSign, KeyRound, Languages, Monitor, Moon, Palette, Sun, User } from 'lucide-react'
 import { normalizarIdioma } from '../i18n/index.js'
+import { traducirMensaje } from '../utils/traducirMensaje'
 import { hogaresApi, usuariosApi } from '../services/api'
 import { useTheme } from '../context/ThemeContext.jsx'
 import Loading from '../components/Loading'
@@ -457,7 +458,9 @@ function CambiarContrasena() {
 
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}))
-                throw new Error(data.message || t('security.changeError'))
+                // Este fetch no pasa por manejarRespuesta: el mapa de
+                // mensajes del backend se aplica aquí, al lanzar.
+                throw new Error(traducirMensaje(data.message) || t('security.changeError'))
             }
 
             setExito(t('security.changeSuccess'))

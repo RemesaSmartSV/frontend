@@ -17,6 +17,7 @@ import { TONOS } from '../components/ui/ChipIcono'
 import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
 import { formatearMoneda, formatearNumero, formatearFecha } from '../utils/formato'
 import { exportarCsv } from '../utils/exportarCsv'
+import { traducirNombreCategoria } from '../utils/traducirCategoria'
 
 function Presupuestos() {
     const { t } = useTranslation()
@@ -600,7 +601,7 @@ function Presupuestos() {
                                             categoria.idCategoria
                                         }
                                     >
-                                        {categoria.nombre}
+                                        {traducirNombreCategoria(categoria.nombre)}
                                     </option>
                                 ))}
                         </select>
@@ -620,7 +621,7 @@ function Presupuestos() {
                                 formulario.montoLimite
                             }
                             onChange={manejarCambio}
-                            placeholder="Ej. 100.00"
+                            placeholder={t('common.amountExample')}
                             className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
                         />
                     </div>
@@ -745,7 +746,7 @@ function Presupuestos() {
                                                     categoria.idCategoria
                                                 }
                                             >
-                                                {categoria.nombre}
+                                                {traducirNombreCategoria(categoria.nombre)}
                                             </option>
                                         )
                                     )}
@@ -895,8 +896,10 @@ function Presupuestos() {
 
                                                     <span className="font-medium text-gray-800">
                                                         {
-                                                            obtenerNombreCategoria(
-                                                                presupuesto.idCategoria
+                                                            traducirNombreCategoria(
+                                                                obtenerNombreCategoria(
+                                                                    presupuesto.idCategoria
+                                                                )
                                                             )
                                                         }
                                                     </span>

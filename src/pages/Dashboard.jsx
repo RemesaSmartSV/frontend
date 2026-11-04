@@ -30,6 +30,7 @@ import { TarjetaKpi } from '../components/ui/TarjetaKpi'
 import { EstadoVacio } from '../components/ui/EstadoVacio'
 import { CLASE_TARJETA } from '../components/ui/estilos'
 import { formatearMoneda, formatearNumero, formatearFecha, obtenerLocale, parsearFechaLocal, obtenerFechaHoy } from '../utils/formato'
+import { traducirNombreCategoria } from '../utils/traducirCategoria'
 import {
     AlertTriangle,
     PiggyBank,
@@ -709,9 +710,11 @@ export default function Dashboard() {
                             idCategoria
                     )
 
-                return categoria?.nombre || t('dashboard.noCategory')
+                return traducirNombreCategoria(categoria?.nombre) || t('dashboard.noCategory')
             },
-            [categorias, t]
+            // i18n.language: al cambiar de idioma el nombre de las
+            // categorías sembradas cambia y la gráfica debe recomputarse.
+            [categorias, t, i18n.language]
         )
 
     /*

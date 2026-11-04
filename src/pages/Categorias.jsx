@@ -9,6 +9,7 @@ import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
 import { EstadoVacio } from '../components/ui/EstadoVacio'
 import { TONOS } from '../components/ui/ChipIcono'
 import { CLASE_TARJETA, CLASE_TH } from '../components/ui/estilos'
+import { traducirNombreCategoria } from '../utils/traducirCategoria'
 
 export default function Categorias() {
     const { t } = useTranslation()
@@ -364,7 +365,7 @@ export default function Categorias() {
 
                                         {/* NOMBRE */}
                                         <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                            {categoria.nombre}
+                                            {traducirNombreCategoria(categoria.nombre)}
                                         </td>
 
                                         {/* TIPO */}

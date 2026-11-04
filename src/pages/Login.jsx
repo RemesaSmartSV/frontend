@@ -201,7 +201,7 @@ export default function Login({ onLogin, irRegistro }) {
                                             type="email"
                                             value={correoReset}
                                             onChange={(e) => { setCorreoReset(e.target.value); setErrorCampo('') }}
-                                            placeholder="correo@gmail.com"
+                                            placeholder={t('auth.emailExampleGmail')}
                                             autoComplete="email"
                                             required
                                             disabled={cargando}
@@ -262,7 +262,7 @@ export default function Login({ onLogin, irRegistro }) {
                                     type="email"
                                     value={correo}
                                     onChange={(e) => { setCorreo(e.target.value); setErrorCampo('') }}
-                                    placeholder="correo@gmail.com"
+                                    placeholder={t('auth.emailExampleGmail')}
                                     autoComplete="email"
                                     required
                                     disabled={cargando}
