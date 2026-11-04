@@ -103,11 +103,51 @@ body {
 .dark tbody tr { border-color: var(--color-border); }
 .dark tbody tr:hover { background-color: var(--color-surface-hover); }
 
-/* Sidebar mantiene su identidad #123B8F en ambos temas */
-.dark aside.bg-\[\#123B8F\] { background-color: #0c2560; }
+/*
+ * T1 — Chrome de navegación (sidebar + navbar) en dark: negro puro, igual
+ * que el resto del dark OLED. El navy #123B8F queda como identidad SOLO en
+ * modo claro (LanguageSelector, botones de marca, paginación); todos estos
+ * selectores llevan scope .dark, así que el modo claro queda intacto.
+ */
+
+/* Contenedor del sidebar: negro puro + borde derecho sutil para separarlo
+   del lienzo. El markup no tiene ninguna clase border, así que no se
+   duplica el borde. */
+.dark aside.bg-\[\#123B8F\] {
+    background-color: #000000;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Píldora activa: el navy anterior (#0B2E6B) se fundía sobre el negro;
+   la marca #123B8F resalta. Scope al aside para no tocar mocks (p. ej.
+   DashboardPreview) que usan la misma clase. */
+.dark aside .bg-\[\#0B2E6B\] { background-color: #123B8F; }
+
+/* Hover de los enlaces del menú: neutro sobre negro en vez de azul navy. */
+.dark aside .hover\:bg-\[\#1D4FA3\]:hover { background-color: rgba(255, 255, 255, 0.10); }
+
+/* Títulos de grupo y rol del usuario: azul claro → gris para no competir
+   con el fondo negro. Scope al aside: Login/Register/Presentacion usan
+   text-blue-200 sobre superficies distintas y no entran en T1. */
+.dark aside .text-blue-200 { color: #9ca3af; }
 
 /* Navbar */
 .dark header.bg-white { background-color: var(--color-surface); border-color: var(--color-border); }
+
+/* Hamburger y nombre del hogar en celular: el navy sobre la superficie
+   oscura queda con bajo contraste. Se aclara el texto solo en dark; el
+   chip de marca conserva su fondo navy porque el logo blanco va encima. */
+.dark header button.text-\[\#123B8F\] { color: #60a5fa; }
+.dark header p.text-\[\#123B8F\] { color: #93c5fd; }
+.dark .hover\:bg-blue-50:hover { background-color: rgba(255, 255, 255, 0.08); }
+
+/* Notificación sin leer: el índigo claro quedaba como parche en dark. */
+.dark .bg-indigo-50 { background-color: #1a1a1a; }
+
+/* Bordes azules de tarjetas (banner de familia en Layout, invitaciones del
+   Navbar, avisos de HogarPendiente): en dark se sustituyen por el borde
+   neutro del tema. */
+.dark .border-blue-200 { border-color: #2a2a2a; }
 
 /* Modales y overlays */
 .dark .fixed.inset-0.bg-black\/40 { background-color: rgba(0, 0, 0, 0.6); }
