@@ -282,6 +282,34 @@ export const usuariosApi = {
         return manejarRespuesta(res)
     },
 
+    // POST /api/Usuarios/foto: multipart con el campo `archivo` (PNG/JPG,
+    // ≤5MB). Devuelve { fotoPerfil } con la ruta relativa que sirve el
+    // endpoint de streaming (se usa como src de la imagen). Sin Content-Type
+    // manual: el navegador pone el boundary del FormData.
+    async subirFoto(archivo) {
+        const datos = new FormData()
+        datos.append('archivo', archivo)
+
+        const res = await fetch(`${API_URL}/Usuarios/foto`, {
+            method: 'POST',
+            headers: obtenerHeaders(),
+            body: datos,
+        })
+
+        return manejarRespuesta(res)
+    },
+
+    // DELETE /api/Usuarios/foto: 204; limpia bytes, content type y ruta,
+    // de modo que el cliente vuelve a mostrar las iniciales.
+    async eliminarFoto() {
+        const res = await fetch(`${API_URL}/Usuarios/foto`, {
+            method: 'DELETE',
+            headers: obtenerHeaders(),
+        })
+
+        return manejarRespuesta(res)
+    },
+
     async buscarPorCodigo(codigoPublico) {
         const params = new URLSearchParams({ codigo: codigoPublico })
         const res = await fetch(`${API_URL}/Hogares/buscar?${params}`, {

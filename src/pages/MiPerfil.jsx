@@ -15,9 +15,70 @@ import { CLASE_TARJETA } from '../components/ui/estilos'
 // Rol, IdHogar y Correo no se editan aquí: no hay endpoints de auto-servicio
 // para ellos y no deben escalarse desde el frontend.
 
-// Solo se previsualiza una URL con esquema http(s): el backend acepta cualquier
-// string ≤500, así que la validación es informativa y nunca bloquea el guardado.
-const ES_URL_FOTO = /^https?:\/\/\S/i
+// Foto de perfil por archivo (T3): se valida en el cliente, se reduce con
+// canvas a 512×512 (JPEG ~0.82) y se sube en Guardar cambios. El backend
+// guarda los bytes en Postgres y sirve la imagen por /api/Usuarios/foto/{id}.
+const TIPOS_FOTO_PERMITIDOS = ['image/png', 'image/jpeg']
+const TAMANIO_MAXIMO_FOTO = 5 * 1024 * 1024
+const LADO_MAXIMO_FOTO = 512
+const CALIDAD_JPEG_FOTO = 0.82
+
+function leerComoDataUrl(archivo) {
+    return new Promise((resolver, rechazar) => {
+        const lector = new FileReader()
+        lector.onload = () => resolver(lector.result)
+        lector.onerror = () => rechazar(new Error('No se pudo leer la imagen.'))
+        lector.readAsDataURL(archivo)
+    })
+}
+
+function cargarImagen(url) {
+    return new Promise((resolver, rechazar) => {
+        const imagen = new Image()
+        imagen.onload = () => resolver(imagen)
+        imagen.onerror = () => rechazar(new Error('No se pudo decodificar la imagen.'))
+        imagen.src = url
+    })
+}
+
+function dataUrlAArchivo(dataUrl, nombre) {
+    const base64 = dataUrl.split(',')[1] || ''
+    const binario = atob(base64)
+    const bytes = new Uint8Array(binario.length)
+    for (let i = 0; i < binario.length; i += 1) bytes[i] = binario.charCodeAt(i)
+    return new File([bytes], nombre, { type: 'image/jpeg' })
+}
+
+// Reduce la imagen con canvas (máx 512×512, JPEG ~0.82) para no subir
+// megabytes de un teléfono. Si el entorno no puede decodificar (canvas o
+// createObjectURL no disponibles), se conserva el archivo original ya
+// validado: la subida nunca queda bloqueada por el resize.
+async function prepararFoto(archivo) {
+    let urlObjeto = null
+
+    try {
+        urlObjeto = URL.createObjectURL(archivo)
+        const imagen = await cargarImagen(urlObjeto)
+        const ladoOriginal = Math.max(imagen.naturalWidth, imagen.naturalHeight) || 1
+        const escala = Math.min(1, LADO_MAXIMO_FOTO / ladoOriginal)
+
+        const lienzo = document.createElement('canvas')
+        lienzo.width = Math.max(1, Math.round(imagen.naturalWidth * escala))
+        lienzo.height = Math.max(1, Math.round(imagen.naturalHeight * escala))
+
+        const contexto = lienzo.getContext('2d')
+        if (!contexto) throw new Error('Sin contexto 2d.')
+        contexto.drawImage(imagen, 0, 0, lienzo.width, lienzo.height)
+
+        const vistaPrevia = lienzo.toDataURL('image/jpeg', CALIDAD_JPEG_FOTO)
+        const nombre = `${(archivo.name || 'foto').replace(/\.[^.]*$/, '')}.jpg`
+        return { archivo: dataUrlAArchivo(vistaPrevia, nombre), vistaPrevia }
+    } catch {
+        return { archivo, vistaPrevia: await leerComoDataUrl(archivo) }
+    } finally {
+        if (urlObjeto) URL.revokeObjectURL(urlObjeto)
+    }
+}
 
 export default function MiPerfil() {
     const { t, i18n } = useTranslation()
@@ -36,9 +97,13 @@ export default function MiPerfil() {
     const [idioma, setIdioma] = useState('es')
     const [tema, setTema] = useState('claro')
 
-    // Vista previa de la foto: debounce para no recargar el <img> en cada tecla,
-    // y flag de imagen rota para volver a las iniciales con onError.
-    const [fotoPrevia, setFotoPrevia] = useState('')
+    // Foto pendiente de subir: se elige con el file input, se previsualiza
+    // en local (dataURL) y recién se sube al pulsar Guardar cambios.
+    const [archivoPendiente, setArchivoPendiente] = useState(null)
+    const [previewFoto, setPreviewFoto] = useState('')
+    const [mensajeFoto, setMensajeFoto] = useState('')
+    // flag de imagen rota para volver a las iniciales con onError (URL
+    // externa legacy que ya no existe).
     const [fotoRota, setFotoRota] = useState(false)
 
     // Estado
@@ -54,14 +119,6 @@ export default function MiPerfil() {
         i18n.on('languageChanged', sincronizarIdioma)
         return () => i18n.off('languageChanged', sincronizarIdioma)
     }, [i18n])
-
-    useEffect(() => {
-        const temporizador = setTimeout(() => {
-            setFotoPrevia(fotoPerfil.trim())
-            setFotoRota(false)
-        }, 300)
-        return () => clearTimeout(temporizador)
-    }, [fotoPerfil])
 
     useEffect(() => {
         let vigente = true
@@ -118,11 +175,25 @@ export default function MiPerfil() {
         try {
             setGuardando(true)
 
+            // Si hay archivo pendiente, primero se sube la foto y la ruta que
+            // devuelve el backend viaja en el PUT siguiente: el servidor y
+            // localStorage quedan sincronizados con la misma fotoPerfil.
+            let fotoGuardada = fotoPerfil.trim() || null
+
+            if (archivoPendiente) {
+                const respuesta = await usuariosApi.subirFoto(archivoPendiente)
+                fotoGuardada = respuesta?.fotoPerfil || null
+                setFotoPerfil(fotoGuardada || '')
+                setArchivoPendiente(null)
+                setPreviewFoto('')
+                setFotoRota(false)
+            }
+
             await usuariosApi.actualizarPerfil({
                 nombre: nombre.trim(),
                 apellido: apellido.trim() || null,
                 nombreVisible: nombreVisible.trim() || null,
-                fotoPerfil: fotoPerfil.trim() || null,
+                fotoPerfil: fotoGuardada,
                 telefono: telefono.trim() || null,
                 idiomaPreferido: idioma,
                 temaPreferido: tema,
@@ -134,7 +205,7 @@ export default function MiPerfil() {
                 nombre: nombre.trim(),
                 apellido: apellido.trim() || null,
                 nombreVisible: nombreVisible.trim() || null,
-                fotoPerfil: fotoPerfil.trim() || null,
+                fotoPerfil: fotoGuardada,
                 telefono: telefono.trim() || null,
                 idiomaPreferido: idioma,
                 temaPreferido: tema,
@@ -156,6 +227,10 @@ export default function MiPerfil() {
         setApellido(usuario.apellido || '')
         setNombreVisible(usuario.nombreVisible || '')
         setFotoPerfil(usuario.fotoPerfil || '')
+        setArchivoPendiente(null)
+        setPreviewFoto('')
+        setMensajeFoto('')
+        setFotoRota(false)
         setTelefono(usuario.telefono || '')
         const idiomaGuardado = normalizarIdioma(usuario.idiomaPreferido) || 'es'
         setIdioma(idiomaGuardado)
@@ -163,6 +238,76 @@ export default function MiPerfil() {
         setTema(usuario.temaPreferido || 'claro')
         setError('')
         setExito('')
+    }
+
+    // Valida el archivo elegido (tipo exacto + ≤5MB), lo reduce con canvas
+    // y deja la vista previa local. La subira recién ocurre en Guardar cambios.
+    async function manejarArchivoFoto(e) {
+        const input = e.target
+        const archivo = input.files?.[0]
+        if (!archivo) return
+
+        setMensajeFoto('')
+
+        if (!TIPOS_FOTO_PERMITIDOS.includes(archivo.type)) {
+            setMensajeFoto(t('profile.photoUploadWrongType'))
+            input.value = ''
+            return
+        }
+
+        if (archivo.size > TAMANIO_MAXIMO_FOTO) {
+            setMensajeFoto(t('profile.photoUploadTooLarge'))
+            input.value = ''
+            return
+        }
+
+        try {
+            const preparada = await prepararFoto(archivo)
+            setArchivoPendiente(preparada.archivo)
+            setPreviewFoto(preparada.vistaPrevia)
+            setFotoRota(false)
+        } catch {
+            setMensajeFoto(t('profile.photoUploadError'))
+        }
+
+        // Permite volver a elegir el mismo archivo tras cancelar.
+        input.value = ''
+    }
+
+    // Quitar foto: si hay un archivo elegido pero aún no subido solo se
+    // descarta; si hay foto guardada se borra ya en el servidor (204) y
+    // localStorage se sincroniza en el momento, igual que el resto del flujo.
+    async function quitarFoto() {
+        setError('')
+        setExito('')
+        setMensajeFoto('')
+
+        if (archivoPendiente) {
+            setArchivoPendiente(null)
+            setPreviewFoto('')
+        }
+
+        if (!fotoPerfil.trim()) {
+            setFotoRota(false)
+            return
+        }
+
+        try {
+            setGuardando(true)
+            await usuariosApi.eliminarFoto()
+
+            setFotoPerfil('')
+            setFotoRota(false)
+            const actualizado = { ...usuario, fotoPerfil: null }
+            localStorage.setItem('usuario', JSON.stringify(actualizado))
+            setUsuario(actualizado)
+
+            setExito(t('profile.photoUploadRemoved'))
+        } catch (err) {
+            setError(err.message || t('profile.photoUploadError'))
+        } finally {
+            setGuardando(false)
+        }
     }
 
     if (cargando) return <Loading />
@@ -175,9 +320,11 @@ export default function MiPerfil() {
         .join('')
         .toUpperCase()
 
-    const urlFoto = fotoPerfil.trim()
-    const urlFotoInvalida = urlFoto !== '' && !ES_URL_FOTO.test(urlFoto)
-    const mostrarFoto = ES_URL_FOTO.test(fotoPrevia) && !fotoRota
+    // Previsualización local (archivo pendiente) o la ruta guardada: funciona
+    // tanto con URLs http(s) externas legacy como con /api/Usuarios/foto/{id}.
+    const fuenteFoto = previewFoto || fotoPerfil.trim()
+    const mostrarFoto = fuenteFoto !== '' && !fotoRota
+    const hayFoto = fuenteFoto !== ''
 
     return (
         <div className="space-y-6">
@@ -199,12 +346,12 @@ export default function MiPerfil() {
                         titulo={t('profile.personal')}
                     />
 
-                    {/* AVATAR + editor de la URL de la foto */}
+                    {/* AVATAR + editor de la foto por archivo */}
                     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
                         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-2xl font-bold text-blue-700">
                             {mostrarFoto ? (
                                 <img
-                                    src={fotoPrevia}
+                                    src={fuenteFoto}
                                     alt={t('profile.photoAlt')}
                                     className="h-full w-full object-cover"
                                     onError={() => setFotoRota(true)}
@@ -216,24 +363,33 @@ export default function MiPerfil() {
 
                         <div className="min-w-0 flex-1">
                             <label htmlFor="fotoPerfil" className="mb-1 block text-sm font-medium text-gray-700">
-                                {t('profile.photoUrl')}
+                                {t('profile.photoUploadLabel')}
                             </label>
                             <input
                                 id="fotoPerfil"
-                                type="text"
-                                value={fotoPerfil}
-                                onChange={(e) => setFotoPerfil(e.target.value)}
-                                maxLength={500}
-                                placeholder={t('profile.photoPlaceholder')}
+                                type="file"
+                                accept="image/png,image/jpeg"
+                                onChange={manejarArchivoFoto}
                                 aria-describedby="fotoPerfil-ayuda"
-                                className="input py-2"
+                                className="block w-full text-sm text-gray-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
                             />
                             <p
                                 id="fotoPerfil-ayuda"
-                                className={`mt-1 text-xs ${urlFotoInvalida ? 'text-amber-700 dark:text-amber-300' : 'text-gray-500'}`}
+                                className={`mt-1 text-xs ${mensajeFoto ? 'text-red-600 dark:text-red-400' : 'text-gray-500'}`}
                             >
-                                {urlFotoInvalida ? t('profile.photoInvalid') : t('profile.photoUrlHint')}
+                                {mensajeFoto || t('profile.photoUploadHelp')}
                             </p>
+
+                            {hayFoto && (
+                                <button
+                                    type="button"
+                                    onClick={quitarFoto}
+                                    disabled={guardando}
+                                    className="mt-2 text-sm font-medium text-red-600 transition hover:text-red-700 disabled:opacity-50"
+                                >
+                                    {t('profile.photoUploadRemove')}
+                                </button>
+                            )}
                         </div>
                     </div>
 
