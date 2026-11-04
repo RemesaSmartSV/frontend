@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useOutletContext } from 'react-router-dom'
 import { AtSign, KeyRound, Languages, Monitor, Moon, Palette, Sun, User } from 'lucide-react'
 import { normalizarIdioma } from '../i18n/index.js'
 import { traducirMensaje } from '../utils/traducirMensaje'
@@ -83,6 +84,11 @@ async function prepararFoto(archivo) {
 export default function MiPerfil() {
     const { t, i18n } = useTranslation()
     const { cambiarTema } = useTheme()
+    // onSesionActualizada llega por el Outlet del Layout y refresca el estado
+    // de App (usuario → Navbar) tras guardar o quitar la foto. Fuera del
+    // Layout (tests que renderizan esta página directo) el contexto viene en
+    // null, por eso el fallback a {} y la llamada opcional.
+    const { onSesionActualizada } = useOutletContext() || {}
     const [usuario, setUsuario] = useState(null)
     const [nombreHogar, setNombreHogar] = useState('')
 
@@ -212,6 +218,10 @@ export default function MiPerfil() {
             }
             localStorage.setItem('usuario', JSON.stringify(actualizado))
             setUsuario(actualizado)
+            // Sincroniza App.usuario (Navbar) con el mismo objeto: sin esto el
+            // avatar de la barra superior seguiría con la foto anterior hasta
+            // el próximo login.
+            onSesionActualizada?.(actualizado)
 
             setExito(t('profile.saveSuccess'))
         } catch (err) {
@@ -301,6 +311,9 @@ export default function MiPerfil() {
             const actualizado = { ...usuario, fotoPerfil: null }
             localStorage.setItem('usuario', JSON.stringify(actualizado))
             setUsuario(actualizado)
+            // Mismo sync que en guardarPerfil: el avatar del Navbar vuelve a
+            // la inicial en el momento, sin esperar otro login.
+            onSesionActualizada?.(actualizado)
 
             setExito(t('profile.photoUploadRemoved'))
         } catch (err) {

@@ -29,6 +29,15 @@ export default function Navbar({
     const [alertasAbiertas, setAlertasAbiertas] = useState(false)
     const alertasRef = useRef(null)
 
+    // flag de imagen rota para volver a la inicial con onError (mismo patrón
+    // que MiPerfil: URL legacy externa que ya no existe). Se resetea cuando
+    // cambia la foto para que una subida nueva reintente el img.
+    const [fotoRota, setFotoRota] = useState(false)
+
+    useEffect(() => {
+        setFotoRota(false)
+    }, [usuario?.fotoPerfil])
+
     useEffect(() => {
         function cerrarAlClickearFuera(e) {
             if (alertasRef.current && !alertasRef.current.contains(e.target)) {
@@ -291,11 +300,20 @@ export default function Navbar({
                     href="/perfil"
                     aria-label={t('shell.profile')}
                     title={t('shell.profile')}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 transition hover:ring-2 hover:ring-blue-300 sm:h-10 sm:w-10 sm:text-base"
+                    className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-sm font-bold text-blue-700 transition hover:ring-2 hover:ring-blue-300 sm:h-10 sm:w-10 sm:text-base"
                 >
-                    {(usuario?.nombre || 'U')
-                        .charAt(0)
-                        .toUpperCase()}
+                    {usuario?.fotoPerfil && !fotoRota ? (
+                        <img
+                            src={usuario.fotoPerfil}
+                            alt={t('profile.photoAlt')}
+                            className="h-full w-full object-cover"
+                            onError={() => setFotoRota(true)}
+                        />
+                    ) : (
+                        (usuario?.nombre || 'U')
+                            .charAt(0)
+                            .toUpperCase()
+                    )}
                 </a>
 
             </div>

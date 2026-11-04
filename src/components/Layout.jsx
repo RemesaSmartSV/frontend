@@ -140,7 +140,9 @@ export default function Layout({
     // navigates home — the user keeps browsing the app without a family and
     // never lands on the create/search screen. cambiarDeFamilia navigates to
     // /hogar instead, where HogarPendiente (create/search) awaits whoever no
-    // longer has a family.
+    // longer has a family. onSesionActualizada lets any Outlet page (e.g.
+    // MiPerfil after saving/removing the photo) refresh App.usuario so the
+    // Navbar re-renders with the new data immediately.
     function salirDeFamilia(datosUsuario) {
         onSesionActualizada?.(datosUsuario)
         navigate('/')
@@ -201,7 +203,9 @@ export default function Layout({
                     </div>
                 )}
 
-                <Outlet context={{ salirDeFamilia, cambiarDeFamilia }} />
+                <Outlet
+                    context={{ salirDeFamilia, cambiarDeFamilia, onSesionActualizada }}
+                />
 
                 <footer className="mt-10 border-t border-gray-200 pt-4 pb-2 text-xs text-gray-500">
                     <nav
