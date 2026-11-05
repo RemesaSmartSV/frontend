@@ -49,6 +49,12 @@ export default function MiHogar() {
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
 
+    // URLs de foto de miembros que fallaron al cargar (se guarda la URL, no
+    // el id, para que una foto nueva con ?v= distinto reintente). Va con el
+    // resto de los states: cualquier return temprano no debe alterar el
+    // orden de hooks.
+    const [fotosRotas, setFotosRotas] = useState(() => new Set())
+
     // El token guardado por authApi.login trae el rol; un Admin puede invitar.
     let esAdmin = false
     let usuarioDatos = null
@@ -265,8 +271,21 @@ export default function MiHogar() {
                     <ul className="divide-y divide-gray-100">
                         {miembros.map((miembro) => (
                             <li key={miembro.idUsuario} className="flex items-center gap-3 py-3">
-                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
-                                    {iniciales(miembro.nombre)}
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+                                    {miembro.fotoPerfil && !fotosRotas.has(miembro.fotoPerfil) ? (
+                                        <img
+                                            src={miembro.fotoPerfil}
+                                            alt=""
+                                            className="h-full w-full object-cover"
+                                            onError={() =>
+                                                setFotosRotas((prev) =>
+                                                    new Set(prev).add(miembro.fotoPerfil)
+                                                )
+                                            }
+                                        />
+                                    ) : (
+                                        iniciales(miembro.nombre)
+                                    )}
                                 </span>
 
                                 <div className="min-w-0 flex-1">
