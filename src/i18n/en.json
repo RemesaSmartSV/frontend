@@ -660,7 +660,7 @@
   "presentation": {
     "sections": { "cover": "Overview", "problem": "Problem", "solution": "Solution", "how": "How it works", "benefits": "Benefits", "technology": "Technology" },
     "coverLead": "Turn your remittances into better financial decisions.",
-    "coverDescription": "A digital solution to manage remittances, organize household expenses, and reach savings goals.",
+    "coverDescription": "A digital solution to manage remittances, organize household expenses, and reach savings goals, with artificial intelligence tips to make better decisions.",
     "coverButton": "See how it works",
     "keyboardHint": "Use ← → to navigate",
     "problemEyebrow": "The problem",
@@ -673,7 +673,7 @@
     },
     "solutionEyebrow": "The solution",
     "solutionHeading": "All your household financial management in one place.",
-    "capabilities": { "remittances": "Record and track remittances.", "incomeExpense": "Manage income and expenses.", "budgets": "Create and manage budgets.", "savings": "Set savings goals.", "overview": "View your household's financial status." },
+    "capabilities": { "remittances": "Record and track remittances.", "incomeExpense": "Manage income and expenses.", "budgets": "Create and manage budgets.", "savings": "Set savings goals.", "aiTips": "Get tips with artificial intelligence.", "overview": "View your household's financial status.", "exports": "Export your data to CSV." },
     "inDevelopment": "Interface in development",
     "screens": {
       "dashboard": { "name": "Financial summary", "detail": "Household cards and charts." },
@@ -681,7 +681,9 @@
       "income": { "name": "Income", "detail": "Recorded household income." },
       "expenses": { "name": "Expenses", "detail": "Expenses filtered by category." },
       "budgets": { "name": "Budgets", "detail": "Limits by category and period." },
-      "education": { "name": "Financial education", "detail": "Tips for making better decisions." }
+      "education": { "name": "Financial education", "detail": "Artificial intelligence tips to make better decisions." },
+      "family": { "name": "My Household", "detail": "Family with photos and roles." },
+      "exports": { "name": "Exports", "detail": "Download your data as CSV." }
     },
     "howEyebrow": "How does it work?",
     "howHeading": "A simple step-by-step flow.",

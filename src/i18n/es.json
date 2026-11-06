@@ -614,7 +614,7 @@
   "presentation": {
     "sections": { "cover": "Portada", "problem": "Problema", "solution": "Solución", "how": "Cómo funciona", "benefits": "Beneficios", "technology": "Tecnología" },
     "coverLead": "Convierte tus remesas en mejores decisiones financieras.",
-    "coverDescription": "Una solución digital para administrar remesas, organizar los gastos del hogar y alcanzar metas de ahorro.",
+    "coverDescription": "Una solución digital para administrar remesas, organizar los gastos del hogar y alcanzar metas de ahorro, con consejos de inteligencia artificial para decidir mejor.",
     "coverButton": "Conoce cómo funciona",
     "keyboardHint": "Usa ← → para navegar",
     "problemEyebrow": "El problema",
@@ -627,7 +627,7 @@
     },
     "solutionEyebrow": "La solución",
     "solutionHeading": "Todo el control financiero del hogar, en un solo lugar.",
-    "capabilities": { "remittances": "Registrar y controlar remesas.", "incomeExpense": "Administrar ingresos y gastos.", "budgets": "Crear y controlar presupuestos.", "savings": "Establecer metas de ahorro.", "overview": "Visualizar el estado financiero del hogar." },
+    "capabilities": { "remittances": "Registrar y controlar remesas.", "incomeExpense": "Administrar ingresos y gastos.", "budgets": "Crear y controlar presupuestos.", "savings": "Establecer metas de ahorro.", "aiTips": "Recibe consejos con inteligencia artificial.", "overview": "Visualizar el estado financiero del hogar.", "exports": "Exportar tus datos a CSV." },
     "inDevelopment": "Interfaz en desarrollo",
     "screens": {
       "dashboard": { "name": "Resumen financiero", "detail": "Tarjetas y gráficas del hogar." },
@@ -635,7 +635,9 @@
       "income": { "name": "Ingresos", "detail": "Entradas registradas del hogar." },
       "expenses": { "name": "Gastos", "detail": "Salidas filtradas por categoría." },
       "budgets": { "name": "Presupuestos", "detail": "Límites por categoría y periodo." },
-      "education": { "name": "Educación financiera", "detail": "Consejos para tomar mejores decisiones." }
+      "education": { "name": "Educación financiera", "detail": "Consejos de inteligencia artificial para decidir mejor." },
+      "family": { "name": "Mi Hogar", "detail": "Familia con fotos y roles." },
+      "exports": { "name": "Exportaciones", "detail": "Descarga tus datos en CSV." }
     },
     "howEyebrow": "¿Cómo funciona?",
     "howHeading": "Un flujo simple, paso a paso.",

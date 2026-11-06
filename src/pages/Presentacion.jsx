@@ -12,13 +12,17 @@ import {
     ClipboardList,
     Container,
     Database,
+    FileDown,
     Files,
     GitBranch,
+    House,
+    Languages,
     LayoutDashboard,
     LineChart,
     MousePointerClick,
     PiggyBank,
     Server,
+    Sparkles,
     Tags,
     Target,
     TrendingDown,
@@ -37,8 +41,10 @@ import logoBlanco from '../assets/remesa-smart (blanco).png'
  *
  * Seis pantallas de altura completa pensadas para una exposición en línea.
  * Solo comunica funcionalidades que existen en el producto: "metas de ahorro"
- * todavía no tiene interfaz en el frontend, así que se rotula como
- * "interfaz en desarrollo" en lugar de presentarse como terminada.
+ * todavía no tiene interfaz en el frontend, así que conserva sus chips
+ * "interfaz en desarrollo" (en la lista de capacidades, en el paso de
+ * presupuesto y en el beneficio de metas) en lugar de presentarse como
+ * terminada.
  */
 
 const SECCIONES = ['cover', 'problem', 'solution', 'how', 'benefits', 'technology']
@@ -62,7 +68,15 @@ const PROBLEMAS = [
     },
 ]
 
-const CAPACIDADES = ['remittances', 'incomeExpense', 'budgets', 'savings', 'overview']
+const CAPACIDADES = [
+    'remittances',
+    'incomeExpense',
+    'budgets',
+    'savings',
+    'aiTips',
+    'overview',
+    'exports',
+]
 
 const PANTALLAS = [
     {
@@ -88,6 +102,14 @@ const PANTALLAS = [
     {
         icono: BookOpen,
         key: 'presentation.screens.education',
+    },
+    {
+        icono: House,
+        key: 'presentation.screens.family',
+    },
+    {
+        icono: FileDown,
+        key: 'presentation.screens.exports',
     },
 ]
 
@@ -135,6 +157,8 @@ const TECNOLOGIA = [
     { icono: Database, etiqueta: 'PostgreSQL' },
     { icono: Container, etiqueta: 'Docker' },
     { icono: GitBranch, etiqueta: 'GitHub Actions' },
+    { icono: Sparkles, etiqueta: 'IA · Groq' },
+    { icono: Languages, etiqueta: 'Español / English' },
 ]
 
 const CHIP_EN_DESARROLLO =
@@ -346,7 +370,7 @@ export default function Presentacion() {
                 <LanguageSelector />
             </div>
             {/* BARRA DE PROGRESO */}
-            <div className="fixed inset-x-0 top-0 z-50 h-1 bg-slate-900/10">
+            <div className="fixed inset-x-0 top-0 z-50 h-1 bg-slate-900/10 dark:bg-white/10">
                 <div
                     className="h-full bg-blue-600 transition-all duration-300 ease-out"
                     style={{
@@ -381,7 +405,7 @@ export default function Presentacion() {
                                 </h1>
 
                                 <p
-                                    className={`mt-4 text-lg font-semibold text-blue-700 sm:text-2xl ${animacion(0)}`}
+                                    className={`mt-4 text-lg font-semibold text-blue-700 dark:text-blue-400 sm:text-2xl ${animacion(0)}`}
                                 >
                                     {t('presentation.coverLead')}
                                 </p>
@@ -404,7 +428,7 @@ export default function Presentacion() {
                                         <ArrowRight size={18} strokeWidth={2.2} />
                                     </button>
 
-                                    <span className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2.5 text-xs font-semibold text-slate-500 lg:inline-flex">
+                                    <span className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2.5 text-xs font-semibold text-slate-500 dark:border-white/20 dark:bg-white/10 dark:text-gray-300 lg:inline-flex">
                                         <MousePointerClick size={15} />
                                         {t('presentation.keyboardHint')}
                                     </span>
@@ -427,7 +451,7 @@ export default function Presentacion() {
                     <>
                         <div className="mx-auto w-full max-w-6xl">
                             <p
-                                className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 ${animacion(1)}`}
+                                className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 ${animacion(1)}`}
                             >
                                 {t('presentation.problemEyebrow')}
                             </p>
@@ -445,9 +469,9 @@ export default function Presentacion() {
                                     return (
                                         <article
                                             key={problema.key}
-                                            className={`rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-[0_10px_30px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.03)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(0,0,0,0.10)] ${animacion(1)}`}
+                                            className={`rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-[0_10px_30px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.03)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(0,0,0,0.10)] dark:border-[#2a2a2a] ${animacion(1)}`}
                                         >
-                                            <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                                            <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
                                                 <Icono size={22} strokeWidth={1.9} />
                                             </span>
 
@@ -476,7 +500,7 @@ export default function Presentacion() {
                         <div className="mx-auto grid w-full max-w-6xl items-center gap-10 lg:grid-cols-2 lg:gap-14">
                             <div>
                                 <p
-                                    className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 ${animacion(2)}`}
+                                    className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 ${animacion(2)}`}
                                 >
                                     {t('presentation.solutionEyebrow')}
                                 </p>
@@ -488,7 +512,7 @@ export default function Presentacion() {
                                 </h2>
 
                                 <ul className="mt-7 flex flex-col gap-3.5">
-                                    {CAPACIDADES.map((capacidad, indice) => (
+                                    {CAPACIDADES.map((capacidad) => (
                                         <li
                                             key={capacidad}
                                             className={`flex items-start gap-3 text-base text-slate-700 ${animacion(2)}`}
@@ -499,7 +523,7 @@ export default function Presentacion() {
 
                                             <span className="leading-snug">
                                                 {t(`presentation.capabilities.${capacidad}`).replace(/\.$/, '')}
-                                                {indice === 3 && (
+                                                {capacidad === 'savings' && (
                                                     <span className={`${CHIP_EN_DESARROLLO} ml-2 align-middle`}>
                                                         {t('presentation.inDevelopment')}
                                                     </span>
@@ -517,7 +541,7 @@ export default function Presentacion() {
                                     return (
                                         <article
                                             key={pantalla.key}
-                                            className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.03)] transition duration-300 hover:-translate-y-1 hover:border-blue-200 ${animacion(2)}`}
+                                            className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.06),0_2px_8px_rgba(0,0,0,0.03)] transition duration-300 hover:-translate-y-1 hover:border-blue-200 dark:hover:border-blue-900 ${animacion(2)}`}
                                         >
                                             <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
                                                 <Icono size={19} strokeWidth={1.9} />
@@ -548,7 +572,7 @@ export default function Presentacion() {
                         <div className="mx-auto w-full max-w-6xl">
                             <div className="text-center">
                                 <p
-                                    className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 ${animacion(3)}`}
+                                    className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 ${animacion(3)}`}
                                 >
                                     {t('presentation.howEyebrow')}
                                 </p>
@@ -575,14 +599,14 @@ export default function Presentacion() {
                                                 </span>
 
                                                 {indice < PASOS.length - 1 && (
-                                                    <span className="hidden h-px flex-1 bg-blue-200 lg:block" />
+                                                    <span className="hidden h-px flex-1 bg-blue-200 lg:block dark:bg-blue-900" />
                                                 )}
                                             </div>
 
                                             <Icono
                                                 size={26}
                                                 strokeWidth={1.8}
-                                                className="text-blue-700"
+                                                className="text-blue-700 dark:text-blue-400"
                                             />
 
                                             <h3 className="mt-4 text-base font-bold leading-snug text-slate-900">
@@ -616,7 +640,7 @@ export default function Presentacion() {
                         <div className="mx-auto w-full max-w-6xl">
                             <div className="text-center">
                                 <p
-                                    className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 ${animacion(4)}`}
+                                    className={`text-xs font-bold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400 ${animacion(4)}`}
                                 >
                                     {t('presentation.sections.benefits')}
                                 </p>
@@ -735,7 +759,7 @@ export default function Presentacion() {
             ======================================================== */}
             <nav
                 aria-label={t('presentation.presentationNav')}
-                className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-slate-200/80 bg-white/90 py-2.5 pl-3 pr-4 shadow-[0_10px_30px_rgba(0,0,0,0.12)] backdrop-blur"
+                className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full border border-slate-200/80 bg-white/90 py-2.5 pl-3 pr-4 shadow-[0_10px_30px_rgba(0,0,0,0.12)] backdrop-blur dark:border-[#2a2a2a] dark:bg-[#121212]/90"
             >
                 <button
                     type="button"
@@ -743,7 +767,7 @@ export default function Presentacion() {
                     disabled={actual === 0}
                     aria-label={t('presentation.previousSection')}
                     title={t('presentation.previousSection')}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:text-gray-400 dark:hover:bg-[#1f1f1f] disabled:dark:text-gray-600"
                 >
                     <ArrowLeft size={18} strokeWidth={2.2} />
                 </button>
@@ -760,7 +784,7 @@ export default function Presentacion() {
                             className={`h-2 rounded-full transition-all duration-300 ${
                                 indice === actual
                                     ? 'w-6 bg-blue-600'
-                                    : 'w-2 bg-slate-300 hover:bg-slate-400'
+                                    : 'w-2 bg-slate-300 hover:bg-slate-400 dark:bg-[#2a2a2a] dark:hover:bg-[#3a3a3a]'
                             }`}
                         />
                     ))}
@@ -777,7 +801,7 @@ export default function Presentacion() {
                     disabled={actual === SECCIONES.length - 1}
                     aria-label={t('presentation.nextSection')}
                     title={t('presentation.nextSection')}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-transparent dark:text-gray-400 dark:hover:bg-[#1f1f1f] disabled:dark:text-gray-600"
                 >
                     <ArrowRight size={18} strokeWidth={2.2} />
                 </button>
