@@ -98,6 +98,14 @@ body {
 /* Gradientes de login/registro */
 .dark .bg-gradient-to-br { background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface) 100%); }
 
+/* Login: fondo negro sólido en dark. Clase dedicada .login-fondo para no
+   depender del override global de gradientes (que sigue para Register).
+   Nota: el dark usa la shorthand `background` (no solo background-color)
+   para reemplazar también la imagen del gradiente; con background-color
+   únicamente el gradiente opaco de light seguiría pintando por encima. */
+.login-fondo { background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 50%, #eef2ff 100%); }
+.dark .login-fondo { background: #000000; }
+
 /* Tablas */
 .dark thead { background-color: var(--color-surface-hover); }
 .dark tbody tr { border-color: var(--color-border); }

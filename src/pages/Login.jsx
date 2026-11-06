@@ -114,61 +114,29 @@ export default function Login({ onLogin, irRegistro }) {
     }
 
     return (
-        <div className="flex min-h-screen">
-            {/* COLUMNA IZQUIERDA — Branding (solo desktop). Gradiente
-                arbitrario dentro de la paleta de marca: la clase arbitraria
-                no es bg-gradient-to-br, así que la variante dark global no la
-                pisa y el panel conserva la identidad en ambos temas. */}
-            <div className="hidden lg:flex lg:w-1/2 lg:flex-col lg:bg-[linear-gradient(135deg,#123B8F_0%,#1D4FA3_55%,#0B2E6B_100%)] lg:p-12 lg:text-white">
-                {/* Hero de marca: logo trimmed + tagline agrupados arriba */}
-                <div>
-                    {/* El asset trimmed es el mismo que usa el Sidebar: la
-                        variante en color sería ilegible sobre este fondo. */}
-                    <h1 className="text-3xl font-extrabold tracking-tight">
-                        <img src={logoBlanco} alt="RemesaSmart SV" className="h-16 w-auto" />
-                    </h1>
-                    <p className="mt-3 text-lg text-blue-100">{t('auth.tagline')}</p>
+        <div className="login-fondo flex min-h-screen items-center justify-center px-4 py-10">
+            {/* Estructura centrada a todo el ancho: se elimina la división
+                50/50 (panel de marca + formulario) que dejaba ~250px de
+                gradiente muerto a cada lado de la tarjeta en desktop. Logo,
+                beneficios y copyright conviven en una sola columna. */}
+            <div className="w-full max-w-xl">
+                <div className="mb-4 flex justify-end">
+                    <LanguageSelector />
+                </div>
+                {/* Logo de marca en todos los breakpoints (reemplaza al panel
+                    izquierdo eliminado): chip navy con el asset trimmed, la
+                    misma variante que antes solo se veía en móvil. */}
+                <div className="mb-6 flex flex-col items-center text-center">
+                    <span className="inline-flex rounded-2xl bg-[#123B8F] px-5 py-3.5">
+                        <img src={logoBlanco} alt="RemesaSmart SV" className="h-8 w-auto" />
+                    </span>
+                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{t('auth.tagline')}</p>
                 </div>
 
-                {/* Beneficios con iconos lucide en tiles bg-white/10 */}
-                <div className="mt-12 space-y-5">
-                    {[
-                        { Icono: ArrowLeftRight, texto: t('auth.benefitTransactions') },
-                        { Icono: PiggyBank, texto: t('auth.benefitSavings') },
-                        { Icono: Users, texto: t('auth.benefitFamily') },
-                        { Icono: LineChart, texto: t('auth.benefitCharts') },
-                    ].map(({ Icono, texto }, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                                <Icono size={22} strokeWidth={1.8} />
-                            </span>
-                            <p className="text-blue-100">{texto}</p>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Copyright anclado abajo sin vacíos justify-between */}
-                <p className="mt-auto pt-12 text-sm text-blue-200">{t('auth.copyright')}</p>
-            </div>
-
-            {/* COLUMNA DERECHA — Formulario sobre gradiente de marca */}
-            <div className="flex w-full flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 px-4 py-12 lg:w-1/2">
-                <div className="w-full max-w-md">
-                    <div className="mb-4 flex justify-end">
-                        <LanguageSelector />
-                    </div>
-                    {/* Logo móvil: imagen real (asset trimmed) sobre chip de
-                        marca, visible en light y dark; solo texto no ancla la
-                        marca en pantallas pequeñas. */}
-                    <div className="mb-6 flex flex-col items-center text-center lg:hidden">
-                        <span className="inline-flex rounded-2xl bg-[#123B8F] px-5 py-3.5">
-                            <img src={logoBlanco} alt="RemesaSmart SV" className="h-8 w-auto" />
-                        </span>
-                        <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{t('auth.tagline')}</p>
-                    </div>
-
-                    {/* Tarjeta elevada: ancla visual del formulario */}
-                    <div className="rounded-2xl bg-white p-8 shadow-xl">
+                {/* Tarjeta elevada: ancla visual del formulario. En dark el
+                    shadow-xl no se ve sobre negro, así que el borde #2a2a2a
+                    define la tarjeta. */}
+                <div className="rounded-2xl bg-white p-8 shadow-xl dark:border dark:border-[#2a2a2a]">
 
                     {error && <Notification tipo="error" mensaje={error} onClose={() => setError('')} />}
                     {mensajeReset && (
@@ -382,8 +350,28 @@ export default function Login({ onLogin, irRegistro }) {
                         <a href="/terminos-y-condiciones" className="hover:text-gray-600">{t('shell.terms')}</a>
                         <a href="/politica-de-cookies" className="hover:text-gray-600">{t('shell.cookies')}</a>
                     </nav>
-                    </div>
                 </div>
+
+                {/* Beneficios: tira compacta bajo la tarjeta (movida desde
+                    el panel izquierdo eliminado). */}
+                <div className="mt-8 hidden sm:grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    {[
+                        { Icono: ArrowLeftRight, texto: t('auth.benefitTransactions') },
+                        { Icono: PiggyBank, texto: t('auth.benefitSavings') },
+                        { Icono: Users, texto: t('auth.benefitFamily') },
+                        { Icono: LineChart, texto: t('auth.benefitCharts') },
+                    ].map(({ Icono, texto }, i) => (
+                        <div key={i} className="flex flex-col items-center gap-2 text-center">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm dark:bg-white/10">
+                                <Icono size={18} strokeWidth={1.8} />
+                            </span>
+                            <p className="text-xs font-medium text-gray-600 dark:text-gray-300">{texto}</p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Copyright centrado debajo de los beneficios */}
+                <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">{t('auth.copyright')}</p>
             </div>
         </div>
     )
