@@ -171,6 +171,22 @@ export const authApi = {
         return manejarRespuesta(res)
     },
 
+    // POST /api/Auth/reset-password: aplica la nueva contraseña usando el token
+    // que llega en el enlace del correo (?reset=...). El backend valida el token
+    // (vigencia 1 h) y responde 400 con mensaje si es inválido o expiró.
+    // Endpoint AllowAnonymous: no requiere sesión.
+    async resetPassword(token, nuevaContrasena, confirmarNueva) {
+        const res = await fetch(`${API_URL}/Auth/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token, nuevaContrasena, confirmarNueva }),
+        })
+
+        return manejarRespuesta(res)
+    },
+
     async loginConGoogle(idToken, nonce) {
         const res = await fetch(`${API_URL}/Auth/google`, {
             method: 'POST',

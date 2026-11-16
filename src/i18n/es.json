@@ -788,7 +788,13 @@
     "resetSubtitle": "Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña.",
     "resetSend": "Enviar enlace",
     "resetSent": "Si el correo existe, recibirás un enlace para restablecer tu contraseña.",
-    "resetError": "No se pudo enviar la solicitud. Inténtalo de nuevo."
+    "resetError": "No se pudo enviar la solicitud. Inténtalo de nuevo.",
+    "newPasswordTitle": "Crea una nueva contraseña",
+    "newPasswordSubtitle": "Elige una contraseña nueva para tu cuenta. Debe tener al menos 6 caracteres.",
+    "newPassword": "Nueva contraseña",
+    "confirmNewPassword": "Confirmar nueva contraseña",
+    "resetSubmit": "Cambiar contraseña",
+    "resetSuccess": "Contraseña restablecida. Ya puedes iniciar sesión con tu nueva contraseña."
   },
   "backendErrors": {
     "invalidCredentials": "Credenciales incorrectas.",

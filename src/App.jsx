@@ -158,7 +158,12 @@ export default function App() {
         return <Presentacion />
     }
 
-    if (!usuario) {
+    // El enlace de restablecimiento (?reset=token) debe abrir el formulario de
+    // nueva contraseña aunque el navegador ya tenga una sesión guardada; si no,
+    // el usuario con sesión caería al dashboard y no podría cambiar la clave.
+    const tieneEnlaceReset = new URLSearchParams(window.location.search).has('reset')
+
+    if (!usuario || tieneEnlaceReset) {
         if (mostrarRegistro) {
             return (
                 <Suspense fallback={<Loading />}>

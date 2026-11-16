@@ -30,6 +30,15 @@ export default function Login({ onLogin, irRegistro }) {
     const [mostrandoReset, setMostrandoReset] = useState(false)
     const [correoReset, setCorreoReset] = useState('')
     const [mensajeReset, setMensajeReset] = useState('')
+    // Token del enlace de correo (?reset=...). Si está presente, se muestra el
+    // formulario para escribir la nueva contraseña en vez del login.
+    const [resetToken, setResetToken] = useState(
+        () => new URLSearchParams(window.location.search).get('reset') || ''
+    )
+    const [nuevaContrasena, setNuevaContrasena] = useState('')
+    const [confirmarNueva, setConfirmarNueva] = useState('')
+    const [verNueva, setVerNueva] = useState(false)
+    const [verConfirmar, setVerConfirmar] = useState(false)
 
     async function iniciarSesion(e) {
         e.preventDefault()
@@ -77,12 +86,59 @@ export default function Login({ onLogin, irRegistro }) {
         setCorreoReset('')
     }
 
+    // Quita ?reset=... de la barra de direcciones sin recargar, para que el
+    // token de un solo uso no quede visible en el historial tras usarlo.
+    function limpiarParametroReset() {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('reset')
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash)
+    }
+
     function volverAlLogin() {
+        if (resetToken) limpiarParametroReset()
+        setResetToken('')
+        setNuevaContrasena('')
+        setConfirmarNueva('')
         setMostrandoReset(false)
         setError('')
         setErrorCampo('')
         setMensajeReset('')
         setCorreoReset('')
+    }
+
+    async function restablecerContrasena(e) {
+        e.preventDefault()
+        setError('')
+        setErrorCampo('')
+
+        if (!nuevaContrasena.trim() || !confirmarNueva.trim()) {
+            setErrorCampo(t('auth.completeFields'))
+            return
+        }
+        if (nuevaContrasena.length < 6) {
+            setErrorCampo(t('auth.passwordTooShort'))
+            return
+        }
+        if (nuevaContrasena !== confirmarNueva) {
+            setErrorCampo(t('auth.passwordMismatch'))
+            return
+        }
+
+        setCargando(true)
+        try {
+            await authApi.resetPassword(resetToken, nuevaContrasena, confirmarNueva)
+            // Token consumido: se limpia la URL y se vuelve al login con aviso.
+            limpiarParametroReset()
+            setResetToken('')
+            setNuevaContrasena('')
+            setConfirmarNueva('')
+            setMostrandoReset(false)
+            setMensajeReset(t('auth.resetSuccess'))
+        } catch (err) {
+            setError(err.message || t('auth.resetError'))
+        } finally {
+            setCargando(false)
+        }
     }
 
     async function solicitarReset(e) {
@@ -147,7 +203,111 @@ export default function Login({ onLogin, irRegistro }) {
                         />
                     )}
 
-                    {mostrandoReset ? (
+                    {resetToken ? (
+                        <>
+                            <h2 className="mb-2 text-2xl font-bold text-gray-800 dark:text-gray-100">
+                                {t('auth.newPasswordTitle')}
+                            </h2>
+                            <p className="mb-8 text-gray-500 dark:text-gray-400">
+                                {t('auth.newPasswordSubtitle')}
+                            </p>
+
+                            {/* FORMULARIO PARA DEFINIR LA NUEVA CONTRASEÑA (token del correo) */}
+                            <form onSubmit={restablecerContrasena} className="space-y-5">
+                    <div>
+                        <label htmlFor="nueva-contrasena" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            {t('auth.newPassword')}
+                        </label>
+                        <div className="relative">
+                            <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                id="nueva-contrasena"
+                                type={verNueva ? 'text' : 'password'}
+                                value={nuevaContrasena}
+                                onChange={(e) => { setNuevaContrasena(e.target.value); setErrorCampo('') }}
+                                placeholder={t('auth.passwordMin')}
+                                autoComplete="new-password"
+                                required
+                                minLength={6}
+                                disabled={cargando}
+                                aria-invalid={errorCampo ? 'true' : undefined}
+                                aria-describedby={errorCampo ? 'login-error-campo' : 'nueva-ayuda'}
+                                className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-12 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setVerNueva(!verNueva)}
+                                aria-label={verNueva ? t('auth.hidePassword') : t('auth.showPassword')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                {verNueva ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
+                        <p id="nueva-ayuda" className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                            {t('auth.passwordMin')}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label htmlFor="confirmar-nueva" className="mb-1 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            {t('auth.confirmNewPassword')}
+                        </label>
+                        <div className="relative">
+                            <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                id="confirmar-nueva"
+                                type={verConfirmar ? 'text' : 'password'}
+                                value={confirmarNueva}
+                                onChange={(e) => { setConfirmarNueva(e.target.value); setErrorCampo('') }}
+                                placeholder={t('auth.repeatPassword')}
+                                autoComplete="new-password"
+                                required
+                                minLength={6}
+                                disabled={cargando}
+                                aria-invalid={errorCampo ? 'true' : undefined}
+                                aria-describedby={errorCampo ? 'login-error-campo' : undefined}
+                                className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-12 text-base outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-100"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setVerConfirmar(!verConfirmar)}
+                                aria-label={verConfirmar ? t('auth.hidePassword') : t('auth.showPassword')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                {verConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {errorCampo && (
+                        <p id="login-error-campo" role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                            {errorCampo}
+                        </p>
+                    )}
+
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        <button
+                            type="submit"
+                            disabled={cargando}
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 py-3 text-base font-bold text-white transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {cargando && (
+                                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                            )}
+                            {cargando ? t('common.enviando') : t('auth.resetSubmit')}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={volverAlLogin}
+                            disabled={cargando}
+                            className="rounded-lg border border-gray-300 bg-white px-6 py-3 text-base font-semibold text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700"
+                        >
+                            {t('common.volver')}
+                        </button>
+                    </div>
+                            </form>
+                        </>
+                    ) : mostrandoReset ? (
                         <>
                             <h2 id="reset-titulo" className="mb-2 text-2xl font-bold text-gray-800 dark:text-gray-100">
                                 {t('auth.resetTitle')}

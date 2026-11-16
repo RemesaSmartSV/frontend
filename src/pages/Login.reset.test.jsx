@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import Login from './Login'
 
@@ -132,5 +132,127 @@ describe('Login — olvidé mi contraseña', () => {
             'Error de red'
         )
         expect(alertSpy).not.toHaveBeenCalled()
+    })
+})
+
+// T2: el enlace del correo (/login?reset=token) debe abrir un formulario para
+// definir la nueva contraseña y llamar a POST /api/Auth/reset-password.
+// Antes el token se ignoraba y el usuario quedaba en el login sin poder
+// recuperar la cuenta.
+describe('Login — nueva contraseña desde el enlace del correo', () => {
+    beforeEach(() => {
+        window.history.replaceState({}, '', '/login?reset=token-de-prueba')
+    })
+
+    afterEach(() => {
+        window.history.replaceState({}, '', '/')
+    })
+
+    it('muestra el formulario de nueva contraseña al abrir el enlace', () => {
+        render(<Login onLogin={() => {}} irRegistro={() => {}} />)
+
+        expect(
+            screen.getByRole('heading', { name: 'Crea una nueva contraseña' })
+        ).toBeInTheDocument()
+        expect(screen.getByLabelText('Nueva contraseña')).toBeInTheDocument()
+        expect(
+            screen.getByLabelText('Confirmar nueva contraseña')
+        ).toBeInTheDocument()
+        // No se debe mostrar el formulario de login normal.
+        expect(
+            screen.queryByRole('button', { name: 'Entrar' })
+        ).not.toBeInTheDocument()
+    })
+
+    it('envía token y nueva contraseña, limpia la URL y avisa de éxito', async () => {
+        const fetchSpy = vi.fn(async (url) =>
+            String(url).includes('reset-password')
+                ? respuesta({ message: 'Contraseña restablecida correctamente.' })
+                : respuesta({})
+        )
+        global.fetch = fetchSpy
+
+        render(<Login onLogin={() => {}} irRegistro={() => {}} />)
+
+        fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
+            target: { value: 'NuevaClave123' },
+        })
+        fireEvent.change(screen.getByLabelText('Confirmar nueva contraseña'), {
+            target: { value: 'NuevaClave123' },
+        })
+        fireEvent.submit(
+            screen.getByLabelText('Nueva contraseña').closest('form')
+        )
+
+        await waitFor(() =>
+            expect(fetchSpy).toHaveBeenCalledWith(
+                '/api/Auth/reset-password',
+                expect.objectContaining({
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: 'token-de-prueba',
+                        nuevaContrasena: 'NuevaClave123',
+                        confirmarNueva: 'NuevaClave123',
+                    }),
+                })
+            )
+        )
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            'Contraseña restablecida. Ya puedes iniciar sesión con tu nueva contraseña.'
+        )
+        // El token de un solo uso desaparece de la barra de direcciones.
+        expect(window.location.search).toBe('')
+        // Y se vuelve al formulario de login.
+        expect(
+            screen.getByRole('button', { name: 'Entrar' })
+        ).toBeInTheDocument()
+    })
+
+    it('rechaza contraseñas que no coinciden sin llamar a la API', async () => {
+        const fetchSpy = vi.fn()
+        global.fetch = fetchSpy
+
+        render(<Login onLogin={() => {}} irRegistro={() => {}} />)
+
+        fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
+            target: { value: 'NuevaClave123' },
+        })
+        fireEvent.change(screen.getByLabelText('Confirmar nueva contraseña'), {
+            target: { value: 'OtraClave123' },
+        })
+        fireEvent.submit(
+            screen.getByLabelText('Nueva contraseña').closest('form')
+        )
+
+        const alerta = await screen.findByRole('alert')
+        expect(alerta).toHaveTextContent('Las contraseñas no coinciden.')
+        expect(fetchSpy).not.toHaveBeenCalled()
+    })
+
+    it('muestra el mensaje traducido cuando el token es inválido o expiró', async () => {
+        global.fetch = vi.fn(async () =>
+            respuesta(
+                { message: 'El enlace de restablecimiento no es válido o expiró.' },
+                400
+            )
+        )
+
+        render(<Login onLogin={() => {}} irRegistro={() => {}} />)
+
+        fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
+            target: { value: 'NuevaClave123' },
+        })
+        fireEvent.change(screen.getByLabelText('Confirmar nueva contraseña'), {
+            target: { value: 'NuevaClave123' },
+        })
+        fireEvent.submit(
+            screen.getByLabelText('Nueva contraseña').closest('form')
+        )
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            'El enlace de restablecimiento no es válido o expiró.'
+        )
     })
 })

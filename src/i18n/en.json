@@ -109,7 +109,13 @@
     "resetSubtitle": "Enter your email and we'll send you a link to create a new password.",
     "resetSend": "Send link",
     "resetSent": "If the email exists, you'll receive a link to reset your password.",
-    "resetError": "Could not send the request. Please try again."
+    "resetError": "Could not send the request. Please try again.",
+    "newPasswordTitle": "Create a new password",
+    "newPasswordSubtitle": "Choose a new password for your account. It must be at least 6 characters long.",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "resetSubmit": "Change password",
+    "resetSuccess": "Password reset. You can now sign in with your new password."
   },
   "dashboard": {
     "titulo": "Financial summary",
