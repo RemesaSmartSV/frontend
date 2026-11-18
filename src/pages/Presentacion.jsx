@@ -40,11 +40,9 @@ import logoBlanco from '../assets/remesa-smart (blanco).png'
  * Presentación comercial de RemesaSmart SV.
  *
  * Seis pantallas de altura completa pensadas para una exposición en línea.
- * Solo comunica funcionalidades que existen en el producto: "metas de ahorro"
- * todavía no tiene interfaz en el frontend, así que conserva sus chips
- * "interfaz en desarrollo" (en la lista de capacidades, en el paso de
- * presupuesto y en el beneficio de metas) en lugar de presentarse como
- * terminada.
+ * Comunica las funcionalidades del producto, todas ya disponibles: remesas,
+ * ingresos y gastos, presupuestos, metas de ahorro, consejos con IA, resumen
+ * del hogar y exportación a CSV.
  */
 
 const SECCIONES = ['cover', 'problem', 'solution', 'how', 'benefits', 'technology']
@@ -160,9 +158,6 @@ const TECNOLOGIA = [
     { icono: Sparkles, etiqueta: 'IA · Groq' },
     { icono: Languages, etiqueta: 'Español / English' },
 ]
-
-const CHIP_EN_DESARROLLO =
-    'inline-flex shrink-0 items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700'
 
 export default function Presentacion() {
     const { t } = useTranslation()
@@ -463,7 +458,7 @@ export default function Presentacion() {
                             </h2>
 
                             <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                {PROBLEMAS.map((problema, indice) => {
+                                {PROBLEMAS.map((problema) => {
                                     const Icono = problema.icono
 
                                     return (
@@ -523,11 +518,6 @@ export default function Presentacion() {
 
                                             <span className="leading-snug">
                                                 {t(`presentation.capabilities.${capacidad}`).replace(/\.$/, '')}
-                                                {capacidad === 'savings' && (
-                                                    <span className={`${CHIP_EN_DESARROLLO} ml-2 align-middle`}>
-                                                        {t('presentation.inDevelopment')}
-                                                    </span>
-                                                )}
                                             </span>
                                         </li>
                                     ))}
@@ -535,7 +525,7 @@ export default function Presentacion() {
                             </div>
 
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                {PANTALLAS.map((pantalla, indice) => {
+                                {PANTALLAS.map((pantalla) => {
                                     const Icono = pantalla.icono
 
                                     return (
@@ -616,12 +606,6 @@ export default function Presentacion() {
                                             <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                                                 {t(`presentation.steps.${paso.key}.text`)}
                                             </p>
-
-                                            {paso.key === 'budget' && (
-                                                <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-                                                    {t(`presentation.steps.${paso.key}.note`)}
-                                                </p>
-                                            )}
                                         </article>
                                     )
                                 })}
@@ -653,7 +637,7 @@ export default function Presentacion() {
                             </div>
 
                             <div className="mt-11 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                                {BENEFICIOS.map((beneficio, indice) => {
+                                {BENEFICIOS.map((beneficio) => {
                                     const Icono = beneficio.icono
 
                                     return (
@@ -672,14 +656,6 @@ export default function Presentacion() {
                                             <p className="mt-2 text-sm leading-relaxed text-slate-600">
                                                 {t(`presentation.benefit.${beneficio.key}.text`)}
                                             </p>
-
-                                            {beneficio.key === 'goals' && (
-                                                <span
-                                                    className={`${CHIP_EN_DESARROLLO} mt-4`}
-                                                >
-                                                    {t(`presentation.benefit.${beneficio.key}.note`)}
-                                                </span>
-                                            )}
                                         </article>
                                     )
                                 })}

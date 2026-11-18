@@ -680,7 +680,6 @@
     "solutionEyebrow": "The solution",
     "solutionHeading": "All your household financial management in one place.",
     "capabilities": { "remittances": "Record and track remittances.", "incomeExpense": "Manage income and expenses.", "budgets": "Create and manage budgets.", "savings": "Set savings goals.", "aiTips": "Get tips with artificial intelligence.", "overview": "View your household's financial status.", "exports": "Export your data to CSV." },
-    "inDevelopment": "Interface in development",
     "screens": {
       "dashboard": { "name": "Financial summary", "detail": "Household cards and charts." },
       "remittances": { "name": "Remittances", "detail": "Record received remittances." },
@@ -696,14 +695,14 @@
     "steps": {
       "receive": { "title": "Receive your remittance", "text": "The money reaches your household." },
       "record": { "title": "Record income and expenses", "text": "Organize every transaction." },
-      "budget": { "title": "Set your budget", "text": "Set limits and prioritize your goals.", "note": "goals: interface in development" },
+      "budget": { "title": "Set your budget", "text": "Set limits and prioritize your goals." },
       "progress": { "title": "Review your progress", "text": "Make decisions with real information." }
     },
     "benefitsHeading": "More control. More organization. More peace of mind.",
     "benefit": {
       "visibility": { "title": "Greater visibility", "text": "Your household finances in one view." },
       "control": { "title": "Better control", "text": "Income and expenses always up to date." },
-      "goals": { "title": "Savings goals", "text": "Track your savings objectives.", "note": "Interface in development" },
+      "goals": { "title": "Savings goals", "text": "Track your savings objectives." },
       "organization": { "title": "Household organization", "text": "More organized financial decisions." }
     },
     "technology": "Technology",

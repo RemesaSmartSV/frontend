@@ -628,7 +628,6 @@
     "solutionEyebrow": "La solución",
     "solutionHeading": "Todo el control financiero del hogar, en un solo lugar.",
     "capabilities": { "remittances": "Registrar y controlar remesas.", "incomeExpense": "Administrar ingresos y gastos.", "budgets": "Crear y controlar presupuestos.", "savings": "Establecer metas de ahorro.", "aiTips": "Recibe consejos con inteligencia artificial.", "overview": "Visualizar el estado financiero del hogar.", "exports": "Exportar tus datos a CSV." },
-    "inDevelopment": "Interfaz en desarrollo",
     "screens": {
       "dashboard": { "name": "Resumen financiero", "detail": "Tarjetas y gráficas del hogar." },
       "remittances": { "name": "Remesas", "detail": "Registro de remesas recibidas." },
@@ -644,14 +643,14 @@
     "steps": {
       "receive": { "title": "Recibe tu remesa", "text": "Llega el dinero al hogar." },
       "record": { "title": "Registra ingresos y gastos", "text": "Organiza cada movimiento." },
-      "budget": { "title": "Define tu presupuesto", "text": "Fija límites y prioriza tus metas.", "note": "metas: interfaz en desarrollo" },
+      "budget": { "title": "Define tu presupuesto", "text": "Fija límites y prioriza tus metas." },
       "progress": { "title": "Consulta tu progreso", "text": "Decide con información real." }
     },
     "benefitsHeading": "Más control. Más organización. Más tranquilidad.",
     "benefit": {
       "visibility": { "title": "Mayor visibilidad", "text": "Las finanzas del hogar en una sola vista." },
       "control": { "title": "Mejor control", "text": "Ingresos y gastos siempre al día." },
-      "goals": { "title": "Metas de ahorro", "text": "Seguimiento de tus objetivos de ahorro.", "note": "Interfaz en desarrollo" },
+      "goals": { "title": "Metas de ahorro", "text": "Seguimiento de tus objetivos de ahorro." },
       "organization": { "title": "Organización del hogar", "text": "Decisiones financieras más ordenadas." }
     },
     "technology": "Tecnología",

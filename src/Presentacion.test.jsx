@@ -15,10 +15,6 @@ vi.mock('react-i18next', () => ({
                 'presentation.previousSection': 'Sección anterior',
                 'presentation.nextSection': 'Sección siguiente',
                 'presentation.goTo': 'Ir a sección',
-                'presentation.inDevelopment': 'Interfaz en desarrollo',
-                // El paso 3 y el beneficio de metas rotulan aparte la deuda de UI.
-                'presentation.steps.budget.note': 'metas: interfaz en desarrollo',
-                'presentation.benefit.goals.note': 'Interfaz en desarrollo',
                 'presentation.closingButton': 'Conoce RemesaSmart SV',
                 'presentation.sections.cover': 'Portada',
                 'presentation.sections.problem': 'Problema',
@@ -106,13 +102,17 @@ describe('Presentacion comercial', () => {
         expect(scrollIntoView).toHaveBeenCalledTimes(1)
     })
 
-    it('no presenta las metas de ahorro como una interfaz terminada', () => {
+    it('presenta todas las funcionalidades como terminadas (sin chips de "en desarrollo")', () => {
         render(<Presentacion />)
 
-        // Aparece en la lista de capacidades, en el paso 3 y en el beneficio.
+        // Metas de ahorro y presupuestos ya tienen interfaz: la presentación
+        // no debe rotular ninguna capacidad como pendiente.
         expect(
-            screen.getAllByText(/interfaz en desarrollo/i).length
-        ).toBeGreaterThanOrEqual(2)
+            screen.queryByText(/interfaz en desarrollo/i)
+        ).not.toBeInTheDocument()
+        expect(
+            screen.queryByText('presentation.inDevelopment')
+        ).not.toBeInTheDocument()
     })
 
     it('sin session sigue siendo una vista publica que enlaza al login', () => {
