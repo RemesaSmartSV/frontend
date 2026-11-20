@@ -60,6 +60,10 @@ async function manejarRespuesta(res) {
         throw new Error(i18n.t('errors.servidorNoDisponible'))
     }
 
+    if (res.status === 429) {
+        throw new Error(i18n.t('errors.demasiadosIntentos'))
+    }
+
     let mensaje = `Error ${res.status}`
 
     try {

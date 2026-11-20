@@ -31,6 +31,8 @@ export default function GoogleSignInButton({ onCredential, onError, disabled = f
                     nonceData = null
                 }
                 if (!nonceResponse.ok || !nonceData?.nonce) {
+                    if (nonceResponse.status === 429)
+                        throw new Error(t('errors.demasiadosIntentos'))
                     if (nonceResponse.status >= 500)
                         throw new Error(t('errors.servidorNoDisponible'))
                     throw new Error(nonceData?.message || t('google.verificationError'))

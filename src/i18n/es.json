@@ -820,7 +820,8 @@
     "red": "Error de conexión. Verifica tu internet.",
     "noAutorizado": "Sesión expirada. Inicia sesión nuevamente.",
     "prohibido": "No tienes permisos para esta acción.",
-    "servidorNoDisponible": "El servidor tardó en responder. Espera unos segundos e inténtalo de nuevo."
+    "servidorNoDisponible": "El servidor tardó en responder. Espera unos segundos e inténtalo de nuevo.",
+    "demasiadosIntentos": "Demasiados intentos. Espera un minuto e inténtalo de nuevo."
   },
   "filtros": {
     "titulo": "Filtros",
