@@ -819,7 +819,8 @@
     "generico": "An error occurred. Please try again.",
     "red": "Connection error. Check your internet.",
     "noAutorizado": "Session expired. Please sign in again.",
-    "prohibido": "You don't have permission for this action."
+    "prohibido": "You don't have permission for this action.",
+    "servidorNoDisponible": "The server took too long to respond. Wait a few seconds and try again."
   },
   "filtros": {
     "titulo": "Filters",

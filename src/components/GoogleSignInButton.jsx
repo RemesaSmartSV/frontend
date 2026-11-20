@@ -24,9 +24,17 @@ export default function GoogleSignInButton({ onCredential, onError, disabled = f
             try {
                 // El servidor emite nonce corto y de un solo uso para evitar replay del ID token.
                 const nonceResponse = await fetch('/api/Auth/google-nonce', { cache: 'no-store' })
-                const nonceData = await nonceResponse.json()
-                if (!nonceResponse.ok || !nonceData.nonce)
-                    throw new Error(nonceData.message || t('google.verificationError'))
+                let nonceData = null
+                try {
+                    nonceData = await nonceResponse.json()
+                } catch {
+                    nonceData = null
+                }
+                if (!nonceResponse.ok || !nonceData?.nonce) {
+                    if (nonceResponse.status >= 500)
+                        throw new Error(t('errors.servidorNoDisponible'))
+                    throw new Error(nonceData?.message || t('google.verificationError'))
+                }
 
                 const gis = window.google?.accounts?.id
                 if (!gis)

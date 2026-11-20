@@ -40,7 +40,11 @@ async function manejarRespuesta(res) {
             return null
         }
 
-        return await res.json()
+        try {
+            return await res.json()
+        } catch {
+            throw new Error(i18n.t('errors.servidorNoDisponible'))
+        }
     }
 
     if (res.status === 401) {
@@ -50,6 +54,10 @@ async function manejarRespuesta(res) {
         // i18n.t en el momento del throw: el instance ya está inicializado y
         // así el mensaje sale en el idioma activo (errors.noAutorizado).
         throw new Error(i18n.t('errors.noAutorizado'))
+    }
+
+    if (res.status === 502 || res.status === 503 || res.status === 504) {
+        throw new Error(i18n.t('errors.servidorNoDisponible'))
     }
 
     let mensaje = `Error ${res.status}`
