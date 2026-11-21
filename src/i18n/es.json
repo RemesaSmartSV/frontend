@@ -476,7 +476,9 @@
     "saveSuccess": "Perfil actualizado correctamente.",
     "saveError": "No se pudo guardar el perfil. Inténtalo de nuevo.",
     "nameRequired": "El nombre es obligatorio.",
-    "cancelled": "Se descartaron los cambios sin guardar."
+    "cancelled": "Se descartaron los cambios sin guardar.",
+    "logoutTitle": "Cerrar sesión",
+    "logoutHelp": "Cierra tu sesión en este dispositivo."
   },
   "security": {
     "title": "Seguridad",

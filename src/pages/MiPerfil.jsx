@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useOutletContext } from 'react-router-dom'
-import { AtSign, KeyRound, Languages, Monitor, Moon, Palette, Sun, User } from 'lucide-react'
+import { AtSign, KeyRound, Languages, LogOut, Monitor, Moon, Palette, Sun, User } from 'lucide-react'
 import { normalizarIdioma } from '../i18n/index.js'
 import { traducirMensaje } from '../utils/traducirMensaje'
 import { hogaresApi, usuariosApi } from '../services/api'
@@ -88,7 +88,7 @@ export default function MiPerfil() {
     // de App (usuario → Navbar) tras guardar o quitar la foto. Fuera del
     // Layout (tests que renderizan esta página directo) el contexto viene en
     // null, por eso el fallback a {} y la llamada opcional.
-    const { onSesionActualizada } = useOutletContext() || {}
+    const { onSesionActualizada, cerrarSesion } = useOutletContext() || {}
     const [usuario, setUsuario] = useState(null)
     const [nombreHogar, setNombreHogar] = useState('')
 
@@ -583,6 +583,26 @@ export default function MiPerfil() {
 
             {/* SECCIÓN 5: SEGURIDAD — Cambiar contraseña */}
             <CambiarContrasena />
+
+            {/* SECCIÓN 6: CERRAR SESIÓN — visible sin abrir el menú lateral
+                (en móvil el botón del sidebar queda escondido tras el ☰). */}
+            <section className={CLASE_TARJETA}>
+                <EncabezadoSeccion
+                    Icono={LogOut}
+                    tono="rojo"
+                    titulo={t('profile.logoutTitle')}
+                    subtitulo={t('profile.logoutHelp')}
+                />
+
+                <button
+                    type="button"
+                    onClick={cerrarSesion}
+                    className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-6 py-2.5 font-medium text-red-600 transition hover:bg-red-50"
+                >
+                    <LogOut size={18} strokeWidth={1.8} />
+                    {t('nav.cerrarSesion')}
+                </button>
+            </section>
         </div>
     )
 }

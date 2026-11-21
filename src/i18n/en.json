@@ -528,7 +528,9 @@
     "saveSuccess": "Profile updated successfully.",
     "saveError": "Could not save the profile. Please try again.",
     "nameRequired": "Name is required.",
-    "cancelled": "Unsaved changes were discarded."
+    "cancelled": "Unsaved changes were discarded.",
+    "logoutTitle": "Sign out",
+    "logoutHelp": "Sign out of your account on this device."
   },
   "security": {
     "title": "Security",

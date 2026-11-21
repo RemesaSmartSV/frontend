@@ -204,7 +204,7 @@ export default function Layout({
                 )}
 
                 <Outlet
-                    context={{ salirDeFamilia, cambiarDeFamilia, onSesionActualizada }}
+                    context={{ salirDeFamilia, cambiarDeFamilia, onSesionActualizada, cerrarSesion }}
                 />
 
                 <footer className="mt-10 border-t border-gray-200 pt-4 pb-2 text-xs text-gray-500">
