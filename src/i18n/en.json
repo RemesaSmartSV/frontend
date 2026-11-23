@@ -89,6 +89,8 @@
     "gmailHint": "Gmail accounts only (@gmail.com).",
     "loginError": "Could not sign in. Check your credentials.",
     "googleLoginError": "Could not sign in with Google.",
+    "logoutConfirmTitle": "Sign out",
+    "logoutConfirmMessage": "Are you sure you want to sign out?",
     "hidePassword": "Hide password",
     "showPassword": "Show password",
     "or": "or",

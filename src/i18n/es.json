@@ -771,6 +771,8 @@
     "gmailHint": "Solo cuentas de Gmail (@gmail.com).",
     "loginError": "No se pudo iniciar sesión. Verifica tus datos.",
     "googleLoginError": "No se pudo iniciar sesión con Google.",
+    "logoutConfirmTitle": "Cerrar sesión",
+    "logoutConfirmMessage": "¿Seguro que querés cerrar la sesión?",
     "hidePassword": "Ocultar contraseña",
     "showPassword": "Mostrar contraseña",
     "or": "o",

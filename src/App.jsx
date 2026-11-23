@@ -10,6 +10,7 @@ import {
 
 import Loading from './components/Loading'
 import Notification from './components/Notification'
+import ConfirmModal from './components/ConfirmModal'
 import Layout from './components/Layout'
 import Presentacion from './pages/Presentacion'
 import PoliticaPrivacidad from './pages/PoliticaPrivacidad'
@@ -90,6 +91,7 @@ export default function App() {
     const [mostrarRegistro, setMostrarRegistro] = useState(false)
     const [mensajeSesion, setMensajeSesion] = useState('')
     const [nombreFamiliar, setNombreFamiliar] = useState('')
+    const [confirmarCierre, setConfirmarCierre] = useState(false)
 
     useEffect(() => {
         const idiomaPerfil = normalizarIdioma(usuario?.idiomaPreferido)
@@ -143,6 +145,11 @@ export default function App() {
     }
 
     function cerrarSesion() {
+        setConfirmarCierre(true)
+    }
+
+    function confirmarCierreSesion() {
+        setConfirmarCierre(false)
         authApi.cerrarSesion()
         setUsuario(null)
         setMostrarRegistro(false)
@@ -251,6 +258,14 @@ export default function App() {
                     </Route>
                 </Routes>
             </Suspense>
+            <ConfirmModal
+                abierto={confirmarCierre}
+                titulo={i18n.t('auth.logoutConfirmTitle')}
+                mensaje={i18n.t('auth.logoutConfirmMessage')}
+                textoConfirmar={i18n.t('nav.cerrarSesion')}
+                onConfirmar={confirmarCierreSesion}
+                onCancelar={() => setConfirmarCierre(false)}
+            />
         </BrowserRouter>
     )
 }
