@@ -211,6 +211,7 @@
   },
   "transactions": {
     "description": "Registra tus ingresos, remesas y gastos familiares.",
+    "familyRequired": "Antes de registrar un movimiento debes crear o unirte a una familia.",
     "selectType": "Tipo",
     "incomeOrRemittance": "Ingreso / Remesa",
     "category": "Categoría",

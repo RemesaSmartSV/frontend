@@ -16,6 +16,7 @@ import {
     Pencil,
     Plus,
     SearchX,
+    Users,
 } from 'lucide-react'
 import { EncabezadoSeccion } from '../components/ui/EncabezadoSeccion'
 import { EstadoVacio } from '../components/ui/EstadoVacio'
@@ -89,6 +90,7 @@ export default function Movimientos() {
 
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
+    const [sinFamilia, setSinFamilia] = useState(false)
 
     const [confirmModal, setConfirmModal] = useState({
         abierto: false,
@@ -133,6 +135,12 @@ export default function Movimientos() {
         try {
             setCargando(true)
             setError('')
+
+            const usuario = JSON.parse(localStorage.getItem('usuario') || 'null')
+            if (!usuario?.idHogar) {
+                setSinFamilia(true)
+                return
+            }
 
             const [movimientosData, categoriasData, miembrosData] =
                 await Promise.all([
@@ -571,6 +579,28 @@ export default function Movimientos() {
                 onClose={() => setError('')}
             />
 
+            {/* SIN FAMILIA: sin formulario ni listado; primero hay que crear o
+                unirse a una familia para registrar movimientos. */}
+
+            {sinFamilia ? (
+                <section className={CLASE_TARJETA}>
+                    <EstadoVacio
+                        Icono={Users}
+                        texto={t('transactions.familyRequired')}
+                        className="py-10"
+                    />
+
+                    <div className="mt-4 flex justify-center">
+                        <a
+                            href="/hogar"
+                            className="rounded-lg bg-[#123B8F] px-6 py-2.5 font-medium text-white transition hover:bg-[#0B2E6B]"
+                        >
+                            {t('family.noFamilyBannerCta')}
+                        </a>
+                    </div>
+                </section>
+            ) : (
+                <>
             {/* ENCABEZADO */}
 
             <div className="mb-6 sm:mb-8">
@@ -1333,6 +1363,9 @@ export default function Movimientos() {
                     })
                 }
             />
+
+                </>
+            )}
 
         </div>
     )

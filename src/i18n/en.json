@@ -263,6 +263,7 @@
   },
   "transactions": {
     "description": "Record your income, remittances, and household expenses.",
+    "familyRequired": "Before recording a transaction, you must create or join a family.",
     "selectType": "Type",
     "incomeOrRemittance": "Income / Remittance",
     "category": "Category",
