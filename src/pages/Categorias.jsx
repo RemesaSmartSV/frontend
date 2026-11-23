@@ -359,7 +359,7 @@ export default function Categorias() {
 
                     <div className="w-full overflow-x-auto">
 
-                        <table className="w-full min-w-[650px] border-collapse">
+                        <table className="w-full min-w-[420px] border-collapse">
 
                             <thead>
                                 <tr>
@@ -370,10 +370,6 @@ export default function Categorias() {
 
                                     <th className={`${CLASE_TH} px-3 py-3 sm:px-3.5`}>
                                         {t('categories.type')}
-                                    </th>
-
-                                    <th className={`${CLASE_TH} px-3 py-3 sm:px-3.5`}>
-                                        {t('categories.icon')}
                                     </th>
 
                                     <th className={`${CLASE_TH} px-3 py-3 sm:px-3.5`}>
@@ -392,8 +388,17 @@ export default function Categorias() {
                                         className="transition hover:bg-gray-50"
                                     >
 
-                                        {/* NOMBRE */}
+                                        {/* NOMBRE (con el emoji al lado: visible sin deslizar en móvil) */}
                                         <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
+                                            {categoria.icono && (
+                                                <span
+                                                    aria-hidden="true"
+                                                    className="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-lg leading-none"
+                                                    style={{ fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji"' }}
+                                                >
+                                                    {categoria.icono}
+                                                </span>
+                                            )}
                                             {traducirNombreCategoria(categoria.nombre)}
                                         </td>
 
@@ -410,17 +415,6 @@ export default function Categorias() {
                                                 {categoria.tipo === 'Ingreso' ? t('nav.ingresos') : t('nav.gastos')}
                                             </span>
 
-                                        </td>
-
-                                        {/* ICONO */}
-                                        <td className="border-b border-gray-200 px-3 py-3.5 text-sm sm:px-3.5">
-                                            {categoria.icono ? (
-                                                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gray-100 text-3xl leading-none">
-                                                    {categoria.icono}
-                                                </span>
-                                            ) : (
-                                                '-'
-                                            )}
                                         </td>
 
                                         {/* ACCIONES */}
