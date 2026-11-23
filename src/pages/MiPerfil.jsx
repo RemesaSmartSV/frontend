@@ -95,7 +95,6 @@ export default function MiPerfil() {
     // Información personal
     const [nombre, setNombre] = useState('')
     const [apellido, setApellido] = useState('')
-    const [nombreVisible, setNombreVisible] = useState('')
     const [fotoPerfil, setFotoPerfil] = useState('')
     const [telefono, setTelefono] = useState('')
 
@@ -145,7 +144,6 @@ export default function MiPerfil() {
                 setUsuario(datos)
                 setNombre(datos.nombre || '')
                 setApellido(datos.apellido || '')
-                setNombreVisible(datos.nombreVisible || '')
                 setFotoPerfil(datos.fotoPerfil || '')
                 setTelefono(datos.telefono || '')
                 setIdioma(normalizarIdioma(datos.idiomaPreferido) || normalizarIdioma(i18n.resolvedLanguage) || 'es')
@@ -198,7 +196,6 @@ export default function MiPerfil() {
             await usuariosApi.actualizarPerfil({
                 nombre: nombre.trim(),
                 apellido: apellido.trim() || null,
-                nombreVisible: nombreVisible.trim() || null,
                 fotoPerfil: fotoGuardada,
                 telefono: telefono.trim() || null,
                 idiomaPreferido: idioma,
@@ -210,7 +207,6 @@ export default function MiPerfil() {
                 ...usuario,
                 nombre: nombre.trim(),
                 apellido: apellido.trim() || null,
-                nombreVisible: nombreVisible.trim() || null,
                 fotoPerfil: fotoGuardada,
                 telefono: telefono.trim() || null,
                 idiomaPreferido: idioma,
@@ -235,7 +231,6 @@ export default function MiPerfil() {
         if (!usuario) return
         setNombre(usuario.nombre || '')
         setApellido(usuario.apellido || '')
-        setNombreVisible(usuario.nombreVisible || '')
         setFotoPerfil(usuario.fotoPerfil || '')
         setArchivoPendiente(null)
         setPreviewFoto('')
@@ -325,7 +320,7 @@ export default function MiPerfil() {
 
     if (cargando) return <Loading />
 
-    const iniciales = (nombre || nombreVisible || '?')
+    const iniciales = (nombre || '?')
         .split(' ')
         .map((p) => p.charAt(0))
         .filter(Boolean)
@@ -432,21 +427,6 @@ export default function MiPerfil() {
                                 value={apellido}
                                 onChange={(e) => setApellido(e.target.value)}
                                 maxLength={100}
-                                className="input py-2"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="nombreVisible" className="mb-1 block text-sm font-medium text-gray-700">
-                                {t('profile.displayName')}
-                            </label>
-                            <input
-                                id="nombreVisible"
-                                type="text"
-                                value={nombreVisible}
-                                onChange={(e) => setNombreVisible(e.target.value)}
-                                maxLength={100}
-                                placeholder={t('profile.displayPlaceholder')}
                                 className="input py-2"
                             />
                         </div>
