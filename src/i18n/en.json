@@ -443,6 +443,7 @@
     "available": "List of available categories.",
     "empty": "No categories have been registered.",
     "emptyHint": "Create your first category using the form above.",
+    "familyRequired": "Default categories are added automatically when you create or join a family — no need to create them.",
     "saved": "Category created successfully.",
     "updated": "Category updated successfully.",
     "deleted": "Category deleted successfully.",

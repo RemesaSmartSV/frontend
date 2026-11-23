@@ -391,6 +391,7 @@
     "available": "Lista de categorías disponibles.",
     "empty": "No hay categorías registradas.",
     "emptyHint": "Crea tu primera categoría usando el formulario de arriba.",
+    "familyRequired": "Las categorías por defecto se agregan solas al crear o unirte a una familia — no hace falta crearlas.",
     "saved": "Categoría creada correctamente.",
     "updated": "Categoría actualizada correctamente.",
     "deleted": "Categoría eliminada correctamente.",

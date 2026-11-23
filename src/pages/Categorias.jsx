@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pencil, Plus, Tags } from 'lucide-react'
+import { Pencil, Plus, Tags, Users } from 'lucide-react'
 import { categoriasApi } from '../services/api'
 import Notification from '../components/Notification'
 import Loading from '../components/Loading'
@@ -24,6 +24,7 @@ export default function Categorias() {
 
     const [error, setError] = useState('')
     const [mensaje, setMensaje] = useState('')
+    const [sinFamilia, setSinFamilia] = useState(false)
 
     const [confirmModal, setConfirmModal] = useState({
         abierto: false,
@@ -36,6 +37,12 @@ export default function Categorias() {
         try {
             setCargando(true)
             setError('')
+
+            const usuario = JSON.parse(localStorage.getItem('usuario') || 'null')
+            if (!usuario?.idHogar) {
+                setSinFamilia(true)
+                return
+            }
 
             const data = await categoriasApi.listar()
             setCategorias(data)
@@ -163,6 +170,28 @@ export default function Categorias() {
                 onClose={() => setError('')}
             />
 
+            {/* SIN FAMILIA: las categorías por defecto nacen con la familia;
+                sin familia no hay nada que mostrar ni crear todavía. */}
+
+            {sinFamilia ? (
+                <section className={CLASE_TARJETA}>
+                    <EstadoVacio
+                        Icono={Users}
+                        texto={t('categories.familyRequired')}
+                        className="py-10"
+                    />
+
+                    <div className="mt-4 flex justify-center">
+                        <a
+                            href="/hogar"
+                            className="rounded-lg bg-[#123B8F] px-6 py-2.5 font-medium text-white transition hover:bg-[#0B2E6B]"
+                        >
+                            {t('family.noFamilyBannerCta')}
+                        </a>
+                    </div>
+                </section>
+            ) : (
+                <>
             {/* ENCABEZADO */}
             <div className="mb-6">
 
@@ -450,6 +479,9 @@ export default function Categorias() {
                 onConfirmar={confirmarEliminarCategoria}
                 onCancelar={() => setConfirmModal({ abierto: false, id: null, titulo: '', mensaje: '' })}
             />
+
+                </>
+            )}
 
         </div>
     )
