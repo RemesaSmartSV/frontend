@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'node:path'
 import { loadEnv } from 'vite'
+import { browserslistToTargets } from 'lightningcss'
 
 // Proxy en desarrollo: /api se reenvia al backend .NET local
 
@@ -26,6 +27,22 @@ export default defineConfig(({ mode }) => {
             react(),
             tailwindcss(),
         ],
+        css: {
+            // Tailwind v4 genera colores oklch() y unidades dvh: los navegadores
+            // Android/iOS viejos no las soportan y la app "se ve rara". Lightning
+            // CSS las degrada a rgb()/vh para los navegadores listados.
+            transformer: 'lightningcss',
+            lightningcss: {
+                targets: browserslistToTargets([
+                    'chrome 80',
+                    'edge 80',
+                    'safari 13',
+                    'firefox 75',
+                    'samsung 13',
+                    'ios_saf 13',
+                ]),
+            },
+        },
         server: {
             port: 5173,
             watch: {
